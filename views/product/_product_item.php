@@ -1,7 +1,7 @@
-<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <div class="product-item">
     <div class="row-custom<?php echo (!empty($product->image_second)) ? ' product-multiple-image' : ''; ?>">
-        <a class="item-wishlist-button item-wishlist-enable <?php echo (is_product_in_wishlist($product->id) == true) ? 'item-wishlist' : ''; ?>" data-product-id="<?php echo $product->id; ?>"></a>
+        <a class="item-wishlist-button item-wishlist-enable <?php echo (is_product_in_wishlist($product) == 1) ? 'item-wishlist' : ''; ?>" data-product-id="<?php echo $product->id; ?>"></a>
         <div class="img-product-container">
             <a href="<?php echo generate_product_url($product); ?>">
                 <img src="<?php echo base_url() . IMG_BG_PRODUCT_SMALL; ?>" data-src="<?php echo get_product_item_image($product); ?>" alt="<?php echo html_escape($product->title); ?>" class="lazyload img-fluid img-product">
@@ -11,7 +11,7 @@
             </a>
             <div class="product-item-options">
                 <a href="javascript:void(0)" class="item-option btn-add-remove-wishlist" data-toggle="tooltip" data-placement="left" data-product-id="<?php echo $product->id; ?>" data-reload="0" title="<?php echo trans("wishlist"); ?>">
-                    <?php if (!empty($product->is_in_wishlist)): ?>
+                    <?php if (is_product_in_wishlist($product) == 1): ?>
                         <i class="icon-heart"></i>
                     <?php else: ?>
                         <i class="icon-heart-o"></i>

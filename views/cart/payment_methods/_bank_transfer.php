@@ -1,4 +1,4 @@
-<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php if ($cart_payment_method->payment_option == "bank_transfer"): ?>
     <!--PROMOTE SALES-->
     <?php if ($mds_payment_type == 'promote'): ?>
@@ -14,7 +14,7 @@
                 <p class="p-transaction-number"><span><?php echo trans("transaction_number"); ?>:&nbsp;<?php echo $transaction_number; ?></span></p>
 
                 <p class="p-complete-payment"><?php echo trans("msg_promote_bank_transfer_text"); ?></p>
-                <button type="submit" name="submit" value="update" class="btn btn-lg btn-custom float-right" onclick="this.disabled=true;"><?php echo trans("place_order") ?></button>
+                <button type="submit" name="submit" value="update" class="btn btn-lg btn-custom btn-place-order float-right"><?php echo trans("place_order") ?></button>
             </div>
             <?php echo form_close(); ?>
         <?php endif; ?>
@@ -32,11 +32,17 @@
                 <?php echo $this->payment_settings->bank_transfer_accounts; ?>
             </div>
             <p class="p-complete-payment"><?php echo trans("msg_bank_transfer_text"); ?></p>
-            <button type="submit" name="submit" value="update" class="btn btn-lg btn-custom float-right" onclick="this.disabled=true;"><?php echo trans("place_order") ?></button>
+            <button type="submit" name="submit" value="update" class="btn btn-lg btn-custom btn-place-order float-right"><?php echo trans("place_order") ?></button>
         </div>
         <?php echo form_close(); ?>
     <?php endif; ?>
 <?php endif; ?>
+
+<script>
+    $('form').submit(function () {
+        $(".btn-place-order").prop('disabled', true);
+    });
+</script>
 
 
 

@@ -655,6 +655,34 @@ class Product_model extends Core_Model
         return $query->row()->count;
     }
 
+    //get guest wishlist products
+    public function get_paginated_guest_wishlist_products($offset, $per_page)
+    {
+        $wishlist = $this->session->userdata('mds_guest_wishlist');
+        if (!empty($wishlist) && item_count($wishlist) > 0) {
+            $sql = $this->query_string() . 'AND products.id IN ? ORDER BY products.created_at DESC LIMIT ?,?';
+            $query = $this->db->query($sql, [$wishlist, clean_number($offset), clean_number($per_page)]);
+
+            return $query->result();
+        }
+
+        return [];
+    }
+
+    //get guest wishlist products count
+    public function get_guest_wishlist_products_count()
+    {
+        $wishlist = $this->session->userdata('mds_guest_wishlist');
+        if (!empty($wishlist) && item_count($wishlist) > 0) {
+            $sql = $this->query_string('active', true) . 'AND products.id IN ?';
+            $query = $this->db->query($sql, [$wishlist]);
+
+            return $query->row()->count;
+        }
+
+        return 0;
+    }
+
     //get user downloads count
     public function get_user_downloads_count($user_id)
     {
@@ -749,10 +777,8 @@ class Product_model extends Core_Model
         } else {
             $wishlist = $this->session->userdata('mds_guest_wishlist');
             if (!empty($wishlist)) {
-                foreach ($wishlist as $item) {
-                    if ($item == clean_number($product_id)) {
-                        return true;
-                    }
+                if (in_array($product_id, $wishlist)) {
+                    return true;
                 }
             }
         }

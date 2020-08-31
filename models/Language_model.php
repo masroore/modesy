@@ -284,17 +284,13 @@ class Language_model extends CI_Model
     }
 
     //update translation
-    public function update_translation()
+    public function update_translation($lang_id, $id, $translation)
     {
-        $lang_id = $this->input->post('lang_id');
-        $label = $this->input->post('label');
-
         $data = [
-            'translation' => $this->input->post('translation'),
+            'translation' => $translation,
         ];
-
         $this->db->where('lang_id', clean_number($lang_id));
-        $this->db->where('label', clean_str($label));
+        $this->db->where('id', clean_number($id));
         $this->db->update('language_translations', $data);
     }
 }

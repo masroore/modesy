@@ -953,16 +953,6 @@ if (!function_exists('get_custom_field_value')) {
     }
 }
 
-//check product in wishlist
-if (!function_exists('is_product_in_wishlist')) {
-    function is_product_in_wishlist($product_id)
-    {
-        $ci = &get_instance();
-
-        return $ci->product_model->is_product_in_wishlist($product_id);
-    }
-}
-
 //get product wishlist count
 if (!function_exists('get_product_wishlist_count')) {
     function get_product_wishlist_count($product_id)

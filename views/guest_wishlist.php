@@ -1,4 +1,4 @@
-<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <!-- Wrapper -->
 <div id="wrapper">
     <div class="container">
@@ -17,23 +17,24 @@
             <div class="col-12">
                 <div class="page-contact">
                     <div class="row">
-                        <?php if (!empty($wishlist)):
-                            foreach ($wishlist as $item):
-                                $product = get_available_product($item);
-                                if (!empty($product)): ?>
-                                    <div class="col-6 col-sm-6 col-md-4 col-lg-3 col-product">
-                                        <?php $this->load->view('product/_product_item', ['product' => $product, 'promoted_badge' => false]); ?>
-                                    </div>
-                                <?php
-                                endif;
-                            endforeach;
+                        <?php if (!empty($products)):
+                            foreach ($products as $product): ?>
+                                <div class="col-6 col-sm-6 col-md-4 col-lg-3 col-product">
+                                    <?php $this->load->view('product/_product_item', ['product' => $product, 'promoted_badge' => false]); ?>
+                                </div>
+                            <?php endforeach;
                         else: ?>
                             <div class="col-12">
                                 <p class="text-center"><?php echo trans("no_products_found"); ?></p>
                             </div>
                         <?php endif; ?>
                     </div>
+                </div>
+            </div>
 
+            <div class="col-12">
+                <div class="row">
+                    <?php echo $this->pagination->create_links(); ?>
                 </div>
             </div>
 

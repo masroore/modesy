@@ -157,10 +157,29 @@ class Language_controller extends Admin_Core_Controller
     }
 
     /**
+     * Update Translations Post.
+     */
+    public function update_translations_post()
+    {
+        $lang_id = $this->input->post('lang_id');
+        $ids = $this->input->post();
+        foreach ($ids as $key => $value) {
+            if ('lang_id' != $key) {
+                $this->language_model->update_translation($lang_id, $key, $value);
+            }
+        }
+        $this->session->set_flashdata('success', trans('msg_updated'));
+        redirect($this->agent->referrer());
+    }
+
+    /**
      * Update Translation Post.
      */
     public function update_translation_post()
     {
-        $this->language_model->update_translation();
+        $lang_id = $this->input->post('lang_id');
+        $id = $this->input->post('label');
+        $translation = $this->input->post('translation');
+        $this->language_model->update_translation($lang_id, $id, $translation);
     }
 }

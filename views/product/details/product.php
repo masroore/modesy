@@ -1,4 +1,4 @@
-<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
 <!-- Wrapper -->
 <div id="wrapper">
@@ -47,9 +47,11 @@
                                 <li class="nav-item">
                                     <a class="nav-link active" id="tab_description" data-toggle="tab" href="#tab_description_content" role="tab" aria-controls="tab_description" aria-selected="true"><?php echo trans("description"); ?></a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" id="tab_additional_information" data-toggle="tab" href="#tab_additional_information_content" role="tab" aria-controls="tab_additional_information" aria-selected="false"><?php echo trans("additional_information"); ?></a>
-                                </li>
+                                <?php if (!empty($custom_fields)): ?>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="tab_additional_information" data-toggle="tab" href="#tab_additional_information_content" role="tab" aria-controls="tab_additional_information" aria-selected="false"><?php echo trans("additional_information"); ?></a>
+                                    </li>
+                                <?php endif; ?>
                                 <?php if ($product->product_type != "digital"): ?>
                                     <li class="nav-item">
                                         <a class="nav-link" id="tab_shipping" data-toggle="tab" href="#tab_shipping_content" role="tab" aria-controls="tab_shipping" aria-selected="false"><?php echo trans("shipping_location"); ?></a>
@@ -88,15 +90,15 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="tab-pane fade" id="tab_additional_information_content" role="tabpanel">
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <a class="card-link collapsed" data-toggle="collapse" href="#collapse_additional_information_content">
-                                                <?php echo trans("additional_information"); ?><i class="icon-arrow-down"></i><i class="icon-arrow-up"></i>
-                                            </a>
-                                        </div>
-                                        <div id="collapse_additional_information_content" class="collapse-description-content collapse" data-parent="#accordion">
-                                            <?php if (!empty($custom_fields)): ?>
+                                <?php if (!empty($custom_fields)): ?>
+                                    <div class="tab-pane fade" id="tab_additional_information_content" role="tabpanel">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <a class="card-link collapsed" data-toggle="collapse" href="#collapse_additional_information_content">
+                                                    <?php echo trans("additional_information"); ?><i class="icon-arrow-down"></i><i class="icon-arrow-up"></i>
+                                                </a>
+                                            </div>
+                                            <div id="collapse_additional_information_content" class="collapse-description-content collapse" data-parent="#accordion">
                                                 <table class="table table-striped table-product-additional-information">
                                                     <tbody>
                                                     <?php foreach ($custom_fields as $custom_field):
@@ -109,10 +111,10 @@
                                                     <?php endforeach; ?>
                                                     </tbody>
                                                 </table>
-                                            <?php endif; ?>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                <?php endif; ?>
                                 <?php if ($product->product_type != "digital"): ?>
                                     <div class="tab-pane fade" id="tab_shipping_content" role="tabpanel">
                                         <div class="card">
@@ -242,7 +244,7 @@
                                         <div class="card">
                                             <div class="card-header">
                                                 <a class="card-link collapsed" data-toggle="collapse" href="#collapse_facebook_comments_content">
-                                                    <?php echo trans("reviews"); ?><i class="icon-arrow-down"></i><i class="icon-arrow-up"></i>
+                                                    <?php echo trans("facebook_comments"); ?><i class="icon-arrow-down"></i><i class="icon-arrow-up"></i>
                                                 </a>
                                             </div>
                                             <div id="collapse_facebook_comments_content" class="collapse-description-content collapse" data-parent="#accordion">
@@ -255,10 +257,7 @@
                                 <?php endif; ?>
                             </div>
                         </div>
-
                     </div>
-
-
                 </div>
             </div>
 

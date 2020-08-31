@@ -1,4 +1,5 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<style>.product-item-options .item-option {width: 40px;height: 40px;line-height: 40px;font-size: 20px;}  .product-item-options .item-option {line-height: 40px;font-size: 20px;}  .product-item-options .item-option .icon-heart {color: #f15e4f !important;}  .btn-wishlist .icon-heart {color: #f15e4f !important;} @media(max-width:1900px) and (min-width: 768px) {.slider-container {height:460px} .main-slider .item {height:460px;} .main-slider .item .row-slider-caption {height:460px}}</style>
 <footer id="footer">
     <div class="container">
         <div class="row">

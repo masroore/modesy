@@ -68,7 +68,7 @@ if ($language->id == $this->site_lang->id):?>
 <?php else: ?>
     <link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/colors/default.min.css"/>
 <?php endif; ?>
-    <style>body {<?php echo $this->fonts->font_family; ?>}</style>
+    <style>body {<?php echo $this->fonts->font_family; ?>} .m-r-0{margin-right: 0 !important;} .p-r-0{padding-right: 0 !important}</style>
     <?php echo $this->general_settings->custom_css_codes; ?>
 <script src="<?php echo base_url(); ?>assets/js/jquery-3.3.1.min.js"></script>
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -160,16 +160,14 @@ if ($language->id == $this->site_lang->id):?>
                                         </li>
                                     <?php endif; ?>
 
-
                                     <!--Check auth-->
                                     <?php if ($this->auth_check): ?>
                                         <?php if (is_multi_vendor_active()): ?>
-                                            <li class="nav-item"><a href="<?php echo generate_url("sell_now"); ?>" class="btn btn-md btn-custom btn-sell-now"><?php echo trans("sell_now"); ?></a></li>
+                                            <li class="nav-item m-r-0"><a href="<?php echo generate_url("sell_now"); ?>" class="btn btn-md btn-custom btn-sell-now m-r-0"><?php echo trans("sell_now"); ?></a></li>
                                         <?php endif; ?>
-
                                     <?php else: ?>
                                         <?php if (is_multi_vendor_active()): ?>
-                                            <li class="nav-item"><a href="javascript:void(0)" class="btn btn-md btn-custom btn-sell-now" data-toggle="modal" data-target="#loginModal"><?php echo trans("sell_now"); ?></a></li>
+                                            <li class="nav-item m-r-0"><a href="javascript:void(0)" class="btn btn-md btn-custom btn-sell-now m-r-0" data-toggle="modal" data-target="#loginModal"><?php echo trans("sell_now"); ?></a></li>
                                         <?php endif; ?>
                                     <?php endif; ?>
                                 </ul>

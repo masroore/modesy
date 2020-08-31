@@ -277,7 +277,9 @@ class Cart_model extends CI_Model
         if (!empty($price_calculated)) {
             $price = $price_calculated / 100;
             $vat = calculate_vat($price, $vat_rate);
-            $vat = $vat * $quantity;
+            if (!is_int($vat)) {
+                $vat = round($vat * $quantity, 2);
+            }
 
             return $vat * 100;
         }

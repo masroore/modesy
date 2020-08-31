@@ -1,4 +1,4 @@
-<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
 <div id="navMobile" class="nav-mobile">
     <div class="nav-mobile-inner">
@@ -50,11 +50,11 @@
                         </li>
                     <?php endif; ?>
                     <?php if (!empty($this->menu_links)): ?>
-                            <?php foreach ($this->menu_links as $menu_link):
-                                if ($menu_link->location == 'top_menu'):?>
-                                    <li class="nav-item nav-item-category-0"><a href="<?php echo generate_menu_item_url($menu_link); ?>" class="nav-link"><?php echo html_escape($menu_link->title); ?></a></li>
-                                <?php endif;
-                            endforeach; ?>
+                        <?php foreach ($this->menu_links as $menu_link):
+                            if ($menu_link->location == 'top_menu'):?>
+                                <li class="nav-item nav-item-category-0"><a href="<?php echo generate_menu_item_url($menu_link); ?>" class="nav-link"><?php echo html_escape($menu_link->title); ?></a></li>
+                            <?php endif;
+                        endforeach; ?>
                     <?php endif; ?>
                     <?php if ($this->auth_check): ?>
                         <li class="dropdown profile-dropdown nav-item nav-item-category-0">
@@ -140,11 +140,13 @@
                         <li class="nav-item nav-item-category-0"><a href="javascript:void(0)" data-toggle="modal" data-target="#loginModal" class="nav-link close-menu-click"><?php echo trans("login"); ?></a></li>
                         <li class="nav-item nav-item-category-0"><a href="<?php echo generate_url("register"); ?>" class="nav-link"><?php echo trans("register"); ?></a></li>
                     <?php endif; ?>
-                    <li class="nav-item nav-item-messages">
-                        <a href="javascript:void(0)" data-toggle="modal" data-target="#locationModal" class="nav-link btn-modal-location close-menu-click">
-                            <i class="icon-map-marker float-left" aria-hidden="true"></i>&nbsp;<?php echo trans("location"); ?>
-                        </a>
-                    </li>
+                    <?php if (item_count($this->countries) > 1): ?>
+                        <li class="nav-item nav-item-messages">
+                            <a href="javascript:void(0)" data-toggle="modal" data-target="#locationModal" class="nav-link btn-modal-location close-menu-click">
+                                <i class="icon-map-marker float-left" aria-hidden="true"></i>&nbsp;<?php echo trans("location"); ?>
+                            </a>
+                        </li>
+                    <?php endif; ?>
                     <?php if ($this->general_settings->multilingual_system == 1 && count($this->languages) > 1): ?>
                         <li class="nav-item">
                             <a href="#" class="nav-link">

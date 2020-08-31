@@ -1,4 +1,4 @@
-<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
 <div class="top-bar">
     <div class="container">
@@ -16,11 +16,13 @@
             </div>
             <div class="col-6 col-right">
                 <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a href="javascript:void(0)" data-toggle="modal" data-target="#locationModal" class="nav-link btn-modal-location">
-                            <i class="icon-map-marker" aria-hidden="true"></i>&nbsp;<?php echo trans("location"); ?>
-                        </a>
-                    </li>
+                    <?php if (item_count($this->countries) > 1): ?>
+                        <li class="nav-item">
+                            <a href="javascript:void(0)" data-toggle="modal" data-target="#locationModal" class="nav-link btn-modal-location">
+                                <i class="icon-map-marker" aria-hidden="true"></i>&nbsp;<?php echo trans("location"); ?>
+                            </a>
+                        </li>
+                    <?php endif; ?>
                     <?php if ($this->general_settings->multilingual_system == 1 && count($this->languages) > 1): ?>
                         <li class="nav-item dropdown language-dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
@@ -41,7 +43,7 @@
                     <?php endif; ?>
 
                     <?php if ($this->auth_check): ?>
-                        <li class="nav-item dropdown profile-dropdown">
+                        <li class="nav-item dropdown profile-dropdown p-r-0">
                             <a class="nav-link dropdown-toggle a-profile" data-toggle="dropdown" href="javascript:void(0)" aria-expanded="false">
                                 <img src="<?php echo get_user_avatar($this->auth_user); ?>" alt="<?php echo get_shop_name($this->auth_user); ?>">
                                 <?php if ($unread_message_count > 0): ?>

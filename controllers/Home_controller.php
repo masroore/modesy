@@ -53,7 +53,6 @@ class Home_controller extends Home_Core_Controller
         $data['title'] = trans('contact');
         $data['description'] = trans('contact') . ' - ' . $this->app_name;
         $data['keywords'] = trans('contact') . ',' . $this->app_name;
-
         $this->load->view('partials/_header', $data);
         $this->load->view('contact', $data);
         $this->load->view('partials/_footer');
@@ -103,7 +102,6 @@ class Home_controller extends Home_Core_Controller
         if (empty($slug)) {
             redirect(lang_base_url());
         }
-
         $page = $this->page_model->get_page($slug);
         //if exists
         if (!empty($page)) {
@@ -133,7 +131,6 @@ class Home_controller extends Home_Core_Controller
         $pagination = $this->paginate($link, $this->product_model->get_paginated_filtered_products_count(null), $this->product_paginate_per_page);
         $data['products'] = $this->product_model->get_paginated_filtered_products(null, $pagination['offset'], $pagination['per_page']);
         $data['categories'] = get_parent_categories($this->categories);
-
         $data['show_location_filter'] = false;
         if (!empty($data['products'])) {
             foreach ($data['products'] as $item) {
@@ -393,7 +390,6 @@ class Home_controller extends Home_Core_Controller
         if (empty($data['category'])) {
             redirect(generate_url('blog'));
         }
-
         $data['title'] = $data['category']->name;
         $data['description'] = $data['category']->description;
         $data['keywords'] = $data['category']->keywords;
@@ -470,7 +466,6 @@ class Home_controller extends Home_Core_Controller
         $data['comment_limit'] = $this->comment_limit;
         $data['post_user'] = $this->auth_model->get_user($data['post']->user_id);
         $data['category'] = $this->blog_category_model->get_category($data['post']->category_id);
-
         //og tags
         $data['show_og_tags'] = true;
         $data['og_title'] = $data['post']->title;
@@ -504,7 +499,10 @@ class Home_controller extends Home_Core_Controller
         $data['title'] = trans('wishlist');
         $data['description'] = trans('wishlist') . ' - ' . $this->app_name;
         $data['keywords'] = trans('wishlist') . ',' . $this->app_name;
-        $data['wishlist'] = $this->session->userdata('mds_guest_wishlist');
+
+        //set pagination
+        $pagination = $this->paginate(generate_url('wishlist'), $this->product_model->get_guest_wishlist_products_count(), $this->product_paginate_per_page);
+        $data['products'] = $this->product_model->get_paginated_guest_wishlist_products($pagination['offset'], $pagination['per_page']);
 
         $this->load->view('partials/_header', $data);
         $this->load->view('guest_wishlist', $data);
@@ -633,7 +631,6 @@ class Home_controller extends Home_Core_Controller
             $blog_posts_count = $this->blog_model->get_posts_count();
             set_cache_data($key, $blog_posts_count);
         }
-
         //set pagination
         $pagination = $this->paginate(generate_url('blog'), $blog_posts_count, $this->blog_paginate_per_page);
         $key = 'blog_posts_lang_' . $this->selected_lang->id . '_page_' . $pagination['current_page'];

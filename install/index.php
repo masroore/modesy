@@ -109,7 +109,6 @@ if (!isset($license_code)) {
                                     <div class="tab-content">
                                         <div class="tab_1">
                                             <h1 class="step-title">Start</h1>
-
                                             <div class="form-group">
                                                 <label for="email">License Code</label>
                                                 <textarea name="license_code" class="form-control form-input" style="resize: vertical; height: 100px;line-height: 24px;padding: 10px;" placeholder="Enter anything" required><?php echo $license_code; ?></textarea>

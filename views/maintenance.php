@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html lang="en">
 <head>
-    <title><?php echo $general_settings->maintenance_mode_title; ?> - <?php echo $general_settings->application_name; ?></title>
+    <title><?php echo $this->general_settings->maintenance_mode_title; ?> - <?php echo $this->general_settings->application_name; ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400&display=swap" rel="stylesheet">

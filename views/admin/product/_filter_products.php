@@ -33,7 +33,7 @@
 					<option value=""><?php echo trans("all"); ?></option>
 					<?php
 					if (!empty($this->input->get('category', true))):
-						$subcategories = get_subcategories_by_parent_id($this->input->get('category', true));
+						$subcategories = $this->category_model->get_subcategories_by_parent_id($this->input->get('category', true));
 						if (!empty($subcategories)) {
 							foreach ($subcategories as $item):?>
 								<option value="<?php echo $item->id; ?>" <?php echo ($this->input->get('subcategory', true) == $item->id) ? 'selected' : ''; ?>><?php echo $item->name; ?></option>

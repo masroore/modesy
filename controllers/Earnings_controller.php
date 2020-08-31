@@ -30,7 +30,6 @@ class Earnings_controller extends Home_Core_Controller
         $data['keywords'] = trans('earnings') . ',' . $this->app_name;
         $data['active_tab'] = 'earnings';
         $data['user'] = $this->auth_user;
-
         $pagination = $this->paginate(generate_url('earnings'), $this->earnings_model->get_earnings_count($this->user_id), $this->earnings_per_page);
         $data['earnings'] = $this->earnings_model->get_paginated_earnings($this->user_id, $pagination['per_page'], $pagination['offset']);
 

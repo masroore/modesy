@@ -249,10 +249,8 @@ if (!function_exists('is_product_in_wishlist')) {
         } else {
             $wishlist = $ci->session->userdata('mds_guest_wishlist');
             if (!empty($wishlist)) {
-                foreach ($wishlist as $item) {
-                    if ($item == $product->id) {
-                        return true;
-                    }
+                if (in_array($product->id, $wishlist)) {
+                    return true;
                 }
             }
         }

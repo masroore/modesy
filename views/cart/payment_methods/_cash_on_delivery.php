@@ -12,8 +12,14 @@
 			<p class="m-b-30">
 				<?php echo trans("cash_on_delivery_warning"); ?>
 			</p>
-			<button type="submit" name="submit" value="update" class="btn btn-lg btn-custom float-right m-t-30" onclick="this.disabled=true;"><?php echo trans("place_order") ?></button>
+			<button type="submit" name="submit" value="update" class="btn btn-lg btn-custom btn-place-order float-right m-t-30"><?php echo trans("place_order") ?></button>
 		</div>
 		<?php echo form_close(); ?>
 	<?php endif; ?>
 <?php endif; ?>
+
+<script>
+    $('form').submit(function () {
+        $(".btn-place-order").prop('disabled', true);
+    });
+</script>

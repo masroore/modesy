@@ -370,12 +370,11 @@ class Location_model extends CI_Model
     public function search_states($val)
     {
         $val = remove_special_characters($val);
-        $this->db->join('location_countries', 'location_states.country_id = location_countries.id');
+        $this->db->join('location_countries', 'location_states.country_id = location_countries.id AND location_countries.status = 1');
         $this->db->select('location_states.*, location_countries.name as country_name, location_countries.id as country_id');
         $this->db->like('location_countries.name', $val);
         $this->db->or_like('location_states.name', $val);
         $this->db->or_like('CONCAT(location_states.name, " ", location_countries.name)', $val);
-        $this->db->where('location_countries.status', 1);
         $this->db->limit(100);
         $query = $this->db->get('location_states');
 
@@ -386,14 +385,13 @@ class Location_model extends CI_Model
     public function search_cities($val)
     {
         $val = remove_special_characters($val);
-        $this->db->join('location_countries', 'location_cities.country_id = location_countries.id');
+        $this->db->join('location_countries', 'location_cities.country_id = location_countries.id AND location_countries.status = 1');
         $this->db->join('location_states', 'location_cities.state_id = location_states.id');
         $this->db->select('location_cities.*, location_countries.id as country_id, location_countries.name as country_name, location_states.id as state_id, location_states.name as state_name');
         $this->db->like('location_countries.name', $val);
         $this->db->or_like('location_states.name', $val);
         $this->db->or_like('location_cities.name', $val);
         $this->db->or_like('CONCAT(location_cities.name, " ",location_states.name, " ", location_countries.name)', $val);
-        $this->db->where('location_countries.status', 1);
         $this->db->limit(200);
         $query = $this->db->get('location_cities');
 

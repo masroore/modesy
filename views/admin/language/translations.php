@@ -1,4 +1,4 @@
-<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
 <div class="box">
     <div class="box-header with-border">
@@ -15,12 +15,13 @@
             </div>
         </div>
 
-
         <div class="row">
             <div class="col-sm-12">
                 <div class="table-responsive">
+                    <?php $this->load->view('admin/language/_filter_translations'); ?>
+                    <?php echo form_open('language_controller/update_translations_post'); ?>
+                    <input type="hidden" name="lang_id" value="<?php echo $language->id; ?>">
                     <table class="table table-bordered table-striped dataTable">
-                        <?php $this->load->view('admin/language/_filter_translations'); ?>
                         <thead>
                         <tr role="row">
                             <th><?php echo trans('id'); ?></th>
@@ -33,17 +34,22 @@
                             <tr class="tr-phrase">
                                 <td style="width: 50px;"><?php echo $item->id; ?></td>
                                 <td style="width: 40%;"><input type="text" class="form-control" value="<?php echo $item->label; ?>" <?php echo ($language->text_direction == "rtl") ? 'dir="rtl"' : ''; ?> readonly></td>
-                                <td style="width: 60%;"><input type="text" data-label="<?php echo $item->label; ?>" data-lang="<?php echo $item->lang_id; ?>" class="form-control input_translation" value="<?php echo $item->translation; ?>" <?php echo ($language->text_direction == "rtl") ? 'dir="rtl"' : ''; ?>></td>
+                                <td style="width: 60%;"><input type="text" name="<?php echo $item->id; ?>" data-label="<?php echo $item->id; ?>" data-lang="<?php echo $item->lang_id; ?>" class="form-control input_translation" value="<?php echo $item->translation; ?>" <?php echo ($language->text_direction == "rtl") ? 'dir="rtl"' : ''; ?>></td>
                             </tr>
                         <?php endforeach; ?>
                         </tbody>
                     </table>
+                    <button type="submit" class="btn btn-primary pull-right">
+                        <?php echo trans("save_changes"); ?>
+                    </button>
+                    <?php echo form_close(); ?>
                 </div>
                 <?php if (empty($translations)): ?>
                     <p class="text-center">
                         <?php echo trans("no_records_found"); ?>
                     </p>
                 <?php endif; ?>
+
                 <div class="col-sm-12 table-ft">
                     <div class="row">
                         <div class="pull-right">
@@ -55,7 +61,3 @@
         </div>
     </div>
 </div>
-
-<?php if ($language->text_direction == "rtl"): ?>
-    <link href="<?php echo base_url(); ?>assets/admin/css/rtl.css" rel="stylesheet"/>
-<?php endif; ?>

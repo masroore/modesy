@@ -4,7 +4,7 @@
 	<div class="row">
 		<div class="col-12 col-sm-4">
 			<div class="item-image">
-				<a class="item-wishlist-button item-wishlist-enable <?php echo (is_product_in_wishlist($product->id) == true) ? 'item-wishlist' : ''; ?>" data-product-id="<?php echo $product->id; ?>"></a>
+				<a class="item-wishlist-button item-wishlist-enable" data-product-id="<?php echo $product->id; ?>"></a>
 				<div class="img-product-container">
 					<img src="<?php echo base_url() . IMG_BG_PRODUCT_SMALL; ?>" data-src="<?php echo get_product_image($product->id, 'image_small'); ?>" alt="<?php echo html_escape($product->title); ?>" class="lazyload img-fluid img-product" onerror="this.src='<?php echo base_url() . IMG_BG_PRODUCT_SMALL; ?>'">
 				</div>

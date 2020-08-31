@@ -1,4 +1,4 @@
-<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <!-- Wrapper -->
 <div id="wrapper">
     <div class="container">
@@ -62,7 +62,7 @@
                             <label class="control-label"><?php echo trans("phone_number"); ?></label>
                             <input type="text" name="phone_number" class="form-control form-input" value="<?php echo html_escape($this->auth_user->phone_number); ?>" placeholder="<?php echo trans("phone_number"); ?>">
                         </div>
-                        <?php if ($this->auth_user->role == "admin" || $this->general_settings->hide_vendor_contact_information == 1): ?>
+                        <?php if ($this->auth_user->role == "admin" || $this->general_settings->hide_vendor_contact_information != 1): ?>
                             <div class="form-group m-t-15">
                                 <div class="custom-control custom-checkbox">
                                     <input type="checkbox" name="show_email" value="1" id="checkbox_show_email" class="custom-control-input" <?php echo ($this->auth_user->show_email == 1) ? 'checked' : ''; ?>>
