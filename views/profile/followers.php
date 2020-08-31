@@ -33,7 +33,7 @@
                         <?php foreach ($followers as $item): ?>
                             <div class="col-4 col-sm-2">
                                 <div class="follower-item">
-                                    <a href="<?php echo generate_profile_url($item); ?>">
+                                    <a href="<?php echo generate_profile_url($item->slug);?>">
                                         <img src="<?php echo get_user_avatar($item); ?>" alt="<?php echo get_shop_name($item); ?>" class="img-fluid img-profile lazyload">
                                         <p class="username">
                                             <?php echo get_shop_name($item); ?>

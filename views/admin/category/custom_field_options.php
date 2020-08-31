@@ -74,7 +74,7 @@
 					<input type="hidden" name="field_id" value="<?php echo $field->id; ?>">
 					<div class="form-group m-b-10">
 						<label><?php echo trans("add_option"); ?></label>
-						<?php foreach ($languages as $language): ?>
+						<?php foreach ($this->languages as $language): ?>
 							<input type="text" class="form-control option-input m-b-5" name="option_lang_<?php echo $language->id; ?>" placeholder="Option (<?php echo $language->name; ?>)" required>
 						<?php endforeach; ?>
 					</div>
@@ -108,7 +108,7 @@
 					<select id="categories" name="category_id[]" class="form-control" onchange="get_subcategories(this.value, 0);" required>
 						<option value=""><?php echo trans('select_category'); ?></option>
 						<?php foreach ($parent_categories as $item): ?>
-							<option value="<?php echo html_escape($item->id); ?>"><?php echo html_escape(get_category_name_by_lang($item->id, $this->selected_lang->id)); ?></option>
+							<option value="<?php echo html_escape($item->id); ?>"><?php echo category_name($item); ?></option>
 						<?php endforeach; ?>
 					</select>
 					<div id="subcategories_container"></div>
@@ -131,12 +131,12 @@
 												<td>
 													<?php $count = 0;
 													foreach ($categories_tree as $item_tree):
-														$item_category = get_category_joined($item_tree->id);
+														$item_category = get_category_by_id($item_tree->id);
 														if (!empty($item_category)):
 															if ($count == 0) {
-																echo html_escape($item_category->name);
+																echo category_name($item_category);
 															} else {
-																echo " / " . html_escape($item_category->name);
+																echo " / " . category_name($item_category);
 															}
 														endif;
 														$count++;

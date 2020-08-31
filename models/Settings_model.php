@@ -40,7 +40,8 @@ class Settings_model extends CI_Model
     {
         $data = [
             'application_name' => $this->input->post('application_name', true),
-            'head_code' => $this->input->post('head_code', false),
+            'custom_css_codes' => $this->input->post('custom_css_codes', false),
+            'custom_javascript_codes' => $this->input->post('custom_javascript_codes', false),
             'facebook_comment_status' => $this->input->post('facebook_comment_status', false),
             'facebook_comment' => $this->input->post('facebook_comment', false),
         ];
@@ -156,6 +157,19 @@ class Settings_model extends CI_Model
         return $this->db->update('general_settings', $data);
     }
 
+    //update vk login
+    public function update_vk_login()
+    {
+        $data = [
+            'vk_app_id' => trim($this->input->post('vk_app_id', true)),
+            'vk_secure_key' => trim($this->input->post('vk_secure_key', true)),
+        ];
+
+        $this->db->where('id', 1);
+
+        return $this->db->update('general_settings', $data);
+    }
+
     //update seo tools
     public function update_seo_tools()
     {
@@ -238,14 +252,82 @@ class Settings_model extends CI_Model
         return $this->db->update('payment_settings', $data);
     }
 
+    //update iyzico submerchant key
+    public function update_iyzico_submerchant_key()
+    {
+        $submerchant = [
+            'submerchant_type' => trim($this->input->post('submerchant_type', true)),
+            'first_name' => trim($this->input->post('first_name', true)),
+            'last_name' => trim($this->input->post('last_name', true)),
+            'email' => trim($this->input->post('email', true)),
+            'phone_number' => trim($this->input->post('phone_number', true)),
+            'identity_number' => trim($this->input->post('identity_number', true)),
+            'iban' => trim($this->input->post('iban', true)),
+            'submerchant_id' => trim($this->input->post('submerchant_id', true)),
+            'submerchant_name' => trim($this->input->post('submerchant_name', true)),
+            'tax_office' => trim($this->input->post('tax_office', true)),
+            'tax_number' => trim($this->input->post('tax_number', true)),
+            'company_title' => trim($this->input->post('company_title', true)),
+            'address' => trim($this->input->post('address', true)),
+        ];
+
+        $merchant_result = [
+            'status' => 1,
+            'error' => '',
+        ];
+        if (!empty($submerchant['submerchant_id']) && !empty($submerchant['first_name']) && !empty($submerchant['last_name'])) {
+            $this->session->set_flashdata('form_data', $submerchant);
+            $result = iyzico_create_submerchant($submerchant);
+            if (1 == $result['status']) {
+                $data = [
+                    'iyzico_submerchant_key' => trim($result['merchant_key']),
+                ];
+                $this->db->where('id', 1);
+                $this->db->update('payment_settings', $data);
+                $merchant_result['status'] = 1;
+            } else {
+                $merchant_result['status'] = 0;
+                $merchant_result['error'] = $result['error'];
+            }
+        }
+
+        return $merchant_result;
+    }
+
     //update iyzico settings
     public function update_iyzico_settings()
     {
+        $submerchant = [
+            'submerchant_type' => trim($this->input->post('submerchant_type', true)),
+            'first_name' => trim($this->input->post('first_name', true)),
+            'last_name' => trim($this->input->post('last_name', true)),
+            'email' => trim($this->input->post('email', true)),
+            'phone_number' => trim($this->input->post('phone_number', true)),
+            'identity_number' => trim($this->input->post('identity_number', true)),
+            'iban' => trim($this->input->post('iban', true)),
+            'submerchant_id' => trim($this->input->post('submerchant_id', true)),
+            'submerchant_name' => trim($this->input->post('submerchant_name', true)),
+            'tax_office' => trim($this->input->post('tax_office', true)),
+            'tax_number' => trim($this->input->post('tax_number', true)),
+            'company_title' => trim($this->input->post('company_title', true)),
+            'address' => trim($this->input->post('address', true)),
+        ];
+
+        $iyzico_submerchant_key = '';
+        if (!empty($submerchant['submerchant_id']) && !empty($submerchant['first_name']) && !empty($submerchant['last_name'])) {
+            $result = iyzico_create_submerchant($submerchant);
+            if ($result) {
+                $iyzico_submerchant_key = $result;
+            }
+        }
+
         $data = [
             'iyzico_enabled' => $this->input->post('iyzico_enabled', true),
             'iyzico_mode' => $this->input->post('iyzico_mode', true),
+            'iyzico_type' => $this->input->post('iyzico_type', true),
             'iyzico_api_key' => trim($this->input->post('iyzico_api_key', true)),
             'iyzico_secret_key' => trim($this->input->post('iyzico_secret_key', true)),
+            'iyzico_submerchant_key' => trim($this->input->post('iyzico_submerchant_key', true)),
         ];
 
         $this->db->where('id', 1);
@@ -287,8 +369,8 @@ class Settings_model extends CI_Model
             'free_product_promotion' => $this->input->post('free_product_promotion', true),
         ];
 
-        $data['price_per_day'] = price_database_format($data['price_per_day']);
-        $data['price_per_month'] = price_database_format($data['price_per_month']);
+        $data['price_per_day'] = get_price($data['price_per_day'], 'database');
+        $data['price_per_month'] = get_price($data['price_per_month'], 'database');
 
         $this->db->where('id', 1);
 
@@ -300,7 +382,6 @@ class Settings_model extends CI_Model
     {
         if ('homepage' == $form) {
             $data = [
-                'index_slider' => $this->input->post('index_slider', true),
                 'index_categories' => $this->input->post('index_categories', true),
                 'index_promoted_products' => $this->input->post('index_promoted_products', true),
                 'index_latest_products' => $this->input->post('index_latest_products', true),
@@ -313,14 +394,15 @@ class Settings_model extends CI_Model
                 'multilingual_system' => $this->input->post('multilingual_system', true),
                 'rss_system' => $this->input->post('rss_system', true),
                 'vendor_verification_system' => $this->input->post('vendor_verification_system', true),
+                'hide_vendor_contact_information' => $this->input->post('hide_vendor_contact_information', true),
                 'guest_checkout' => $this->input->post('guest_checkout', true),
             ];
         } elseif ('reviews_comments' == $form) {
             $data = [
-                'product_reviews' => $this->input->post('product_reviews', true),
-                'user_reviews' => $this->input->post('user_reviews', true),
+                'reviews' => $this->input->post('reviews', true),
                 'product_comments' => $this->input->post('product_comments', true),
                 'blog_comments' => $this->input->post('blog_comments', true),
+                'comment_approval_system' => $this->input->post('comment_approval_system', true),
             ];
         } elseif ('products' == $form) {
             $data = [
@@ -392,22 +474,6 @@ class Settings_model extends CI_Model
         return $this->db->update('general_settings', $data);
     }
 
-    //update admin panel link
-    public function update_admin_panel_link($link)
-    {
-        $link = str_slug($link);
-        if (empty($link)) {
-            $link = 'admin';
-        }
-        $start = '<?php defined("BASEPATH") OR exit("No direct script access allowed");' . PHP_EOL;
-        $keys = '$custom_slug_array["admin"] = "' . $link . '";';
-        $end = '?>';
-
-        $content = $start . $keys . $end;
-
-        file_put_contents(FCPATH . 'application/config/route_slugs.php', $content);
-    }
-
     //update cache system
     public function update_cache_system()
     {
@@ -444,6 +510,7 @@ class Settings_model extends CI_Model
             'classified_ads_system' => $this->input->post('classified_ads_system', true),
             'bidding_system' => $this->input->post('bidding_system', true),
             'multi_vendor_system' => $this->input->post('multi_vendor_system', true),
+            'vat_status' => $this->input->post('vat_status', true),
             'commission_rate' => $this->input->post('commission_rate', true),
             'timezone' => trim($this->input->post('timezone', true)),
         ];
@@ -451,6 +518,29 @@ class Settings_model extends CI_Model
         $this->db->where('id', 1);
 
         return $this->db->update('general_settings', $data);
+    }
+
+    //update route settings
+    public function update_route_settings()
+    {
+        $data = [];
+        foreach ($this->routes as $key => $value) {
+            if ('id' != $key) {
+                $new_val = $this->input->post($key, true);
+                $data[$key] = str_slug($new_val, true);
+            }
+        }
+
+        //update blog slug
+        $data_blog = [
+            'slug' => $this->input->post('blog', true),
+        ];
+        $this->db->where('page_default_name', 'blog');
+        $this->db->update('pages', $data_blog);
+
+        $this->db->where('id', 1);
+
+        return $this->db->update('routes', $data);
     }
 
     //update aws s3
@@ -531,6 +621,97 @@ class Settings_model extends CI_Model
         return $query->row();
     }
 
+    //get routes
+    public function get_routes()
+    {
+        $query = $this->db->query('SELECT * FROM routes WHERE id = 1');
+
+        return $query->row();
+    }
+
+    /*
+    *-------------------------------------------------------------------------------------------------
+    * FONT SETTINGS
+    *-------------------------------------------------------------------------------------------------
+    */
+
+    //get selected fonts
+    public function get_selected_fonts()
+    {
+        $sql = 'SELECT * FROM fonts WHERE id = ?';
+        $query = $this->db->query($sql, [clean_number($this->settings->site_font)]);
+
+        return $query->row();
+    }
+
+    //get fonts
+    public function get_fonts()
+    {
+        $query = $this->db->query('SELECT * FROM fonts ORDER BY font_name');
+
+        return $query->result();
+    }
+
+    //get font
+    public function get_font($id)
+    {
+        $sql = 'SELECT * FROM fonts WHERE id =  ?';
+        $query = $this->db->query($sql, [clean_number($id)]);
+
+        return $query->row();
+    }
+
+    //add font
+    public function add_font()
+    {
+        $data = [
+            'font_name' => $this->input->post('font_name', true),
+            'font_url' => $this->input->post('font_url', false),
+            'font_family' => $this->input->post('font_family', true),
+            'is_default' => 0,
+        ];
+
+        return $this->db->insert('fonts', $data);
+    }
+
+    //set site font
+    public function set_site_font()
+    {
+        $lang_id = $this->input->post('lang_id', true);
+        $data = [
+            'site_font' => $this->input->post('site_font', true),
+        ];
+        $this->db->where('lang_id', clean_number($lang_id));
+
+        return $this->db->update('settings', $data);
+    }
+
+    //update font
+    public function update_font($id)
+    {
+        $data = [
+            'font_name' => $this->input->post('font_name', true),
+            'font_url' => $this->input->post('font_url', false),
+            'font_family' => $this->input->post('font_family', true),
+        ];
+        $this->db->where('id', clean_number($id));
+
+        return $this->db->update('fonts', $data);
+    }
+
+    //delete font
+    public function delete_font($id)
+    {
+        $font = $this->get_font($id);
+        if (!empty($font)) {
+            $this->db->where('id', $font->id);
+
+            return $this->db->delete('fonts');
+        }
+
+        return false;
+    }
+
     /*
     *-------------------------------------------------------------------------------------------------
     * FORM SETTINGS
@@ -551,8 +732,8 @@ class Settings_model extends CI_Model
             'shipping' => get_checkbox_value($this->input->post('shipping', true)),
             'shipping_required' => get_checkbox_value($this->input->post('shipping_required', true)),
             'product_location' => get_checkbox_value($this->input->post('product_location', true)),
-            'product_location_required ' => get_checkbox_value($this->input->post('product_location_required', true)),
-            'external_link ' => get_checkbox_value($this->input->post('external_link', true)),
+            'product_location_required' => get_checkbox_value($this->input->post('product_location_required', true)),
+            'external_link' => get_checkbox_value($this->input->post('external_link', true)),
         ];
 
         $this->db->where('id', 1);
@@ -580,8 +761,19 @@ class Settings_model extends CI_Model
         $data = [
             'digital_demo_url' => get_checkbox_value($this->input->post('digital_demo_url', true)),
             'digital_video_preview' => get_checkbox_value($this->input->post('digital_video_preview', true)),
-            'digital_audio_preview ' => get_checkbox_value($this->input->post('digital_audio_preview', true)),
+            'digital_audio_preview' => get_checkbox_value($this->input->post('digital_audio_preview', true)),
+            'digital_allowed_file_extensions' => '',
         ];
+
+        $ext_array = @explode(',', $this->input->post('digital_allowed_file_extensions', true));
+        if (!empty($ext_array)) {
+            $exts = json_encode($ext_array);
+            $exts = str_replace('[', '', $exts);
+            $exts = str_replace(']', '', $exts);
+            $exts = str_replace('.', '', $exts);
+            $exts = strtolower($exts);
+            $data['digital_allowed_file_extensions'] = $exts;
+        }
 
         $this->db->where('id', 1);
 

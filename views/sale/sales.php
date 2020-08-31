@@ -49,7 +49,7 @@
 										if (!empty($sale)):?>
 											<tr>
 												<td>#<?php echo $sale->order_number; ?></td>
-												<td><?php echo print_price($total, $sale->price_currency); ?></td>
+												<td><?php echo price_formatted($total, $sale->price_currency); ?></td>
 												<td>
 													<?php if ($sale->payment_status == 'payment_received'):
 														echo trans("payment_received");
@@ -76,7 +76,7 @@
 												</td>
 												<td><?php echo date("Y-m-d / h:i", strtotime($sale->created_at)); ?></td>
 												<td>
-													<a href="<?php echo lang_base_url(); ?>sale/<?php echo $sale->order_number; ?>" class="btn btn-sm btn-table-info"><?php echo trans("details"); ?></a>
+													<a href="<?php echo generate_url("sale"); ?>/<?php echo $sale->order_number; ?>" class="btn btn-sm btn-table-info"><?php echo trans("details"); ?></a>
 												</td>
 											</tr>
 										<?php endif;

@@ -14,6 +14,7 @@ class Order_model extends CI_Model
                 'buyer_id' => 0,
                 'buyer_type' => 'guest',
                 'price_subtotal' => $cart_total->subtotal,
+                'price_vat' => $cart_total->vat,
                 'price_shipping' => $cart_total->shipping_cost,
                 'price_total' => $cart_total->total,
                 'price_currency' => $cart_total->currency,
@@ -29,9 +30,9 @@ class Order_model extends CI_Model
                 $data['status'] = 1;
             }
 
-            if (auth_check()) {
+            if ($this->auth_check) {
                 $data['buyer_type'] = 'registered';
-                $data['buyer_id'] = user()->id;
+                $data['buyer_id'] = $this->auth_user->id;
             }
             if ($this->db->insert('orders', $data)) {
                 $order_id = $this->db->insert_id();
@@ -96,9 +97,9 @@ class Order_model extends CI_Model
                 'created_at' => date('Y-m-d H:i:s'),
             ];
 
-            if (auth_check()) {
+            if ($this->auth_check) {
                 $data['buyer_type'] = 'registered';
-                $data['buyer_id'] = user()->id;
+                $data['buyer_id'] = $this->auth_user->id;
             }
             if ($this->db->insert('orders', $data)) {
                 $order_id = $this->db->insert_id();
@@ -189,6 +190,7 @@ class Order_model extends CI_Model
         if (!empty($cart_items)) {
             foreach ($cart_items as $cart_item) {
                 $product = get_available_product($cart_item->product_id);
+                $variation_option_ids = @serialize($cart_item->options_array);
                 if (!empty($product)) {
                     $data = [
                         'order_id' => $order_id,
@@ -202,8 +204,11 @@ class Order_model extends CI_Model
                         'product_unit_price' => $cart_item->unit_price,
                         'product_quantity' => $cart_item->quantity,
                         'product_currency' => $cart_item->currency,
+                        'product_vat_rate' => $product->vat_rate,
+                        'product_vat' => $cart_item->product_vat,
                         'product_shipping_cost' => $cart_item->shipping_cost,
                         'product_total_price' => $cart_item->total_price,
+                        'variation_option_ids' => $variation_option_ids,
                         'commission_rate' => $this->general_settings->commission_rate,
                         'order_status' => $order_status,
                         'is_approved' => 0,
@@ -212,8 +217,8 @@ class Order_model extends CI_Model
                         'updated_at' => date('Y-m-d H:i:s'),
                         'created_at' => date('Y-m-d H:i:s'),
                     ];
-                    if (auth_check()) {
-                        $data['buyer_id'] = user()->id;
+                    if ($this->auth_check) {
+                        $data['buyer_id'] = $this->auth_user->id;
                         $data['buyer_type'] = 'registered';
                     }
                     //approve if digital product
@@ -225,7 +230,7 @@ class Order_model extends CI_Model
                             $data['order_status'] = $order_status;
                         }
                     }
-                    $data['product_total_price'] = $cart_item->total_price + $cart_item->shipping_cost;
+                    $data['product_total_price'] = $cart_item->total_price + $cart_item->product_vat + $cart_item->shipping_cost;
 
                     $this->db->insert('order_products', $data);
                 }
@@ -239,7 +244,7 @@ class Order_model extends CI_Model
         $order_id = clean_number($order_id);
         $cart_items = $this->cart_model->get_sess_cart_items();
         $order = $this->get_order($order_id);
-        if (!empty($cart_items) && auth_check() && !empty($order)) {
+        if (!empty($cart_items) && $this->auth_check && !empty($order)) {
             foreach ($cart_items as $cart_item) {
                 $product = get_available_product($cart_item->product_id);
                 if (!empty($product) && 'digital' == $product->product_type) {
@@ -337,15 +342,18 @@ class Order_model extends CI_Model
             'ip_address' => 0,
             'created_at' => date('Y-m-d H:i:s'),
         ];
-        if (auth_check()) {
-            $data['user_id'] = user()->id;
+        if ($this->auth_check) {
+            $data['user_id'] = $this->auth_user->id;
             $data['user_type'] = 'registered';
         }
         $ip = $this->input->ip_address();
         if (!empty($ip)) {
             $data['ip_address'] = $ip;
         }
-        $this->db->insert('transactions', $data);
+        if ($this->db->insert('transactions', $data)) {
+            //add invoice
+            $this->add_invoice($order_id);
+        }
     }
 
     //update order payment as received
@@ -358,19 +366,22 @@ class Order_model extends CI_Model
                 'updated_at' => date('Y-m-d H:i:s'),
             ];
             $this->db->where('id', $order_id);
-            $this->db->update('orders', $data_order);
-
-            //update order products payment status
-            $order_products = $this->get_order_products($order_id);
-            if (!empty($order_products)) {
-                foreach ($order_products as $order_product) {
-                    $data = [
-                        'order_status' => 'payment_received',
-                        'updated_at' => date('Y-m-d H:i:s'),
-                    ];
-                    $this->db->where('id', $order_product->id);
-                    $this->db->update('order_products', $data);
+            if ($this->db->update('orders', $data_order)) {
+                //update order products payment status
+                $order_products = $this->get_order_products($order_id);
+                if (!empty($order_products)) {
+                    foreach ($order_products as $order_product) {
+                        $data = [
+                            'order_status' => 'payment_received',
+                            'updated_at' => date('Y-m-d H:i:s'),
+                        ];
+                        $this->db->where('id', $order_product->id);
+                        $this->db->update('order_products', $data);
+                    }
                 }
+
+                //add invoice
+                $this->add_invoice($order_id);
             }
         }
     }
@@ -468,8 +479,7 @@ class Order_model extends CI_Model
     //get order by order number
     public function get_order_by_order_number($order_number)
     {
-        $order_number = clean_number($order_number);
-        $this->db->where('order_number', $order_number);
+        $this->db->where('order_number', clean_number($order_number));
         $query = $this->db->get('orders');
 
         return $query->row();
@@ -481,7 +491,7 @@ class Order_model extends CI_Model
         $order_product_id = clean_number($order_product_id);
         $order_product = $this->get_order_product($order_product_id);
         if (!empty($order_product)) {
-            if ($order_product->seller_id == user()->id) {
+            if ($order_product->seller_id == $this->auth_user->id) {
                 $data = [
                     'order_status' => $this->input->post('order_status', true),
                     'is_approved' => 0,
@@ -518,7 +528,7 @@ class Order_model extends CI_Model
         $order_product_id = clean_number($order_product_id);
         $order_product = $this->get_order_product($order_product_id);
         if (!empty($order_product)) {
-            if ($order_product->seller_id == user()->id) {
+            if ($order_product->seller_id == $this->auth_user->id) {
                 $data = [
                     'shipping_tracking_number' => $this->input->post('shipping_tracking_number', true),
                     'shipping_tracking_url' => $this->input->post('shipping_tracking_url', true),
@@ -547,8 +557,8 @@ class Order_model extends CI_Model
             'ip_address' => 0,
             'created_at' => date('Y-m-d H:i:s'),
         ];
-        if (auth_check()) {
-            $data['user_id'] = user()->id;
+        if ($this->auth_check) {
+            $data['user_id'] = $this->auth_user->id;
             $data['user_type'] = 'registered';
         }
         $ip = $this->input->ip_address();
@@ -643,7 +653,7 @@ class Order_model extends CI_Model
         $result = false;
         if (!empty($order_products)) {
             foreach ($order_products as $product) {
-                if ($product->seller_id == user()->id) {
+                if ($product->seller_id == $this->auth_user->id) {
                     $result = true;
                 }
             }
@@ -660,7 +670,7 @@ class Order_model extends CI_Model
         $total = 0;
         if (!empty($order_products)) {
             foreach ($order_products as $product) {
-                if ($product->seller_id == user()->id) {
+                if ($product->seller_id == $this->auth_user->id) {
                     $total += $product->product_total_price;
                 }
             }
@@ -676,7 +686,7 @@ class Order_model extends CI_Model
         $order_product = $this->get_order_product($order_product_id);
 
         if (!empty($order_product)) {
-            if (user()->id == $order_product->buyer_id) {
+            if ($this->auth_user->id == $order_product->buyer_id) {
                 $data = [
                     'is_approved' => 1,
                     'order_status' => 'completed',
@@ -691,27 +701,52 @@ class Order_model extends CI_Model
         return false;
     }
 
-    //decrease product quantity after sale
-    public function decrease_product_quantity_after_sale($order)
+    //decrease product stock after sale
+    public function decrease_product_stock_after_sale($order_id)
     {
-        $order_products = $this->get_order_products($order->id);
+        $order_products = $this->get_order_products($order_id);
         if (!empty($order_products)) {
             foreach ($order_products as $order_product) {
-                $product = get_product($order_product->product_id);
-                if (!empty($product) && 'physical' == $product->product_type) {
-                    if ($product->quantity > 1) {
-                        $data = [
-                            'quantity' => $product->quantity - $order_product->product_quantity,
-                        ];
-                        if ($data['quantity'] < 1) {
-                            $data['is_sold'] = 1;
+                $option_ids = @unserialize($order_product->variation_option_ids);
+                if (!empty($option_ids)) {
+                    foreach ($option_ids as $option_id) {
+                        $option = $this->variation_model->get_variation_option($option_id);
+                        if (!empty($option)) {
+                            if (1 == $option->is_default) {
+                                $product = $this->product_model->get_product_by_id($order_product->product_id);
+                                if (!empty($product)) {
+                                    $stock = $product->stock - $order_product->product_quantity;
+                                    if ($stock < 0) {
+                                        $stock = 0;
+                                    }
+                                    $data = [
+                                        'stock' => $stock,
+                                    ];
+                                    $this->db->where('id', $product->id);
+                                    $this->db->update('products', $data);
+                                }
+                            } else {
+                                $stock = $option->stock - $order_product->product_quantity;
+                                if ($stock < 0) {
+                                    $stock = 0;
+                                }
+                                $data = [
+                                    'stock' => $stock,
+                                ];
+                                $this->db->where('id', $option->id);
+                                $this->db->update('variation_options', $data);
+                            }
                         }
-                        $this->db->where('id', $product->id);
-                        $this->db->update('products', $data);
-                    } elseif (1 == $product->quantity) {
+                    }
+                } else {
+                    $product = $this->product_model->get_product_by_id($order_product->product_id);
+                    if (!empty($product)) {
+                        $stock = $product->stock - $order_product->product_quantity;
+                        if ($stock < 0) {
+                            $stock = 0;
+                        }
                         $data = [
-                            'quantity' => 0,
-                            'is_sold' => 1,
+                            'stock' => $stock,
                         ];
                         $this->db->where('id', $product->id);
                         $this->db->update('products', $data);
@@ -719,5 +754,63 @@ class Order_model extends CI_Model
                 }
             }
         }
+    }
+
+    //add invoice
+    public function add_invoice($order_id)
+    {
+        $order = $this->get_order($order_id);
+        if (!empty($order)) {
+            $invoice = $this->get_invoice_by_order_number($order->order_number);
+            if (empty($invoice)) {
+                $client = get_user($order->buyer_id);
+                if (!empty($client)) {
+                    $invoice_items = [];
+                    $order_products = $this->order_model->get_order_products($order_id);
+                    if (!empty($order_products)) {
+                        foreach ($order_products as $order_product) {
+                            $seller = get_user($order_product->seller_id);
+                            $item = [
+                                'id' => $order_product->id,
+                                'seller' => (!empty($seller)) ? $seller->username : '',
+                            ];
+                            array_push($invoice_items, $item);
+                        }
+                    }
+                    $data = [
+                        'order_id' => $order->id,
+                        'order_number' => $order->order_number,
+                        'client_username' => $client->username,
+                        'client_first_name' => $client->first_name,
+                        'client_last_name' => $client->last_name,
+                        'client_address' => get_location($client),
+                        'invoice_items' => @serialize($invoice_items),
+                        'created_at' => date('Y-m-d H:i:s'),
+                    ];
+
+                    return $this->db->insert('invoices', $data);
+                }
+            }
+        }
+
+        return false;
+    }
+
+    //get invoice
+    public function get_invoice($id)
+    {
+        $this->db->where('id', clean_number($id));
+        $query = $this->db->get('invoices');
+
+        return $query->row();
+    }
+
+    //get invoice by order number
+    public function get_invoice_by_order_number($order_number)
+    {
+        $this->db->where('order_number', clean_number($order_number));
+        $query = $this->db->get('invoices');
+
+        return $query->row();
     }
 }

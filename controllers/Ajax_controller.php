@@ -8,6 +8,7 @@ class Ajax_controller extends Home_Core_Controller
     {
         parent::__construct();
         $this->review_limit = 6;
+        $this->comment_limit = 6;
     }
 
     /*
@@ -55,6 +56,69 @@ class Ajax_controller extends Home_Core_Controller
         echo json_encode($data);
     }
 
+    //get countire
+    public function get_countries()
+    {
+        $countries = $this->location_model->get_active_countries();
+        $content = '<option value="">' . trans('all') . '</option>';
+        if (!empty($countries)) {
+            foreach ($countries as $country) {
+                if (!empty($this->default_location_id) && $this->default_location_id == $country->id) {
+                    $content .= '<option value="' . $country->id . '" selected>' . $country->name . '</option>';
+                } else {
+                    $content .= '<option value="' . $country->id . '">' . $country->name . '</option>';
+                }
+            }
+        }
+        $data = [
+            'result' => 1,
+            'content' => $content,
+        ];
+        echo json_encode($data);
+    }
+
+    //get states
+    public function get_states()
+    {
+        $country_id = $this->input->post('country_id', true);
+        $states = $this->location_model->get_states_by_country($country_id);
+        $status = 0;
+        $content = '';
+        if (!empty($states)) {
+            $status = 1;
+            $content = '<option value="">' . trans('state') . '</option>';
+            foreach ($states as $item) {
+                $content .= '<option value="' . $item->id . '">' . html_escape($item->name) . '</option>';
+            }
+        }
+        $data = [
+            'result' => $status,
+            'content' => $content,
+        ];
+        echo json_encode($data);
+    }
+
+    //get cities
+    public function get_cities()
+    {
+        $state_id = $this->input->post('state_id', true);
+        $cities = $this->location_model->get_cities_by_state($state_id);
+        $status = 0;
+        $content = '';
+        if (!empty($cities)) {
+            $status = 1;
+            $content = '<option value="">' . trans('city') . '</option>';
+            foreach ($cities as $item) {
+                $content .= '<option value="' . $item->id . '">' . html_escape($item->name) . '</option>';
+            }
+        }
+        $data = [
+            'result' => $status,
+            'content' => $content,
+        ];
+        echo json_encode($data);
+    }
+
     /*
     *------------------------------------------------------------------------------------------
     * AJAX SEARCH
@@ -81,10 +145,10 @@ class Ajax_controller extends Home_Core_Controller
                 $members = $this->profile_model->search_members_limited($input_value);
                 if (!empty($members)) {
                     foreach ($members as $member) {
-                        $response .= '<li><a href="' . $lang_base_url . 'profile' . '/' . $member->slug . '">' . $member->username . '</a></li>';
+                        $response .= '<li><a href="' . $lang_base_url . get_route('profile') . '/' . $member->slug . '">' . $member->username . '</a></li>';
                     }
                 } else {
-                    $response .= '<li><a href="' . $lang_base_url . 'members?search=' . $input_value . '">' . $input_value . '</a></li>';
+                    $response .= '<li><a href="' . $lang_base_url . get_route('members') . '?search=' . $input_value . '">' . $input_value . '</a></li>';
                 }
                 $response .= '</ul>';
                 $data['response'] = $response;
@@ -97,7 +161,7 @@ class Ajax_controller extends Home_Core_Controller
                         $response .= '<li><a href="' . $lang_base_url . $product->slug . '">' . $product->title . '</a></li>';
                     }
                 } else {
-                    $response .= '<li><a href="' . $lang_base_url . 'products?search=' . $input_value . '">' . $input_value . '</a></li>';
+                    $response .= '<li><a href="' . $lang_base_url . get_route('products') . '?search=' . $input_value . '">' . $input_value . '</a></li>';
                 }
                 $response .= '</ul>';
                 $data['response'] = $response;
@@ -115,11 +179,11 @@ class Ajax_controller extends Home_Core_Controller
     //add user review
     public function add_user_review()
     {
-        if (1 != $this->general_settings->user_reviews) {
+        if (1 != $this->general_settings->reviews) {
             exit();
         }
         $seller_id = $this->input->post('seller_id', true);
-        $review = $this->user_review_model->get_review_by_user($seller_id, user()->id);
+        $review = $this->user_review_model->get_review_by_user($seller_id, $this->auth_user->id);
         if (!empty($review)) {
             echo 'voted_error';
         } else {
@@ -146,6 +210,268 @@ class Ajax_controller extends Home_Core_Controller
     {
         $id = $this->input->post('review_id', true);
         $this->user_review_model->delete_review($id);
+    }
+
+    /*
+    *------------------------------------------------------------------------------------------
+    * WISHLIST FUNCTIONS
+    *------------------------------------------------------------------------------------------
+    */
+
+    /*
+     *------------------------------------------------------------------------------------------
+     * VARIATION FUNCTIONS
+     *------------------------------------------------------------------------------------------
+     */
+
+    //select variation option
+    public function select_product_variation_option()
+    {
+        $variation_id = $this->input->post('variation_id', true);
+        $selected_option_id = $this->input->post('selected_option_id', true);
+        $variation = $this->variation_model->get_variation($variation_id);
+        $option = $this->variation_model->get_variation_option($selected_option_id);
+
+        $data = [
+            'status' => 0,
+            'html_content_slider' => '',
+            'html_content_price' => '',
+            'html_content_stock' => '',
+            'stock_status' => 1,
+        ];
+        if (!empty($variation) && !empty($option)) {
+            $product = $this->product_model->get_product_by_id($variation->product_id);
+
+            //slider content response
+            if ($variation->show_images_on_slider) {
+                $product_images = $this->variation_model->get_variation_option_images($selected_option_id);
+                if (empty($product_images)) {
+                    $product_images = $this->file_model->get_product_images($variation->product_id);
+                }
+                $vars = [
+                    'product' => $product,
+                    'product_images' => $product_images,
+                ];
+                $data['html_content_slider'] = $this->load->view('product/details/_preview', $vars, true);
+            }
+
+            //price content response
+            if (1 == $variation->use_different_price) {
+                $price = $product->price;
+                $discount_rate = $product->discount_rate;
+                if (isset($option->price)) {
+                    $price = $option->price;
+                }
+                if (isset($option->discount_rate)) {
+                    $discount_rate = $option->discount_rate;
+                }
+                if (empty($price)) {
+                    $price = $product->price;
+                    $discount_rate = $product->discount_rate;
+                }
+                $vars = [
+                    'product' => $product,
+                    'price' => $price,
+                    'discount_rate' => $discount_rate,
+                ];
+                $data['html_content_price'] = $this->load->view('product/details/_price', $vars, true);
+            }
+
+            //stock content response
+            $stock = $product->stock;
+            if (1 != $option->is_default) {
+                $stock = $option->stock;
+            }
+            if (0 == $stock) {
+                $data['html_content_stock'] = '<span class="text-danger">' . trans('out_of_stock') . '</span>';
+                $data['stock_status'] = 0;
+            } else {
+                $data['html_content_stock'] = '<span class="text-success">' . trans('in_stock') . '</span>';
+            }
+            $data['status'] = 1;
+        }
+        echo json_encode($data);
+    }
+
+    //get sub variation options
+    public function get_sub_variation_options()
+    {
+        $variation_id = $this->input->post('variation_id', true);
+        $selected_option_id = $this->input->post('selected_option_id', true);
+        $subvariation = $this->variation_model->get_product_sub_variation($variation_id);
+        $content = null;
+        $data = [
+            'status' => 0,
+            'subvariation_id' => '',
+            'html_content' => '',
+        ];
+        if (!empty($subvariation)) {
+            $options = $this->variation_model->get_variation_sub_options($selected_option_id);
+            if (!empty($options)) {
+                $content .= '<option value="">' . trans('select') . '</option>';
+                foreach ($options as $option) {
+                    $option_name = get_variation_option_name($option->option_names, $this->selected_lang->id);
+                    $content .= '<option value="' . $option->id . '">' . html_escape($option_name) . '</option>';
+                }
+            }
+            $data['status'] = 1;
+            $data['subvariation_id'] = $subvariation->id;
+            $data['html_content'] = $content;
+        }
+
+        echo json_encode($data);
+    }
+
+    //add or remove wishlist
+    public function add_remove_wishlist()
+    {
+        $product_id = $this->input->post('product_id', true);
+        $this->product_model->add_remove_wishlist($product_id);
+    }
+
+    /*
+    *------------------------------------------------------------------------------------------
+    * PRODUCT COMMENTS FUNCTIONS
+    *------------------------------------------------------------------------------------------
+    */
+    //add comment
+    public function add_comment()
+    {
+        post_method();
+        if (1 != $this->general_settings->product_comments) {
+            exit();
+        }
+        $limit = $this->input->post('limit', true);
+        $product_id = $this->input->post('product_id', true);
+
+        if ($this->auth_check) {
+            $this->comment_model->add_comment();
+        } else {
+            if ($this->recaptcha_verify_request()) {
+                $this->comment_model->add_comment();
+            }
+        }
+
+        if (1 == $this->general_settings->comment_approval_system) {
+            $data = [
+                'type' => 'message',
+                'html_content' => "<p class='comment-success-message'><i class='icon-check'></i>&nbsp;&nbsp;" . trans('msg_comment_sent_successfully') . '</p>',
+            ];
+            echo json_encode($data);
+        } else {
+            $this->generate_comment_html_content($product_id, $limit);
+        }
+    }
+
+    //load more comment
+    public function load_more_comment()
+    {
+        post_method();
+        $product_id = $this->input->post('product_id', true);
+        $limit = $this->input->post('limit', true);
+        $new_limit = $limit + $this->comment_limit;
+
+        $this->generate_comment_html_content($product_id, $new_limit);
+    }
+
+    //delete comment
+    public function delete_comment()
+    {
+        post_method();
+        $id = $this->input->post('id', true);
+        $product_id = $this->input->post('product_id', true);
+        $limit = $this->input->post('limit', true);
+
+        $comment = $this->comment_model->get_comment($id);
+        if ($this->auth_check && !empty($comment)) {
+            if ('admin' == $this->auth_user->role || $this->auth_user->id == $comment->user_id) {
+                $this->comment_model->delete_comment($id);
+            }
+        }
+
+        $this->generate_comment_html_content($product_id, $limit);
+    }
+
+    //load subcomment box
+    public function load_subcomment_box()
+    {
+        $comment_id = $this->input->post('comment_id', true);
+        $limit = $this->input->post('limit', true);
+        $vars = [
+            'parent_comment' => $this->comment_model->get_comment($comment_id),
+            'comment_limit' => $limit,
+        ];
+        $html_content = $this->load->view('product/details/_add_subcomment', $vars, true);
+        $data = [
+            'type' => 'form',
+            'html_content' => $html_content,
+        ];
+        echo json_encode($data);
+    }
+
+    /*
+    *------------------------------------------------------------------------------------------
+    * BLOG COMMENTS FUNCTIONS
+    *------------------------------------------------------------------------------------------
+    */
+
+    /**
+     * Add Blog Comment.
+     */
+    public function add_blog_comment()
+    {
+        if (1 != $this->general_settings->blog_comments) {
+            exit();
+        }
+        $post_id = $this->input->post('post_id', true);
+        $limit = $this->input->post('limit', true);
+        if ($this->auth_check) {
+            $this->comment_model->add_blog_comment();
+        } else {
+            if ($this->recaptcha_verify_request()) {
+                $this->comment_model->add_blog_comment();
+            }
+        }
+
+        if (1 == $this->general_settings->comment_approval_system) {
+            $data = [
+                'type' => 'message',
+                'html_content' => "<p class='comment-success-message'><i class='icon-check'></i>&nbsp;&nbsp;" . trans('msg_comment_sent_successfully') . '</p>',
+            ];
+            echo json_encode($data);
+        } else {
+            $this->generate_comment_blog_html_content($post_id, $limit);
+        }
+    }
+
+    /**
+     * Delete Blog Comment.
+     */
+    public function delete_blog_comment()
+    {
+        $comment_id = $this->input->post('comment_id', true);
+        $post_id = $this->input->post('post_id', true);
+        $limit = $this->input->post('limit', true);
+
+        $comment = $this->comment_model->get_blog_comment($comment_id);
+        if ($this->auth_check && !empty($comment)) {
+            if ('admin' == $this->auth_user->role || $this->auth_user->id == $comment->user_id) {
+                $this->comment_model->delete_blog_comment($comment_id);
+            }
+        }
+        $this->generate_comment_blog_html_content($post_id, $limit);
+    }
+
+    /**
+     * Load More Comments.
+     */
+    public function load_more_blog_comments()
+    {
+        $post_id = $this->input->post('post_id', true);
+        $limit = $this->input->post('limit', true);
+        $new_limit = $limit + $this->comment_limit;
+
+        $this->generate_comment_blog_html_content($post_id, $new_limit);
     }
 
     /*
@@ -254,7 +580,7 @@ class Ajax_controller extends Home_Core_Controller
             if (!empty($product)) {
                 $data = [
                     'subject' => trans('email_text_new_product'),
-                    'product_url' => lang_base_url() . $product->slug,
+                    'product_url' => generate_product_url($product),
                     'to' => $this->general_settings->mail_options_account,
                     'template_path' => 'email/email_new_product',
                 ];
@@ -325,5 +651,39 @@ class Ajax_controller extends Home_Core_Controller
             'email_button_text' => $this->input->post('email_button_text', true),
         ];
         $this->email_model->send_email($data);
+    }
+
+    //generate comment html content
+    private function generate_comment_html_content($product_id, $limit)
+    {
+        $vars = [
+            'product' => $this->product_model->get_product_by_id($product_id),
+            'comment_count' => $this->comment_model->get_product_comment_count($product_id),
+            'comments' => $this->comment_model->get_comments($product_id, $limit),
+            'comment_limit' => $limit,
+        ];
+        $html_content = $this->load->view('product/details/_comments', $vars, true);
+        $data = [
+            'type' => 'comments',
+            'html_content' => $html_content,
+        ];
+        echo json_encode($data);
+    }
+
+    //generate blog comment html content
+    private function generate_comment_blog_html_content($post_id, $limit)
+    {
+        $vars = [
+            'comments' => $this->comment_model->get_blog_comments($post_id, $limit),
+            'comment_post_id' => $post_id,
+            'comments_count' => $this->comment_model->get_blog_comment_count($post_id),
+            'comment_limit' => $limit,
+        ];
+        $html_content = $this->load->view('blog/_blog_comments', $vars, true);
+        $data = [
+            'type' => 'comments',
+            'html_content' => $html_content,
+        ];
+        echo json_encode($data);
     }
 }

@@ -10,6 +10,12 @@ use Gumlet\ImageResizeException;
 
 class Upload_model extends CI_Model
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->img_quality = 85;
+    }
+
     //upload temp image
     public function upload_temp_image($file_name)
     {
@@ -38,7 +44,7 @@ class Upload_model extends CI_Model
     {
         try {
             $image = new ImageResize($path);
-            $image->quality_jpg = 85;
+            $image->quality_jpg = $this->img_quality;
             $image->resizeToHeight(500);
             $new_name = 'img_x500_' . generate_unique_id() . '.jpg';
             $new_path = 'uploads/' . $folder . '/' . $new_name;
@@ -59,7 +65,7 @@ class Upload_model extends CI_Model
     {
         try {
             $image = new ImageResize($path);
-            $image->quality_jpg = 85;
+            $image->quality_jpg = $this->img_quality;
             $image->resizeToWidth(1920);
             $new_name = 'img_1920x_' . generate_unique_id() . '.jpg';
             $new_path = 'uploads/' . $folder . '/' . $new_name;
@@ -80,7 +86,7 @@ class Upload_model extends CI_Model
     {
         try {
             $image = new ImageResize($path);
-            $image->quality_jpg = 85;
+            $image->quality_jpg = $this->img_quality;
             $image->resizeToHeight(300);
             $new_name = 'img_x300_' . generate_unique_id() . '.jpg';
             $new_path = 'uploads/' . $folder . '/' . $new_name;
@@ -96,13 +102,30 @@ class Upload_model extends CI_Model
         }
     }
 
+    //product variation small image upload
+    public function product_variation_small_image_upload($path, $folder)
+    {
+        try {
+            $image = new ImageResize($path);
+            $image->quality_jpg = $this->img_quality;
+            $image->crop(200, 200, true);
+            $new_name = 'img_x200_' . generate_unique_id() . '.jpg';
+            $new_path = 'uploads/' . $folder . '/' . $new_name;
+            $image->save(FCPATH . $new_path, IMAGETYPE_JPEG);
+
+            return $new_name;
+        } catch (ImageResizeException $e) {
+            return;
+        }
+    }
+
     //file manager image upload
     public function file_manager_image_upload($path)
     {
         try {
             $image = new ImageResize($path);
-            $image->quality_jpg = 85;
-            $image->resizeToWidth(750);
+            $image->quality_jpg = $this->img_quality;
+            $image->resizeToWidth(1280);
             $new_name = 'img_' . generate_unique_id() . '.jpg';
             $new_path = 'uploads/images-file-manager/' . $new_name;
             $image->save(FCPATH . $new_path, IMAGETYPE_JPEG);
@@ -122,7 +145,7 @@ class Upload_model extends CI_Model
     {
         try {
             $image = new ImageResize($path);
-            $image->quality_jpg = 85;
+            $image->quality_jpg = $this->img_quality;
             $image->resizeToWidth(880);
             $new_path = 'uploads/blog/img_' . generate_unique_id() . '.jpg';
             $image->save(FCPATH . $new_path, IMAGETYPE_JPEG);
@@ -142,7 +165,7 @@ class Upload_model extends CI_Model
     {
         try {
             $image = new ImageResize($path);
-            $image->quality_jpg = 85;
+            $image->quality_jpg = $this->img_quality;
             $image->crop(500, 332, true);
             $new_path = 'uploads/blog/img_thumb_' . generate_unique_id() . '.jpg';
             $image->save(FCPATH . $new_path, IMAGETYPE_JPEG);
@@ -158,13 +181,13 @@ class Upload_model extends CI_Model
     }
 
     //category image upload
-    public function category_image_upload($path, $width, $height)
+    public function category_image_upload($path)
     {
         try {
             $image = new ImageResize($path);
-            $image->quality_jpg = 85;
-            $image->crop($width, $height, true);
-            $new_path = 'uploads/category/category_' . $width . '-' . $height . '_' . generate_unique_id() . '.jpg';
+            $image->quality_jpg = $this->img_quality;
+            $image->crop(420, 420, true);
+            $new_path = 'uploads/category/category_' . generate_unique_id() . '.jpg';
             $image->save(FCPATH . $new_path, IMAGETYPE_JPEG);
 
             return $new_path;
@@ -178,24 +201,8 @@ class Upload_model extends CI_Model
     {
         try {
             $image = new ImageResize($path);
-            $image->quality_jpg = 85;
+            $image->quality_jpg = $this->img_quality;
             $image->crop(1170, 356, true);
-            $new_path = 'uploads/slider/slider_' . generate_unique_id() . '.jpg';
-            $image->save(FCPATH . $new_path, IMAGETYPE_JPEG);
-
-            return $new_path;
-        } catch (ImageResizeException $e) {
-            return;
-        }
-    }
-
-    //slider small image upload
-    public function slider_small_image_upload($path)
-    {
-        try {
-            $image = new ImageResize($path);
-            $image->quality_jpg = 85;
-            $image->crop(768, 380, true);
             $new_path = 'uploads/slider/slider_' . generate_unique_id() . '.jpg';
             $image->save(FCPATH . $new_path, IMAGETYPE_JPEG);
 
@@ -210,7 +217,7 @@ class Upload_model extends CI_Model
     {
         try {
             $image = new ImageResize($path);
-            $image->quality_jpg = 85;
+            $image->quality_jpg = $this->img_quality;
             $image->crop(240, 240, true);
             $new_path = 'uploads/profile/avatar_' . generate_unique_id() . '.jpg';
             $image->save(FCPATH . $new_path, IMAGETYPE_JPEG);
@@ -269,6 +276,22 @@ class Upload_model extends CI_Model
         }
     }
 
+    //flag upload
+    public function flag_upload($path)
+    {
+        try {
+            $image = new ImageResize($path);
+            $image->quality_jpg = $this->img_quality;
+            $image->resizeToHeight(100);
+            $new_path = 'uploads/blocks/flag_' . generate_unique_id() . '.jpg';
+            $image->save(FCPATH . $new_path, IMAGETYPE_JPEG);
+
+            return $new_path;
+        } catch (ImageResizeException $e) {
+            return;
+        }
+    }
+
     //receipt upload
     public function receipt_upload($file_name)
     {
@@ -320,10 +343,6 @@ class Upload_model extends CI_Model
     //digital file upload
     public function digital_file_upload($input_name, $file_name)
     {
-        $allowed_types = ['zip', 'ZIP'];
-        if (!$this->check_file_mime_type($input_name, $allowed_types)) {
-            return false;
-        }
         $config['upload_path'] = './uploads/digital-files/';
         $config['allowed_types'] = '*';
         $config['file_name'] = $file_name;

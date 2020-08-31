@@ -29,7 +29,7 @@
                         <!-- include message block -->
                         <?php $this->load->view('partials/_messages'); ?>
 
-                        <?php echo form_open_multipart("profile_controller/update_profile_post", ['id' => 'form_validate']); ?>
+                        <?php echo form_open_multipart("update-profile-post", ['id' => 'form_validate']); ?>
                         <div class="form-group">
                             <p>
                                 <img src="<?php echo get_user_avatar($user); ?>" alt="<?php echo $user->username; ?>" class="form-avatar">

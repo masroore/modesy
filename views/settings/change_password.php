@@ -29,7 +29,7 @@
                         <!-- include message block -->
                         <?php $this->load->view('partials/_messages'); ?>
 
-                        <?php echo form_open_multipart("profile_controller/change_password_post", ['id' => 'form_validate']); ?>
+                        <?php echo form_open_multipart("change-password-post", ['id' => 'form_validate']); ?>
                         <?php if (!empty($user->password)): ?>
                             <div class="form-group">
                                 <label class="control-label"><?php echo trans("old_password"); ?></label>

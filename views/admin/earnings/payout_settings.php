@@ -26,19 +26,19 @@
                         </div>
                         <div class="col-md-4 col-sm-4 col-xs-12 col-option">
                             <input type="radio" name="payout_paypal_enabled" value="1" id="paypal_enabled_1"
-                                   class="square-purple" <?php echo ($payment_settings->payout_paypal_enabled == 1) ? 'checked' : ''; ?>>
+                                   class="square-purple" <?php echo ($this->payment_settings->payout_paypal_enabled == 1) ? 'checked' : ''; ?>>
                             <label for="paypal_enabled_1" class="option-label"><?php echo trans('enable'); ?></label>
                         </div>
                         <div class="col-md-4 col-sm-4 col-xs-12 col-option">
                             <input type="radio" name="payout_paypal_enabled" value="0" id="paypal_enabled_2"
-                                   class="square-purple" <?php echo ($payment_settings->payout_paypal_enabled != 1) ? 'checked' : ''; ?>>
+                                   class="square-purple" <?php echo ($this->payment_settings->payout_paypal_enabled != 1) ? 'checked' : ''; ?>>
                             <label for="paypal_enabled_2" class="option-label"><?php echo trans('disable'); ?></label>
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="control-label"><?php echo trans('min_poyout_amount'); ?> (<?php echo get_currency($payment_settings->default_product_currency); ?>)</label>
-                    <input type="text" name="min_payout_paypal" class="form-control form-input price-input" value="<?php echo price_format_input($payment_settings->min_payout_paypal); ?>" onpaste="return false;" maxlength="32" required>
+                    <label class="control-label"><?php echo trans('min_poyout_amount'); ?> (<?php echo get_currency($this->payment_settings->default_product_currency); ?>)</label>
+                    <input type="text" name="min_payout_paypal" class="form-control form-input price-input" value="<?php echo get_price($this->payment_settings->min_payout_paypal, 'input'); ?>" onpaste="return false;" maxlength="32" required>
                 </div>
             </div>
             <!-- /.box-body -->
@@ -71,19 +71,19 @@
                         </div>
                         <div class="col-md-4 col-sm-4 col-xs-12 col-option">
                             <input type="radio" name="payout_iban_enabled" value="1" id="iban_enabled_1"
-                                   class="square-purple" <?php echo ($payment_settings->payout_iban_enabled == 1) ? 'checked' : ''; ?>>
+                                   class="square-purple" <?php echo ($this->payment_settings->payout_iban_enabled == 1) ? 'checked' : ''; ?>>
                             <label for="iban_enabled_1" class="option-label"><?php echo trans('enable'); ?></label>
                         </div>
                         <div class="col-md-4 col-sm-4 col-xs-12 col-option">
                             <input type="radio" name="payout_iban_enabled" value="0" id="iban_enabled_2"
-                                   class="square-purple" <?php echo ($payment_settings->payout_iban_enabled != 1) ? 'checked' : ''; ?>>
+                                   class="square-purple" <?php echo ($this->payment_settings->payout_iban_enabled != 1) ? 'checked' : ''; ?>>
                             <label for="iban_enabled_2" class="option-label"><?php echo trans('disable'); ?></label>
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="control-label"><?php echo trans('min_poyout_amount'); ?> (<?php echo get_currency($payment_settings->default_product_currency); ?>)</label>
-                    <input type="text" name="min_payout_iban" class="form-control form-input price-input" value="<?php echo price_format_input($payment_settings->min_payout_iban); ?>" onpaste="return false;" maxlength="32" required>
+                    <label class="control-label"><?php echo trans('min_poyout_amount'); ?> (<?php echo get_currency($this->payment_settings->default_product_currency); ?>)</label>
+                    <input type="text" name="min_payout_iban" class="form-control form-input price-input" value="<?php echo get_price($this->payment_settings->min_payout_iban, 'input'); ?>" onpaste="return false;" maxlength="32" required>
                 </div>
             </div>
             <!-- /.box-body -->
@@ -119,19 +119,19 @@
                         </div>
                         <div class="col-md-4 col-sm-4 col-xs-12 col-option">
                             <input type="radio" name="payout_swift_enabled" value="1" id="swift_enabled_1"
-                                   class="square-purple" <?php echo ($payment_settings->payout_swift_enabled == 1) ? 'checked' : ''; ?>>
+                                   class="square-purple" <?php echo ($this->payment_settings->payout_swift_enabled == 1) ? 'checked' : ''; ?>>
                             <label for="swift_enabled_1" class="option-label"><?php echo trans('enable'); ?></label>
                         </div>
                         <div class="col-md-4 col-sm-4 col-xs-12 col-option">
                             <input type="radio" name="payout_swift_enabled" value="0" id="swift_enabled_2"
-                                   class="square-purple" <?php echo ($payment_settings->payout_swift_enabled != 1) ? 'checked' : ''; ?>>
+                                   class="square-purple" <?php echo ($this->payment_settings->payout_swift_enabled != 1) ? 'checked' : ''; ?>>
                             <label for="swift_enabled_2" class="option-label"><?php echo trans('disable'); ?></label>
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="control-label"><?php echo trans('min_poyout_amount'); ?> (<?php echo get_currency($payment_settings->default_product_currency); ?>)</label>
-                    <input type="text" name="min_payout_swift" class="form-control form-input price-input" value="<?php echo price_format_input($payment_settings->min_payout_swift); ?>" onpaste="return false;" maxlength="32" required>
+                    <label class="control-label"><?php echo trans('min_poyout_amount'); ?> (<?php echo get_currency($this->payment_settings->default_product_currency); ?>)</label>
+                    <input type="text" name="min_payout_swift" class="form-control form-input price-input" value="<?php echo get_price($this->payment_settings->min_payout_swift, 'input'); ?>" onpaste="return false;" maxlength="32" required>
                 </div>
             </div>
             <!-- /.box-body -->

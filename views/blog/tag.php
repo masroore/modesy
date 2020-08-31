@@ -9,7 +9,7 @@
                     <nav class="nav-breadcrumb" aria-label="breadcrumb">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="<?php echo lang_base_url(); ?>"><?php echo trans("home"); ?></a></li>
-                            <li class="breadcrumb-item"><a href="<?php echo lang_base_url(); ?>blog"><?php echo trans("blog"); ?></a></li>
+                            <li class="breadcrumb-item"><a href="<?php echo generate_url("blog"); ?>"><?php echo trans("blog"); ?></a></li>
                             <li class="breadcrumb-item active" aria-current="page"><?php echo html_escape($tag->tag_slug); ?></li>
                         </ol>
                     </nav>
@@ -26,7 +26,7 @@
                         <!--print blog posts-->
                         <?php foreach ($posts as $item): ?>
                             <div class="col-xs-12 col-sm-6 col-lg-4">
-                                <?php $this->load->view('blog/_blog_item', ['item' => $item, "class" => "lazyload"]); ?>
+                                <?php $this->load->view('blog/_blog_item', ['item' => $item, 'blog_slider' => false]); ?>
                             </div>
                         <?php endforeach; ?>
                     </div>

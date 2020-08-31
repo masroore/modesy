@@ -4,27 +4,37 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Cart_model extends CI_Model
 {
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     //add to cart
     public function add_to_cart($product)
     {
-        if (!$this->check_item_quantity($product)) {
-            return false;
-        }
         $cart = $this->get_sess_cart_items();
         $quantity = $this->input->post('product_quantity', true);
-        $appended_variations = $this->append_selected_variations($product->id);
+        if ('digital' == $product->product_type) {
+            $quantity = 1;
+        }
+        $appended_variations = $this->get_selected_variations($product->id)->str;
+        $options_array = $this->get_selected_variations($product->id)->options_array;
+        $object = $this->get_product_price_and_stock($product, $options_array, $quantity);
 
         $item = new stdClass();
         $item->cart_item_id = generate_unique_id();
         $item->product_id = $product->id;
         $item->product_type = $product->product_type;
         $item->product_title = $product->title . ' ' . $appended_variations;
+        $item->options_array = $options_array;
         $item->quantity = $quantity;
-        $item->unit_price = $product->price;
-        $item->total_price = $product->price * $quantity;
+        $item->unit_price = $object->price_calculated;
+        $item->total_price = $object->price_calculated * $quantity;
+        $item->discount_rate = $object->discount_rate;
         $item->currency = $product->currency;
+        $item->product_vat = calculate_vat($object->price_calculated, $product->vat_rate);
         $item->shipping_cost = $product->shipping_cost;
-        $item->is_avaible = check_product_available_for_sale($product);
+        $item->is_stock_available = $object->is_stock_available;
         $item->purchase_type = 'product';
         $item->quote_request_id = 0;
         array_push($cart, $item);
@@ -47,12 +57,14 @@ class Cart_model extends CI_Model
                 $item->product_id = $product->id;
                 $item->product_type = $product->product_type;
                 $item->product_title = $quote_request->product_title;
+                $item->options_array = [];
                 $item->quantity = $quote_request->product_quantity;
                 $item->unit_price = $quote_request->price_offered / $quote_request->product_quantity;
                 $item->total_price = $quote_request->price_offered;
                 $item->currency = $quote_request->price_currency;
+                $item->product_vat = 0;
                 $item->shipping_cost = $quote_request->shipping_cost;
-                $item->is_avaible = true;
+                $item->is_stock_available = 1;
                 $item->purchase_type = 'bidding';
                 $item->quote_request_id = $quote_request->id;
                 array_push($cart, $item);
@@ -81,36 +93,52 @@ class Cart_model extends CI_Model
         }
     }
 
-    //append selected variations
-    public function append_selected_variations($product_id)
+    //get selected variations
+    public function get_selected_variations($product_id)
     {
-        $variations = $this->variation_model->get_product_variations_by_lang($product_id, $this->selected_lang->id);
+        $object = new stdClass();
+        $object->str = '';
+        $object->options_array = [];
+
+        $variations = $this->variation_model->get_product_variations($product_id);
         $str = '';
         if (!empty($variations)) {
             foreach ($variations as $variation) {
                 $append_text = '';
-                if (!empty($variation)) {
+                if (!empty($variation) && 1 == $variation->is_visible) {
                     $variation_val = $this->input->post('variation' . $variation->id, true);
                     if (!empty($variation_val)) {
-                        //check multiselect
-                        if (is_array($variation_val)) {
-                            $i = 0;
-                            foreach ($variation_val as $item) {
-                                if (0 == $i) {
-                                    $append_text .= $item;
-                                } else {
-                                    $append_text .= ' - ' . $item;
-                                }
-                                $i++;
-                            }
-                        } else {
+                        if ('text' == $variation->variation_type || 'number' == $variation->variation_type) {
                             $append_text = $variation_val;
+                        } else {
+                            //check multiselect
+                            if (is_array($variation_val)) {
+                                $i = 0;
+                                foreach ($variation_val as $item) {
+                                    $option = $this->variation_model->get_variation_option($item);
+                                    if (!empty($option)) {
+                                        if (0 == $i) {
+                                            $append_text .= get_variation_option_name($option->option_names, $this->selected_lang->id);
+                                        } else {
+                                            $append_text .= ' - ' . get_variation_option_name($option->option_names, $this->selected_lang->id);
+                                        }
+                                        $i++;
+                                        array_push($object->options_array, $option->id);
+                                    }
+                                }
+                            } else {
+                                $option = $this->variation_model->get_variation_option($variation_val);
+                                if (!empty($option)) {
+                                    $append_text .= get_variation_option_name($option->option_names, $this->selected_lang->id);
+                                    array_push($object->options_array, $option->id);
+                                }
+                            }
                         }
 
                         if (empty($str)) {
-                            $str .= '(' . $variation->label . ': ' . $append_text;
+                            $str .= '(' . get_variation_label($variation->label_names, $this->selected_lang->id) . ': ' . $append_text;
                         } else {
-                            $str .= ', ' . $variation->label . ': ' . $append_text;
+                            $str .= ', ' . get_variation_label($variation->label_names, $this->selected_lang->id) . ': ' . $append_text;
                         }
                     }
                 }
@@ -119,35 +147,89 @@ class Cart_model extends CI_Model
                 $str = $str . ')';
             }
         }
+        $object->str = $str;
 
-        return $str;
+        return $object;
     }
 
-    //clear cart
-    public function clear_cart()
+    //get product price and stock
+    public function get_product_price_and_stock($product, $options_array, $quantity)
     {
-        $this->unset_sess_cart_items();
-        $this->unset_sess_cart_payment_method();
-        $this->unset_sess_cart_shipping_address();
+        $object = new stdClass();
+        $object->price = 0;
+        $object->discount_rate = 0;
+        $object->price_calculated = 0;
+        $object->is_stock_available = 0;
+
+        if (!empty($product)) {
+            $stock = $product->stock;
+            $object->price = $product->price;
+            $object->discount_rate = $product->discount_rate;
+            if (!empty($options_array)) {
+                foreach ($options_array as $option_id) {
+                    $option = $this->variation_model->get_variation_option($option_id);
+                    if (!empty($option)) {
+                        $variation = $this->variation_model->get_variation($option->variation_id);
+                        if (1 == $variation->use_different_price) {
+                            if (isset($option->price)) {
+                                $object->price = $option->price;
+                            }
+                            if (isset($option->discount_rate)) {
+                                $object->discount_rate = $option->discount_rate;
+                            }
+                        }
+                        if (1 != $option->is_default) {
+                            $stock = $option->stock;
+                        }
+                    }
+                }
+            }
+
+            if (empty($object->price)) {
+                $object->price = $product->price;
+                $object->discount_rate = $product->discount_rate;
+            }
+            $object->price_calculated = calculate_product_price($object->price, $object->discount_rate);
+
+            if ($stock >= $quantity) {
+                $object->is_stock_available = 1;
+            }
+        }
+
+        return $object;
+    }
+
+    //get product shipping cost
+    public function get_product_shipping_cost($cart_items, $product, $quantity)
+    {
+        $array_shipping_cost_ids = [];
+        if (!empty($cart_items)) {
+            foreach ($cart_items as $item) {
+                if (in_array($item->product_id, $array_shipping_cost_ids)) {
+                    return $product->shipping_cost_additional * $quantity;
+                }
+                array_push($array_shipping_cost_ids, $item->product_id);
+                if ($quantity > 1) {
+                    return $product->shipping_cost + ($product->shipping_cost_additional * ($quantity - 1));
+                }
+
+                return $product->shipping_cost * $quantity;
+            }
+        }
     }
 
     //update cart product quantity
     public function update_cart_product_quantity($product_id, $cart_item_id, $quantity)
     {
-        $product = $this->product_model->get_product_by_id($product_id);
-        if (!empty($product)) {
-            $cart = $this->get_sess_cart_items();
-            if (!empty($cart)) {
-                foreach ($cart as $item) {
-                    if ($item->cart_item_id == $cart_item_id) {
-                        $item->quantity = $quantity;
-                        $item->unit_price = $product->price;
-                        $item->total_price = $product->price * $quantity;
-                    }
+        $cart = $this->get_sess_cart_items();
+        if (!empty($cart)) {
+            foreach ($cart as $item) {
+                if ($item->cart_item_id == $cart_item_id) {
+                    $item->quantity = $quantity;
                 }
             }
-            $this->session->set_userdata('mds_shopping_cart', $cart);
         }
+        $this->session->set_userdata('mds_shopping_cart', $cart);
     }
 
     //calculate cart total
@@ -156,6 +238,7 @@ class Cart_model extends CI_Model
         $cart = $this->get_sess_cart_items();
         $cart_total = new stdClass();
         $cart_total->subtotal = 0;
+        $cart_total->vat = 0;
         $cart_total->shipping_cost = 0;
         $cart_total->total = 0;
         $cart_total->currency = $this->payment_settings->default_product_currency;
@@ -174,16 +257,100 @@ class Cart_model extends CI_Model
                         }
                     }
                 } else {
-                    $cart_total->subtotal += $product->price * $item->quantity;
-                    $cart_total->shipping_cost += $product->shipping_cost;
+                    $object = $this->get_product_price_and_stock($product, $item->options_array, $item->quantity);
+                    $cart_total->subtotal += $object->price_calculated * $item->quantity;
+                    $cart_total->vat += $item->product_vat;
+                    $cart_total->shipping_cost += $item->shipping_cost;
                     if (1 != $this->form_settings->shipping) {
                         $cart_total->shipping_cost = 0;
                     }
                 }
             }
         }
-        $cart_total->total = $cart_total->subtotal + $cart_total->shipping_cost;
+        $cart_total->total = $cart_total->subtotal + $cart_total->vat + $cart_total->shipping_cost;
         $this->session->set_userdata('mds_shopping_cart_total', $cart_total);
+    }
+
+    //calculate total vat
+    public function calculate_total_vat($price_calculated, $vat_rate, $quantity)
+    {
+        if (!empty($price_calculated)) {
+            $price = $price_calculated / 100;
+            $vat = calculate_vat($price, $vat_rate);
+            $vat = $vat * $quantity;
+
+            return $vat * 100;
+        }
+
+        return 0;
+    }
+
+    //get cart items session
+    public function get_sess_cart_items()
+    {
+        $cart = [];
+        $new_cart = [];
+        if (!empty($this->session->userdata('mds_shopping_cart'))) {
+            $cart = $this->session->userdata('mds_shopping_cart');
+        }
+        foreach ($cart as $cart_item) {
+            $product = $this->product_model->get_available_product($cart_item->product_id);
+            if (!empty($product)) {
+                //if purchase type is bidding
+                if ('bidding' == $cart_item->purchase_type) {
+                    $this->load->model('bidding_model');
+                    $quote_request = $this->bidding_model->get_quote_request($cart_item->quote_request_id);
+                    if (!empty($quote_request) && 'pending_payment' == $quote_request->status) {
+                        $item = new stdClass();
+                        $item->cart_item_id = $cart_item->cart_item_id;
+                        $item->product_id = $product->id;
+                        $item->product_type = $cart_item->product_type;
+                        $item->product_title = $cart_item->product_title;
+                        $item->options_array = $cart_item->options_array;
+                        $item->quantity = $cart_item->quantity;
+                        $item->unit_price = $quote_request->price_offered / $quote_request->product_quantity;
+                        $item->total_price = $quote_request->price_offered;
+                        $item->discount_rate = 0;
+                        $item->currency = $product->currency;
+                        $item->product_vat = 0;
+                        $item->shipping_cost = $quote_request->shipping_cost;
+                        $item->purchase_type = $cart_item->purchase_type;
+                        $item->quote_request_id = $cart_item->quote_request_id;
+                        $item->is_stock_available = 1;
+                        if (1 != $this->form_settings->shipping) {
+                            $item->shipping_cost = 0;
+                        }
+                        array_push($new_cart, $item);
+                    }
+                } else {
+                    $object = $this->get_product_price_and_stock($product, $cart_item->options_array, $cart_item->quantity);
+                    $price = calculate_product_price($product->price, $product->discount_rate);
+                    $item = new stdClass();
+                    $item->cart_item_id = $cart_item->cart_item_id;
+                    $item->product_id = $product->id;
+                    $item->product_type = $cart_item->product_type;
+                    $item->product_title = $cart_item->product_title;
+                    $item->options_array = $cart_item->options_array;
+                    $item->quantity = $cart_item->quantity;
+                    $item->unit_price = $object->price_calculated;
+                    $item->total_price = $object->price_calculated * $cart_item->quantity;
+                    $item->discount_rate = $object->discount_rate;
+                    $item->currency = $product->currency;
+                    $item->product_vat = $this->calculate_total_vat($object->price_calculated, $product->vat_rate, $cart_item->quantity);
+                    $item->shipping_cost = $this->get_product_shipping_cost($cart, $product, $cart_item->quantity);
+                    $item->purchase_type = $cart_item->purchase_type;
+                    $item->quote_request_id = $cart_item->quote_request_id;
+                    $item->is_stock_available = $object->is_stock_available;
+                    if (1 != $this->form_settings->shipping) {
+                        $item->shipping_cost = 0;
+                    }
+                    array_push($new_cart, $item);
+                }
+            }
+        }
+        $this->session->set_userdata('mds_shopping_cart', $new_cart);
+
+        return $new_cart;
     }
 
     //set cart shipping address session
@@ -270,8 +437,8 @@ class Cart_model extends CI_Model
         $std = new stdClass();
         $row = null;
 
-        if (auth_check()) {
-            $row = $this->profile_model->get_user_shipping_address(user()->id);
+        if ($this->auth_check) {
+            $row = $this->profile_model->get_user_shipping_address($this->auth_user->id);
         } else {
             $row = $this->profile_model->get_user_shipping_address(null);
         }
@@ -301,69 +468,6 @@ class Cart_model extends CI_Model
         return $std;
     }
 
-    //get cart items session
-    public function get_sess_cart_items()
-    {
-        $cart = [];
-        $new_cart = [];
-        if (!empty($this->session->userdata('mds_shopping_cart'))) {
-            $cart = $this->session->userdata('mds_shopping_cart');
-        }
-
-        foreach ($cart as $cart_item) {
-            $product = $this->product_model->get_available_product($cart_item->product_id);
-            if (!empty($product)) {
-                if (check_product_available_for_sale($product)) {
-                    //if purchase type is bidding
-                    if ('bidding' == $cart_item->purchase_type) {
-                        $this->load->model('bidding_model');
-                        $quote_request = $this->bidding_model->get_quote_request($cart_item->quote_request_id);
-                        if (!empty($quote_request) && 'pending_payment' == $quote_request->status) {
-                            $item = new stdClass();
-                            $item->cart_item_id = $cart_item->cart_item_id;
-                            $item->product_id = $product->id;
-                            $item->product_type = $cart_item->product_type;
-                            $item->product_title = $cart_item->product_title;
-                            $item->quantity = $cart_item->quantity;
-                            $item->unit_price = $quote_request->price_offered / $quote_request->product_quantity;
-                            $item->total_price = $quote_request->price_offered;
-                            $item->currency = $product->currency;
-                            $item->shipping_cost = $quote_request->shipping_cost;
-                            $item->purchase_type = $cart_item->purchase_type;
-                            $item->quote_request_id = $cart_item->quote_request_id;
-                            $item->is_quantity_available = true;
-                            if (1 != $this->form_settings->shipping) {
-                                $item->shipping_cost = 0;
-                            }
-                            array_push($new_cart, $item);
-                        }
-                    } else {
-                        $item = new stdClass();
-                        $item->cart_item_id = $cart_item->cart_item_id;
-                        $item->product_id = $product->id;
-                        $item->product_type = $cart_item->product_type;
-                        $item->product_title = $cart_item->product_title;
-                        $item->quantity = $cart_item->quantity;
-                        $item->unit_price = $product->price;
-                        $item->total_price = $product->price * $cart_item->quantity;
-                        $item->currency = $product->currency;
-                        $item->shipping_cost = $product->shipping_cost;
-                        $item->purchase_type = $cart_item->purchase_type;
-                        $item->quote_request_id = $cart_item->quote_request_id;
-                        $item->is_quantity_available = $this->is_quantity_available($product);
-                        if (1 != $this->form_settings->shipping) {
-                            $item->shipping_cost = 0;
-                        }
-                        array_push($new_cart, $item);
-                    }
-                }
-            }
-        }
-        $this->session->set_userdata('mds_shopping_cart', $new_cart);
-
-        return $new_cart;
-    }
-
     //check cart has physical products
     public function check_cart_has_physical_product()
     {
@@ -389,50 +493,6 @@ class Cart_model extends CI_Model
                     return true;
                 }
             }
-        }
-
-        return false;
-    }
-
-    //check item quantity
-    public function check_item_quantity($product, $allow_equal = false)
-    {
-        $quantity = 0;
-        $cart_items = $this->session->userdata('mds_shopping_cart');
-        if (!empty($cart_items)) {
-            foreach ($cart_items as $cart_item) {
-                if ($cart_item->product_id == $product->id) {
-                    $quantity += $cart_item->quantity;
-                }
-            }
-        }
-        if (true == $allow_equal) {
-            if ($product->quantity >= $quantity) {
-                return true;
-            }
-        } else {
-            if ($product->quantity > $quantity) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    //is quantity available
-    public function is_quantity_available($product)
-    {
-        $quantity = 0;
-        $cart_items = $this->session->userdata('mds_shopping_cart');
-        if (!empty($cart_items)) {
-            foreach ($cart_items as $cart_item) {
-                if ($cart_item->product_id == $product->id) {
-                    $quantity += $cart_item->quantity;
-                }
-            }
-        }
-        if ($product->quantity >= $quantity) {
-            return true;
         }
 
         return false;
@@ -488,5 +548,13 @@ class Cart_model extends CI_Model
         if (!empty($this->session->userdata('mds_cart_shipping_address'))) {
             $this->session->unset_userdata('mds_cart_shipping_address');
         }
+    }
+
+    //clear cart
+    public function clear_cart()
+    {
+        $this->unset_sess_cart_items();
+        $this->unset_sess_cart_payment_method();
+        $this->unset_sess_cart_shipping_address();
     }
 }

@@ -22,6 +22,7 @@
                             <th width="20"><input type="checkbox" class="checkbox-table" id="checkAll"></th>
                             <th width="20"><?php echo trans('id'); ?></th>
                             <th><?php echo trans('product'); ?></th>
+                            <th><?php echo trans('sku'); ?></th>
 							<th><?php echo trans('product_type'); ?></th>
                             <th><?php echo trans('category'); ?></th>
                             <th><?php echo trans('user'); ?></th>
@@ -37,7 +38,7 @@
                                 <td><?php echo html_escape($item->id); ?></td>
                                 <td class="td-product">
                                     <?php if ($item->is_promoted == 1): ?>
-                                        <label class="label label-success"><?php echo trans("promoted"); ?></label>
+                                        <label class="label label-success"><?php echo trans("featured"); ?></label>
                                     <?php endif; ?>
                                     <div class="img-table" style="height: 100px;">
                                         <a href="<?php echo generate_product_url($item); ?>" target="_blank">
@@ -48,12 +49,13 @@
                                         <?php echo html_escape($item->title); ?>
                                     </a>
                                 </td>
+                                <td><?php echo $item->sku; ?></td>
 								<td><?php echo trans($item->product_type); ?></td>
 								<td>
 									<?php $categories_array = get_parent_categories_array($item->category_id);
 									if (!empty($categories_array)) {
 										foreach ($categories_array as $item_array) {
-											$item_category = get_category_joined($item_array->id);
+											$item_category = get_category_by_id($item_array->id);
 											if (!empty($item_category)) {
 												echo @html_escape($item_category->name) . "<br>";
 											}
@@ -63,13 +65,13 @@
                                 <td>
                                     <?php $user = get_user($item->user_id);
                                     if (!empty($user)): ?>
-                                        <a href="<?php echo base_url(); ?>profile/<?php echo html_escape($user->slug); ?>" target="_blank" class="table-username">
+                                        <a href="<?php echo generate_profile_url($user->slug); ?>" target="_blank" class="table-username">
                                             <?php echo html_escape($user->username); ?>
                                         </a>
                                     <?php endif; ?>
                                 </td>
 
-                                <td><?php echo $item->created_at; ?></td>
+                                <td><?php echo formatted_date($item->created_at); ?></td>
                                 <td>
                                     <div class="dropdown">
                                         <button class="btn bg-purple dropdown-toggle btn-select-option"

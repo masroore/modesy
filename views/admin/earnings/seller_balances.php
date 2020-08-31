@@ -34,7 +34,7 @@
                                 <td>
                                     <?php if (!empty($item)): ?>
                                         <div class="table-orders-user">
-                                            <a href="<?php echo base_url(); ?>profile/<?php echo $item->slug; ?>" target="_blank">
+                                            <a href="<?php echo generate_profile_url($item->slug); ?>" target="_blank">
                                                 <div style="width: 50px; height: 50px; overflow: hidden; float: left; margin-right: 10px;">
                                                     <img src="<?php echo get_user_avatar($item); ?>" alt="" class="img-responsive" style="height: 50px;">
                                                 </div>
@@ -44,7 +44,7 @@
                                     <?php endif; ?>
                                 </td>
                                 <td><strong class="font-600"><?php echo $item->number_of_sales; ?></strong></td>
-                                <td><strong class="font-600"><?php echo print_price($item->balance, $payment_settings->default_product_currency); ?></strong></td>
+                                <td><strong class="font-600"><?php echo price_formatted($item->balance, $this->payment_settings->default_product_currency); ?></strong></td>
                                 <td>
                                     <div class="dropdown">
                                         <button class="btn bg-purple dropdown-toggle btn-select-option"

@@ -9,7 +9,7 @@
             <!-- /.box-header -->
 
             <!-- form start -->
-            <?php echo form_open('language_controller/update_language_post'); ?>
+            <?php echo form_open_multipart('language_controller/update_language_post'); ?>
 
             <input type="hidden" name="id" value="<?php echo html_escape($language->id); ?>">
 
@@ -20,7 +20,7 @@
                 <div class="form-group">
                     <label><?php echo trans("language_name"); ?></label>
                     <input type="text" class="form-control" name="name" placeholder="<?php echo trans("language_name"); ?>"
-                           value="<?php echo $language->name; ?>" maxlength="200" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?> required>
+                           value="<?php echo $language->name; ?>" maxlength="200" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?> required>
                     <small>(Ex: English)</small>
                 </div>
 
@@ -28,14 +28,14 @@
                     <div class="form-group">
                         <label class="control-label"><?php echo trans("short_form"); ?> </label>
                         <input type="text" class="form-control" name="short_form" placeholder="<?php echo trans("short_form"); ?>"
-                               value="<?php echo $language->short_form; ?>" maxlength="200" readonly <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?> required>
+                               value="<?php echo $language->short_form; ?>" maxlength="200" readonly <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?> required>
                         <small>(Ex: en)</small>
                     </div>
                 <?php else: ?>
                     <div class="form-group">
                         <label class="control-label"><?php echo trans("short_form"); ?> </label>
                         <input type="text" class="form-control" name="short_form" placeholder="<?php echo trans("short_form"); ?>"
-                               value="<?php echo $language->short_form; ?>" maxlength="200" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?> required>
+                               value="<?php echo $language->short_form; ?>" maxlength="200" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?> required>
                         <small>(Ex: en)</small>
                     </div>
                 <?php endif; ?>
@@ -43,14 +43,14 @@
                 <div class="form-group">
                     <label class="control-label"><?php echo trans("language_code"); ?> </label>
                     <input type="text" class="form-control" name="language_code" placeholder="<?php echo trans("language_code"); ?>"
-                           value="<?php echo $language->language_code; ?>" maxlength="200" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?> required>
+                           value="<?php echo $language->language_code; ?>" maxlength="200" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?> required>
                     <small>(Ex: en_us)</small>
                 </div>
 
                 <div class="form-group">
                     <label><?php echo trans('order'); ?></label>
                     <input type="number" class="form-control" name="language_order" placeholder="<?php echo trans('order'); ?>"
-                           value="<?php echo $language->language_order; ?>" min="1" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?> required>
+                           value="<?php echo $language->language_order; ?>" min="1" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?> required>
                 </div>
 
                 <div class="form-group">
@@ -127,6 +127,21 @@
                         <option value="vi" <?php echo ($this->selected_lang->ckeditor_lang == 'vi') ? 'selected' : ''; ?>>Vietnamese</option>
                         <option value="cy" <?php echo ($this->selected_lang->ckeditor_lang == 'cy') ? 'selected' : ''; ?>>Welsh</option>
                     </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label"><?php echo trans('flag'); ?></label>
+                    <div class="display-block m-b-15">
+                        <img src="<?php echo base_url() . $language->flag_path; ?>" alt=""/>
+                    </div>
+                    <div class="display-block">
+                        <a class='btn btn-success btn-sm btn-file-upload'>
+                            <?php echo trans('select_image'); ?>
+                            <input type="file" id="Multifileupload" name="file" size="40" accept=".png, .jpg, .jpeg, .gif">
+                        </a>
+                    </div>
+
+                    <div id="MultidvPreview" class="image-preview"></div>
                 </div>
 
                 <div class="form-group">

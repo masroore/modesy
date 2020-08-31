@@ -69,6 +69,7 @@ class Currency_model extends CI_Model
             'promoted_products_payment_currency' => $this->input->post('promoted_products_payment_currency', true),
             'currency_format' => $this->input->post('currency_format', true),
             'currency_symbol_format' => $this->input->post('currency_symbol_format', true),
+            'space_between_money_currency' => $this->input->post('space_between_money_currency', true),
         ];
 
         $this->db->where('id', 1);

@@ -19,7 +19,7 @@
                 <div class="form-group">
                     <label class="control-label"><?php echo trans('title'); ?></label>
                     <input type="text" class="form-control" name="title" placeholder="<?php echo trans('title'); ?>"
-                           value="<?php echo html_escape($post->title); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?> required>
+                           value="<?php echo html_escape($post->title); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?> required>
                 </div>
 
                 <div class="form-group">
@@ -27,25 +27,25 @@
                         <small>(<?php echo trans('slug_exp'); ?>)</small>
                     </label>
                     <input type="text" class="form-control" name="slug" placeholder="<?php echo trans('slug'); ?>"
-                           value="<?php echo html_escape($post->slug); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+                           value="<?php echo html_escape($post->slug); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
                 </div>
 
                 <div class="form-group">
                     <label class="control-label"><?php echo trans('summary'); ?> & <?php echo trans("description"); ?> (<?php echo trans('meta_tag'); ?>)</label>
                     <textarea class="form-control text-area" name="summary"
-                              placeholder="<?php echo trans('summary'); ?> & <?php echo trans("description"); ?> (<?php echo trans('meta_tag'); ?>)" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>><?php echo html_escape($post->summary); ?></textarea>
+                              placeholder="<?php echo trans('summary'); ?> & <?php echo trans("description"); ?> (<?php echo trans('meta_tag'); ?>)" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>><?php echo html_escape($post->summary); ?></textarea>
                 </div>
 
                 <div class="form-group">
                     <label class="control-label"><?php echo trans('keywords'); ?> (<?php echo trans('meta_tag'); ?>)</label>
                     <input type="text" class="form-control" name="keywords"
-                           placeholder="<?php echo trans('keywords'); ?> (<?php echo trans('meta_tag'); ?>)" value="<?php echo html_escape($post->keywords); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+                           placeholder="<?php echo trans('keywords'); ?> (<?php echo trans('meta_tag'); ?>)" value="<?php echo html_escape($post->keywords); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
                 </div>
 
                 <div class="form-group">
                     <label><?php echo trans("language"); ?></label>
                     <select name="lang_id" class="form-control max-600" onchange="get_blog_categories_by_lang(this.value);">
-                        <?php foreach ($languages as $language): ?>
+                        <?php foreach ($this->languages as $language): ?>
                             <option value="<?php echo $language->id; ?>" <?php echo ($post->lang_id == $language->id) ? 'selected' : ''; ?>><?php echo $language->name; ?></option>
                         <?php endforeach; ?>
                     </select>

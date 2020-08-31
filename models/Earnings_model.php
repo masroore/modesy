@@ -4,6 +4,11 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Earnings_model extends CI_Model
 {
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     //get earnings count
     public function get_earnings_count($user_id)
     {
@@ -50,10 +55,42 @@ class Earnings_model extends CI_Model
                 //update seller balance and number of sales
                 $user = get_user($order_product->seller_id);
                 if (!empty($user)) {
-                    $balance = $user->balance;
-                    $new_balance = $balance + $earned_amount;
+                    $new_balance = $user->balance;
+                    if ('Cash On Delivery' != $order->payment_method) {
+                        $new_balance = $user->balance + $earned_amount;
+                    }
                     $sales = $user->number_of_sales;
                     $sales = $sales + 1;
+                    $data = [
+                        'balance' => $new_balance,
+                        'number_of_sales' => $sales,
+                    ];
+                    $this->db->where('id', $user->id);
+                    $this->db->update('users', $data);
+                }
+            }
+        }
+    }
+
+    //remove seller earnings
+    public function remove_seller_earnings($order_product)
+    {
+        if (!empty($order_product)) {
+            $order = $this->order_model->get_order($order_product->order_id);
+            if (!empty($order)) {
+                $earned_amount = $this->calculate_earned_amount($order_product);
+
+                $this->db->where('order_number', $order->order_number);
+                $this->db->where('user_id', $order_product->seller_id);
+                $this->db->delete('earnings');
+
+                //update seller balance and number of sales
+                $user = get_user($order_product->seller_id);
+                if (!empty($user)) {
+                    $balance = $user->balance;
+                    $new_balance = $balance - $earned_amount;
+                    $sales = $user->number_of_sales;
+                    $sales = $sales - 1;
                     $data = [
                         'balance' => $new_balance,
                         'number_of_sales' => $sales,
@@ -76,6 +113,16 @@ class Earnings_model extends CI_Model
         }
 
         return 0;
+    }
+
+    //get order earning by user id
+    public function get_earning_by_user_id($user_id, $order_number)
+    {
+        $this->db->where('order_number', $order_number);
+        $this->db->where('user_id', $user_id);
+        $query = $this->db->get('earnings');
+
+        return $query->row();
     }
 
     //get user payout account

@@ -14,7 +14,7 @@
 			<div class="box-body">
 				<!-- include message block -->
 				<?php $this->load->view('admin/includes/_messages_form'); ?>
-				<?php foreach ($languages as $language): ?>
+				<?php foreach ($this->languages as $language): ?>
 					<div class="form-group">
 						<label><?php echo trans("option_label"); ?> (<?php echo $language->name; ?>)</label>
 						<input type="text" class="form-control" name="option_label_<?php echo $language->id; ?>" placeholder="<?php echo trans("option_label"); ?>" maxlength="255" required>
@@ -80,7 +80,7 @@
 								<tbody>
 
 								<?php foreach ($product_conditions as $item):
-									$product_condition = get_product_condition_by_lang($item->common_id, $selected_lang->id);
+									$product_condition = get_product_condition_by_lang($item->common_id, $this->selected_lang->id);
 									if (!empty($product_condition)):?>
 										<tr>
 											<td><?php echo html_escape($product_condition->id); ?></td>

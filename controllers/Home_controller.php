@@ -9,7 +9,6 @@ class Home_controller extends Home_Core_Controller
         parent::__construct();
         $this->comment_limit = 6;
         $this->blog_paginate_per_page = 12;
-        $this->product_paginate_per_page = 18;
         $this->promoted_products_limit = $this->general_settings->index_promoted_products_count;
     }
 
@@ -24,22 +23,13 @@ class Home_controller extends Home_Core_Controller
         $data['keywords'] = $this->settings->keywords;
 
         //products
-        $key = 'latest_products';
-        if (0 != $this->default_location_id) {
-            $key = 'latest_products_location_' . $this->default_location_id;
-        }
-        $data['latest_products'] = get_cached_data($key);
-        if (empty($data['latest_products'])) {
-            $data['latest_products'] = $this->product_model->get_products_limited($this->general_settings->index_latest_products_count);
-            set_cache_data($key, $data['latest_products']);
-        }
-
-        $data['promoted_products'] = $this->product_model->get_promoted_products();
-        $data['promoted_products_count'] = $this->product_model->get_promoted_products_count();
-        $data['promoted_products_limit'] = $this->promoted_products_limit;
+        $data['latest_products'] = get_latest_products($this->general_settings->index_latest_products_count);
+        $data['promoted_products'] = get_promoted_products(0, $this->promoted_products_limit);
+        $data['promoted_products_count'] = get_promoted_products_count();
 
         $data['slider_items'] = $this->slider_model->get_slider_items();
-        $data['featured_category_count'] = $this->category_model->get_featured_categories_count();
+        $data['featured_categories'] = $this->category_model->get_featured_categories();
+        $data['featured_categories'] = $this->category_model->get_featured_categories();
 
         //blog slider posts
         $key = 'blog_slider_posts_lang_' . $this->selected_lang->id;
@@ -63,6 +53,7 @@ class Home_controller extends Home_Core_Controller
         $data['title'] = trans('contact');
         $data['description'] = trans('contact') . ' - ' . $this->app_name;
         $data['keywords'] = trans('contact') . ',' . $this->app_name;
+
         $this->load->view('partials/_header', $data);
         $this->load->view('contact', $data);
         $this->load->view('partials/_footer');
@@ -107,29 +98,19 @@ class Home_controller extends Home_Core_Controller
     public function any($slug)
     {
         get_method();
-        $slug = decode_slug($slug);
+        $slug = clean_slug($slug);
         //index page
         if (empty($slug)) {
             redirect(lang_base_url());
         }
 
-        $data['page'] = $this->page_model->get_page($slug);
+        $page = $this->page_model->get_page($slug);
         //if exists
-        if (!empty($data['page'])) {
-            if (0 == $data['page']->visibility) {
-                $this->error_404();
-            } else {
-                $data['title'] = $data['page']->title;
-                $data['description'] = $data['page']->description;
-                $data['keywords'] = $data['page']->keywords;
-
-                $this->load->view('partials/_header', $data);
-                $this->load->view('page', $data);
-                $this->load->view('partials/_footer');
-            }
+        if (!empty($page)) {
+            $this->page($page);
         } else {
             //check category
-            $category = $this->category_model->get_category_by_slug($slug);
+            $category = $this->category_model->get_parent_category_by_slug($slug);
             if (!empty($category)) {
                 $this->category($category);
             } else {
@@ -148,10 +129,10 @@ class Home_controller extends Home_Core_Controller
         $data['description'] = trans('products') . ' - ' . $this->app_name;
         $data['keywords'] = trans('products') . ',' . $this->app_name;
         //get paginated posts
-        $link = lang_base_url() . 'products';
+        $link = generate_url('products');
         $pagination = $this->paginate($link, $this->product_model->get_paginated_filtered_products_count(null), $this->product_paginate_per_page);
-        $data['products'] = $this->product_model->get_paginated_filtered_products(null, $pagination['per_page'], $pagination['offset']);
-        $data['categories'] = $this->category_model->get_parent_categories();
+        $data['products'] = $this->product_model->get_paginated_filtered_products(null, $pagination['offset'], $pagination['per_page']);
+        $data['categories'] = get_parent_categories($this->categories);
 
         $data['show_location_filter'] = false;
         if (!empty($data['products'])) {
@@ -189,7 +170,7 @@ class Home_controller extends Home_Core_Controller
         //get paginated posts
         $link = generate_category_url($data['category']);
         $pagination = $this->paginate($link, $this->product_model->get_paginated_filtered_products_count($data['category']->id), $this->product_paginate_per_page);
-        $data['products'] = $this->product_model->get_paginated_filtered_products($data['category']->id, $pagination['per_page'], $pagination['offset']);
+        $data['products'] = $this->product_model->get_paginated_filtered_products($data['category']->id, $pagination['offset'], $pagination['per_page']);
 
         $data['show_location_filter'] = false;
         if (!empty($data['products'])) {
@@ -204,9 +185,8 @@ class Home_controller extends Home_Core_Controller
         if (0 == $data['category']->parent_id) {
             $data['parent_category'] = null;
         } else {
-            $data['parent_category'] = $this->category_model->get_category_joined($data['category']->parent_id);
+            $data['parent_category'] = $this->category_model->get_category($data['category']->parent_id);
         }
-
         $this->load->view('partials/_header', $data);
         $this->load->view('product/products', $data);
         $this->load->view('partials/_footer');
@@ -218,7 +198,7 @@ class Home_controller extends Home_Core_Controller
     public function subcategory($parent_slug, $slug)
     {
         get_method();
-        $slug = decode_slug($slug);
+        $slug = clean_slug($slug);
         $category = $this->category_model->get_category_by_slug($slug);
         if (!empty($category)) {
             $this->category($category);
@@ -233,7 +213,7 @@ class Home_controller extends Home_Core_Controller
     public function product($slug)
     {
         get_method();
-        $slug = decode_slug($slug);
+        $slug = clean_slug($slug);
         $this->review_limit = 5;
         $this->comment_limit = 5;
 
@@ -242,15 +222,15 @@ class Home_controller extends Home_Core_Controller
             $this->error_404();
         } else {
             if (0 == $data['product']->status || 0 == $data['product']->visibility) {
-                if (!auth_check()) {
+                if (!$this->auth_check) {
                     redirect(lang_base_url());
                 }
-                if ($data['product']->user_id != user()->id && 'admin' != user()->role) {
+                if ($data['product']->user_id != $this->auth_user->id && 'admin' != $this->auth_user->role) {
                     redirect(lang_base_url());
                 }
             }
 
-            $data['category'] = $this->category_model->get_category_joined($data['product']->category_id);
+            $data['category'] = $this->category_model->get_category($data['product']->category_id);
 
             //images
             $data['product_images'] = $this->file_model->get_product_images($data['product']->id);
@@ -269,7 +249,7 @@ class Home_controller extends Home_Core_Controller
             $key = 'more_products_by_user_' . $data['user']->id . 'cache';
             $data['user_products'] = get_cached_data($key);
             if (empty($data['user_products'])) {
-                $data['user_products'] = $this->product_model->get_user_products($data['user']->slug, 3, $data['product']->id);
+                $data['user_products'] = $this->product_model->get_user_products($data['user']->id, $data['product']->id);
                 set_cache_data($key, $data['user_products']);
             }
 
@@ -281,8 +261,8 @@ class Home_controller extends Home_Core_Controller
             $data['comments'] = $this->comment_model->get_comments($data['product']->id, $this->comment_limit);
             $data['comment_limit'] = $this->comment_limit;
             $data['custom_fields'] = $this->field_model->generate_custom_fields_array($data['product']->category_id, $data['product']->id);
-            $data['half_width_product_variations'] = $this->variation_model->get_half_width_product_variations($data['product']->id, $this->selected_lang->id);
-            $data['full_width_product_variations'] = $this->variation_model->get_full_width_product_variations($data['product']->id, $this->selected_lang->id);
+            $data['half_width_product_variations'] = $this->variation_model->get_half_width_product_variations($data['product']->id);
+            $data['full_width_product_variations'] = $this->variation_model->get_full_width_product_variations($data['product']->id);
 
             $data['video'] = $this->file_model->get_product_video($data['product']->id);
             $data['audio'] = $this->file_model->get_product_audio($data['product']->id);
@@ -297,7 +277,7 @@ class Home_controller extends Home_Core_Controller
             $description_text = trim(html_escape(strip_tags($data['product']->description)));
             $data['og_description'] = character_limiter($description_text, 200, '');
             $data['og_type'] = 'article';
-            $data['og_url'] = lang_base_url() . $data['product']->slug;
+            $data['og_url'] = generate_product_url($data['product']);
             $data['og_image'] = get_product_image($data['product']->id, 'image_default');
             $data['og_width'] = '750';
             $data['og_height'] = '500';
@@ -328,10 +308,29 @@ class Home_controller extends Home_Core_Controller
      */
     public function load_more_promoted_products()
     {
-        $data['limit'] = $this->input->post('limit', true);
-        $data['new_limit'] = $data['limit'] + $this->promoted_products_limit;
-        $data['promoted_products'] = $this->product_model->get_promoted_products();
-        $this->load->view('product/_promoted_product_item_response', $data);
+        post_method();
+        $offset = clean_number($this->input->post('offset', true));
+        $promoted_products = get_promoted_products($offset, $this->promoted_products_limit);
+
+        $data_json = [
+            'result' => 0,
+            'html_content' => '',
+            'offset' => $offset + $this->promoted_products_limit,
+            'hide_button' => 0,
+        ];
+        $html_content = '';
+        if (!empty($promoted_products)) {
+            foreach ($promoted_products as $product) {
+                $vars = ['product' => $product, 'promoted_badge' => false];
+                $html_content .= '<div class="col-6 col-sm-6 col-md-4 col-lg-3 col-product">' . $this->load->view('product/_product_item', $vars, true) . '</div>';
+            }
+            $data_json['result'] = 1;
+            $data_json['html_content'] = $html_content;
+            if ($offset + $this->promoted_products_limit >= get_promoted_products_count()) {
+                $data_json['hide_button'] = 1;
+            }
+        }
+        echo json_encode($data_json);
     }
 
     /**
@@ -349,9 +348,9 @@ class Home_controller extends Home_Core_Controller
         }
 
         if ('product' == $search_type) {
-            redirect(lang_base_url() . 'products?search=' . $search);
+            redirect(generate_url('products') . '?search=' . $search);
         } else {
-            redirect(lang_base_url() . 'members?search=' . $search);
+            redirect(generate_url('members') . '?search=' . $search);
         }
     }
 
@@ -382,59 +381,23 @@ class Home_controller extends Home_Core_Controller
         $this->load->view('partials/_footer');
     }
 
-    /*
-    *-------------------------------------------------------------------------------------------------
-    * BLOG PAGES
-    *-------------------------------------------------------------------------------------------------
-    */
-
-    /**
-     * Blog.
-     */
-    public function blog()
-    {
-        get_method();
-        $data['title'] = trans('blog');
-        $data['description'] = trans('blog') . ' - ' . $this->app_name;
-        $data['keywords'] = trans('blog') . ',' . $this->app_name;
-        $data['active_category'] = 'all';
-        $key = 'blog_posts_count_lang_' . $this->selected_lang->id;
-        $blog_posts_count = get_cached_data($key);
-        if (empty($blog_posts_count)) {
-            $blog_posts_count = $this->blog_model->get_posts_count();
-            set_cache_data($key, $blog_posts_count);
-        }
-        //set pagination
-        $pagination = $this->paginate(lang_base_url() . 'blog', $blog_posts_count, $this->blog_paginate_per_page);
-        $key = 'blog_posts_lang_' . $this->selected_lang->id . '_page_' . $pagination['current_page'];
-        $data['posts'] = get_cached_data($key);
-        if (empty($data['posts'])) {
-            $data['posts'] = $this->blog_model->get_paginated_posts($pagination['per_page'], $pagination['offset']);
-            set_cache_data($key, $data['posts']);
-        }
-
-        $this->load->view('partials/_header', $data);
-        $this->load->view('blog/index', $data);
-        $this->load->view('partials/_footer');
-    }
-
     /**
      * Blog Category.
      */
     public function blog_category($slug)
     {
         get_method();
-        $slug = decode_slug($slug);
+        $slug = clean_slug($slug);
         $data['category'] = $this->blog_category_model->get_category_by_slug($slug);
 
         if (empty($data['category'])) {
-            redirect(lang_base_url() . 'blog');
+            redirect(generate_url('blog'));
         }
 
         $data['title'] = $data['category']->name;
         $data['description'] = $data['category']->description;
         $data['keywords'] = $data['category']->keywords;
-        $data['active_category'] = $slug;
+        $data['active_category'] = $data['category']->slug;
         $key = 'blog_category_' . $data['category']->id . '_posts_count_lang_' . $this->selected_lang->id;
         $blog_posts_count = get_cached_data($key);
         if (empty($blog_posts_count)) {
@@ -443,11 +406,11 @@ class Home_controller extends Home_Core_Controller
         }
 
         //set pagination
-        $pagination = $this->paginate(lang_base_url() . 'blog/' . $data['category']->slug, $blog_posts_count, $this->blog_paginate_per_page);
+        $pagination = $this->paginate(generate_url('blog') . '/' . $data['category']->slug, $blog_posts_count, $this->blog_paginate_per_page);
         $key = 'blog_category_' . $data['category']->id . 'posts_lang_' . $this->selected_lang->id . '_page_' . $pagination['current_page'];
         $data['posts'] = get_cached_data($key);
         if (empty($data['posts'])) {
-            $data['posts'] = $this->blog_model->get_paginated_category_posts($pagination['per_page'], $pagination['offset'], $data['category']->id);
+            $data['posts'] = $this->blog_model->get_paginated_category_posts($pagination['offset'], $pagination['per_page'], $data['category']->id);
             set_cache_data($key, $data['posts']);
         }
 
@@ -462,19 +425,20 @@ class Home_controller extends Home_Core_Controller
     public function tag($slug)
     {
         get_method();
-        $slug = decode_slug($slug);
+        $slug = clean_slug($slug);
         $data['tag'] = $this->tag_model->get_post_tag($slug);
 
         if (empty($data['tag'])) {
-            redirect(lang_base_url() . 'blog');
+            redirect(generate_url('blog'));
         }
 
         $data['title'] = $data['tag']->tag;
         $data['description'] = trans('tag') . ': ' . $data['tag']->tag . ' - ' . $this->app_name;
         $data['keywords'] = trans('tag') . ',' . $data['tag']->tag . ',' . $this->app_name;
         //get paginated posts
-        $pagination = $this->paginate(lang_base_url() . 'blog/tag/' . $data['tag']->tag_slug, $this->blog_model->get_paginated_tag_posts_count($data['tag']->tag_slug), $this->blog_paginate_per_page);
-        $data['posts'] = $this->blog_model->get_paginated_tag_posts($pagination['per_page'], $pagination['offset'], $data['tag']->tag_slug);
+        $pagination = $this->paginate(generate_url('blog', 'tag') . ' / ' . $data['tag']->tag_slug, $this->blog_model->get_paginated_tag_posts_count($data['tag']->tag_slug), $this->blog_paginate_per_page);
+        $data['posts'] = $this->blog_model->get_paginated_tag_posts($pagination['offset'], $pagination['per_page'], $data['tag']->tag_slug);
+
         $this->load->view('partials/_header', $data);
         $this->load->view('blog/tag', $data);
         $this->load->view('partials/_footer');
@@ -486,11 +450,11 @@ class Home_controller extends Home_Core_Controller
     public function post($category_slug, $slug)
     {
         get_method();
-        $slug = decode_slug($slug);
+        $slug = clean_slug($slug);
         $data['post'] = $this->blog_model->get_post_by_slug($slug);
 
         if (empty($data['post'])) {
-            redirect(lang_base_url() . 'blog');
+            redirect(generate_url('blog'));
         }
 
         $data['title'] = $data['post']->title;
@@ -502,15 +466,17 @@ class Home_controller extends Home_Core_Controller
         $data['random_tags'] = $this->tag_model->get_random_post_tags();
         $data['post_tags'] = $this->tag_model->get_post_tags($data['post']->id);
         $data['comments'] = $this->comment_model->get_blog_comments($data['post']->id, $this->comment_limit);
+        $data['comments_count'] = $this->comment_model->get_blog_comment_count($data['post']->id);
         $data['comment_limit'] = $this->comment_limit;
         $data['post_user'] = $this->auth_model->get_user($data['post']->user_id);
         $data['category'] = $this->blog_category_model->get_category($data['post']->category_id);
+
         //og tags
         $data['show_og_tags'] = true;
         $data['og_title'] = $data['post']->title;
         $data['og_description'] = $data['post']->summary;
         $data['og_type'] = 'article';
-        $data['og_url'] = lang_base_url() . 'blog/' . $data['post']->category_slug . '/' . $data['post']->slug;
+        $data['og_url'] = generate_url('blog') . ' / ' . $data['post']->category_slug . ' / ' . $data['post']->slug;
         $data['og_image'] = get_blog_image_url($data['post'], 'image_default');
         $data['og_width'] = '750';
         $data['og_height'] = '500';
@@ -531,17 +497,17 @@ class Home_controller extends Home_Core_Controller
     }
 
     /**
-     * Guest Favorites.
+     * Guest Wishlist.
      */
-    public function guest_favorites()
+    public function guest_wishlist()
     {
-        $data['title'] = trans('favorites');
-        $data['description'] = trans('favorites') . ' - ' . $this->app_name;
-        $data['keywords'] = trans('favorites') . ',' . $this->app_name;
-        $data['favorites'] = $this->session->userdata('mds_guest_favorites');
+        $data['title'] = trans('wishlist');
+        $data['description'] = trans('wishlist') . ' - ' . $this->app_name;
+        $data['keywords'] = trans('wishlist') . ',' . $this->app_name;
+        $data['wishlist'] = $this->session->userdata('mds_guest_wishlist');
 
         $this->load->view('partials/_header', $data);
-        $this->load->view('guest_favorites', $data);
+        $this->load->view('guest_wishlist', $data);
         $this->load->view('partials/_footer');
     }
 
@@ -590,77 +556,6 @@ class Home_controller extends Home_Core_Controller
         redirect($this->agent->referrer() . '#newsletter');
     }
 
-    /**
-     * Add Comment.
-     */
-    public function add_comment_post()
-    {
-        if (1 != $this->general_settings->blog_comments) {
-            exit();
-        }
-        $post_id = $this->input->post('post_id', true);
-        $limit = $this->input->post('limit', true);
-        if (auth_check()) {
-            $this->comment_model->add_blog_comment();
-        } else {
-            if ($this->recaptcha_verify_request()) {
-                $this->comment_model->add_blog_comment();
-            }
-        }
-
-        $data['comments'] = $this->comment_model->get_blog_comments($post_id, $limit);
-        $data['comment_post_id'] = $post_id;
-        $data['comment_limit'] = $limit;
-
-        $this->load->view('blog/_blog_comments', $data);
-    }
-
-    /**
-     * Delete Comment.
-     */
-    public function delete_comment_post()
-    {
-        $comment_id = $this->input->post('comment_id', true);
-        $post_id = $this->input->post('post_id', true);
-        $limit = $this->input->post('limit', true);
-
-        $comment = $this->comment_model->get_blog_comment($comment_id);
-        if (auth_check() && !empty($comment)) {
-            if ('admin' == user()->role || user()->id == $comment->user_id) {
-                $this->comment_model->delete_blog_comment($comment_id);
-            }
-        }
-
-        $data['comments'] = $this->comment_model->get_blog_comments($post_id, $limit);
-        $data['comment_post_id'] = $post_id;
-        $data['comment_limit'] = $limit;
-
-        $this->load->view('blog/_blog_comments', $data);
-    }
-
-    /**
-     * Load Comment.
-     */
-    public function load_more_comment()
-    {
-        $post_id = $this->input->post('post_id', true);
-        $limit = $this->input->post('limit', true);
-        $new_limit = $limit + $this->comment_limit;
-
-        $data['comments'] = $this->comment_model->get_blog_comments($post_id, $new_limit);
-        $data['comment_post_id'] = $post_id;
-        $data['comment_limit'] = $new_limit;
-
-        $this->load->view('blog/_blog_comments', $data);
-    }
-
-    //set site language
-    public function set_site_language()
-    {
-        $lang_id = $this->input->post('lang_id', true);
-        $this->session->set_userdata('modesy_selected_lang', $lang_id);
-    }
-
     public function cookies_warning()
     {
         setcookie('modesy_cookies_warning', '1', time() + (86400 * 10), '/'); //10 days
@@ -669,23 +564,87 @@ class Home_controller extends Home_Core_Controller
     public function set_default_location()
     {
         $location_id = $this->input->post('location_id', true);
-        if ('all' == $location_id) {
-            if (!empty($this->session->userdata('modesy_default_location'))) {
-                $this->session->unset_userdata('modesy_default_location');
-            }
+        if (!empty($location_id)) {
+            $this->session->set_userdata('mds_default_location_id', $location_id);
         } else {
-            $this->session->set_userdata('modesy_default_location', $location_id);
+            @$this->session->unset_userdata('mds_default_location_id');
         }
+        redirect($this->agent->referrer());
     }
 
     public function error_404()
     {
+        get_method();
+        header('HTTP/1.0 404 Not Found');
         $data['title'] = 'Error 404';
         $data['description'] = 'Error 404';
         $data['keywords'] = 'error,404';
 
         $this->load->view('partials/_header', $data);
         $this->load->view('errors/error_404');
+        $this->load->view('partials/_footer');
+    }
+
+    /**
+     * Page.
+     */
+    private function page($page)
+    {
+        if (empty($page)) {
+            redirect(lang_base_url());
+        }
+        if (0 == $page->visibility) {
+            $this->error_404();
+        } else {
+            $data['title'] = $page->title;
+            $data['description'] = $page->description;
+            $data['keywords'] = $page->keywords;
+            $data['page'] = $page;
+            if ('blog' == $page->page_default_name) {
+                $this->blog($data);
+            } elseif ('contact' == $page->page_default_name) {
+                $this->load->view('partials/_header', $data);
+                $this->load->view('contact', $data);
+                $this->load->view('partials/_footer');
+            } else {
+                $this->load->view('partials/_header', $data);
+                $this->load->view('page', $data);
+                $this->load->view('partials/_footer');
+            }
+        }
+    }
+
+    /*
+    *-------------------------------------------------------------------------------------------------
+    * BLOG PAGES
+    *-------------------------------------------------------------------------------------------------
+    */
+
+    /**
+     * Blog.
+     */
+    private function blog($data)
+    {
+        get_method();
+        $data['active_category'] = 'all';
+        $key = 'blog_posts_count_lang_' . $this->selected_lang->id;
+        $blog_posts_count = get_cached_data($key);
+        if (empty($blog_posts_count)) {
+            $blog_posts_count = $this->blog_model->get_posts_count();
+            set_cache_data($key, $blog_posts_count);
+        }
+
+        //set pagination
+        $pagination = $this->paginate(generate_url('blog'), $blog_posts_count, $this->blog_paginate_per_page);
+        $key = 'blog_posts_lang_' . $this->selected_lang->id . '_page_' . $pagination['current_page'];
+        $data['posts'] = get_cached_data($key);
+        if (empty($data['posts'])) {
+            $data['posts'] = $this->blog_model->get_paginated_posts($pagination['offset'], $pagination['per_page']);
+            set_cache_data($key, $data['posts']);
+        }
+
+        $this->load->view('partials/_header', $data);
+        $this->load->view('blog/index', $data);
         $this->load->view('partials/_footer');
     }
 }

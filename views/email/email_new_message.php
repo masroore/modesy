@@ -21,7 +21,7 @@
                             </p>
                         </div>
                         <p style='text-align: center;margin-top: 60px;'>
-                            <a href='<?php echo lang_base_url(); ?>messages' style='font-size: 14px;text-decoration: none;padding: 14px 40px;background-color: #09b1ba;color: #ffffff !important; border-radius: 3px;'>
+                            <a href='<?php echo generate_url("messages"); ?>' style='font-size: 14px;text-decoration: none;padding: 14px 40px;background-color: #09b1ba;color: #ffffff !important; border-radius: 3px;'>
                                 <?php echo trans("messages"); ?>
                             </a>
                         </p>

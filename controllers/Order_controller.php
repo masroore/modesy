@@ -7,7 +7,7 @@ class Order_controller extends Home_Core_Controller
     public function __construct()
     {
         parent::__construct();
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_sale_active()) {
@@ -15,7 +15,7 @@ class Order_controller extends Home_Core_Controller
         }
         $this->order_per_page = 15;
         $this->earnings_per_page = 15;
-        $this->user_id = user()->id;
+        $this->user_id = $this->auth_user->id;
     }
 
     /**
@@ -28,7 +28,7 @@ class Order_controller extends Home_Core_Controller
         $data['keywords'] = trans('orders') . ',' . $this->app_name;
         $data['active_tab'] = 'active_orders';
 
-        $pagination = $this->paginate(lang_base_url() . 'orders', $this->order_model->get_orders_count($this->user_id), $this->order_per_page);
+        $pagination = $this->paginate(generate_url('orders'), $this->order_model->get_orders_count($this->user_id), $this->order_per_page);
         $data['orders'] = $this->order_model->get_paginated_orders($this->user_id, $pagination['per_page'], $pagination['offset']);
 
         $this->load->view('partials/_header', $data);
@@ -46,7 +46,7 @@ class Order_controller extends Home_Core_Controller
         $data['keywords'] = trans('orders') . ',' . $this->app_name;
         $data['active_tab'] = 'completed_orders';
 
-        $pagination = $this->paginate(lang_base_url() . 'orders', $this->order_model->get_completed_orders_count($this->user_id), $this->order_per_page);
+        $pagination = $this->paginate(generate_url('orders', 'completed_orders'), $this->order_model->get_completed_orders_count($this->user_id), $this->order_per_page);
         $data['orders'] = $this->order_model->get_paginated_completed_orders($this->user_id, $pagination['per_page'], $pagination['offset']);
 
         $this->load->view('partials/_header', $data);
@@ -72,7 +72,6 @@ class Order_controller extends Home_Core_Controller
             redirect(lang_base_url());
         }
         $data['order_products'] = $this->order_model->get_order_products($data['order']->id);
-
         $data['last_bank_transfer'] = $this->order_admin_model->get_bank_transfer_by_order_number($data['order']->order_number);
 
         $this->load->view('partials/_header', $data);
@@ -102,8 +101,7 @@ class Order_controller extends Home_Core_Controller
         $data['description'] = trans('sales') . ' - ' . $this->app_name;
         $data['keywords'] = trans('sales') . ',' . $this->app_name;
         $data['active_tab'] = 'active_sales';
-
-        $pagination = $this->paginate(lang_base_url() . 'sales', $this->order_model->get_sales_count($this->user_id), $this->order_per_page);
+        $pagination = $this->paginate(generate_url('sales'), $this->order_model->get_sales_count($this->user_id), $this->order_per_page);
         $data['orders'] = $this->order_model->get_paginated_sales($this->user_id, $pagination['per_page'], $pagination['offset']);
 
         $this->load->view('partials/_header', $data);
@@ -124,8 +122,7 @@ class Order_controller extends Home_Core_Controller
         $data['description'] = trans('sales') . ' - ' . $this->app_name;
         $data['keywords'] = trans('sales') . ',' . $this->app_name;
         $data['active_tab'] = 'completed_sales';
-
-        $pagination = $this->paginate(lang_base_url() . 'sales', $this->order_model->get_completed_sales_count($this->user_id), $this->order_per_page);
+        $pagination = $this->paginate(generate_url('sales', 'completed_sales'), $this->order_model->get_completed_sales_count($this->user_id), $this->order_per_page);
         $data['orders'] = $this->order_model->get_paginated_completed_sales($this->user_id, $pagination['per_page'], $pagination['offset']);
 
         $this->load->view('partials/_header', $data);
@@ -146,7 +143,6 @@ class Order_controller extends Home_Core_Controller
         $data['description'] = trans('sales') . ' - ' . $this->app_name;
         $data['keywords'] = trans('sales') . ',' . $this->app_name;
         $data['active_tab'] = '';
-
         $data['order'] = $this->order_model->get_order_by_order_number($order_number);
         if (empty($data['order'])) {
             redirect(lang_base_url());
@@ -159,6 +155,48 @@ class Order_controller extends Home_Core_Controller
         $this->load->view('partials/_header', $data);
         $this->load->view('sale/sale', $data);
         $this->load->view('partials/_footer');
+    }
+
+    /**
+     * Invoice.
+     */
+    public function invoice($order_number)
+    {
+        $data['title'] = trans('invoice');
+        $data['description'] = trans('invoice') . ' - ' . $this->app_name;
+        $data['keywords'] = trans('invoice') . ',' . $this->app_name;
+
+        $data['order'] = $this->order_model->get_order_by_order_number($order_number);
+        if (empty($data['order'])) {
+            redirect(lang_base_url());
+        }
+        $data['invoice'] = $this->order_model->get_invoice_by_order_number($order_number);
+        if (empty($data['invoice'])) {
+            $this->order_model->add_invoice($data['order']->id);
+        }
+        if (empty($data['invoice'])) {
+            redirect(lang_base_url());
+        }
+        $data['invoice_items'] = unserialize($data['invoice']->invoice_items);
+        $data['order_products'] = $this->order_model->get_order_products($data['order']->id);
+
+        //check permission
+        if ('admin' != $this->auth_user->role) {
+            $is_seller = false;
+            if (!empty($data['order_products'])) {
+                foreach ($data['order_products'] as $item) {
+                    if ($item->seller_id == $this->auth_user->id) {
+                        $is_seller = true;
+                    }
+                }
+            }
+            if ($this->auth_user->id != $data['order']->buyer_id && false == $is_seller) {
+                redirect(lang_base_url());
+                exit();
+            }
+        }
+
+        $this->load->view('order/invoice', $data);
     }
 
     /**

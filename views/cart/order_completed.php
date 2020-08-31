@@ -13,7 +13,7 @@
                     <?php if($order->payment_method=="Bank Transfer"): ?>
                         <p class="p-complete-payment"><?php echo trans("msg_bank_transfer_text_order_completed"); ?></p>
                         <div class="bank-account-container">
-                            <?php echo $payment_settings->bank_transfer_accounts; ?>
+                            <?php echo $this->payment_settings->bank_transfer_accounts; ?>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -38,11 +38,10 @@
             var data = JSON.parse(<?php echo json_encode($this->session->userdata("mds_send_email_data"));?>);
             if (data) {
                 data[csfr_token_name] = $.cookie(csfr_cookie_name);
-                data['lang_folder'] = lang_folder;
-                data['form_lang_base_url'] = '<?php echo lang_base_url(); ?>';
+                data["sys_lang_id"] = sys_lang_id;
                 $.ajax({
                     type: "POST",
-                    url: base_url + "ajax_controller/send_email",
+                    url: base_url + "send-email-post",
                     data: data,
                     success: function (response) {
                     }

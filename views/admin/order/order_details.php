@@ -78,7 +78,7 @@
                                 <strong> <?php echo trans("updated"); ?></strong>
                             </div>
                             <div class="col-sm-8">
-                                <strong class="font-right"><?php echo $order->updated_at; ?>&nbsp;(<?php echo time_ago($order->updated_at); ?>)</strong>
+                                <strong class="font-right"><?php echo formatted_date($order->updated_at); ?>&nbsp;(<?php echo time_ago($order->updated_at); ?>)</strong>
                             </div>
                         </div>
                         <div class="row row-details">
@@ -86,7 +86,7 @@
                                 <strong> <?php echo trans("date"); ?></strong>
                             </div>
                             <div class="col-sm-8">
-                                <strong class="font-right"><?php echo $order->created_at; ?>&nbsp;(<?php echo time_ago($order->created_at); ?>)</strong>
+                                <strong class="font-right"><?php echo formatted_date($order->created_at); ?>&nbsp;(<?php echo time_ago($order->created_at); ?>)</strong>
                             </div>
                         </div>
                     </div>
@@ -135,7 +135,7 @@
                                 <div class="row row-details">
                                     <div class="col-xs-12">
                                         <div class="table-orders-user">
-                                            <a href="<?php echo base_url(); ?>profile/<?php echo $buyer->slug; ?>" target="_blank">
+                                            <a href="<?php echo generate_profile_url($buyer->slug); ?>" target="_blank">
                                                 <img src="<?php echo get_user_avatar($buyer); ?>" alt="" class="img-responsive" style="height: 120px;">
                                             </a>
                                         </div>
@@ -147,7 +147,7 @@
                                     </div>
                                     <div class="col-sm-8">
                                         <strong class="font-right">
-                                            <a href="<?php echo base_url(); ?>profile/<?php echo $buyer->slug; ?>" target="_blank">
+                                            <a href="<?php echo generate_profile_url($buyer->slug); ?>" target="_blank">
                                                 <?php echo html_escape($buyer->username); ?>
                                             </a>
                                         </strong>
@@ -377,6 +377,7 @@
                                     <th><?php echo trans('product'); ?></th>
                                     <th><?php echo trans('unit_price'); ?></th>
                                     <th><?php echo trans('quantity'); ?></th>
+                                    <th><?php echo trans('vat'); ?></th>
                                     <th><?php echo trans('shipping_cost'); ?></th>
                                     <th><?php echo trans('total'); ?></th>
                                     <th><?php echo trans('status'); ?></th>
@@ -396,7 +397,7 @@
                                         </td>
                                         <td>
                                             <div class="img-table" style="height: 67px;">
-                                                <a href="<?php echo base_url() . $item->product_slug; ?>" target="_blank">
+                                                <a href="<?php echo generate_product_url_by_slug($item->product_slug); ?>" target="_blank">
                                                     <img src="<?php echo get_product_image($item->product_id, 'image_small'); ?>" data-src="" alt="" class="lazyload img-responsive post-image"/>
                                                 </a>
                                             </div>
@@ -405,27 +406,32 @@
                                                     <label class="label bg-black"><i class="icon-cloud-download"></i><?php echo trans("instant_download"); ?></label>
                                                 <?php endif; ?>
                                             </p>
-                                            <a href="<?php echo base_url() . $item->product_slug; ?>" target="_blank" class="table-product-title">
+                                            <a href="<?php echo generate_product_url_by_slug($item->product_slug); ?>" target="_blank" class="table-product-title">
                                                 <?php echo html_escape($item->product_title); ?>
                                             </a>
                                             <p>
                                                 <span><?php echo trans("by"); ?></span>
                                                 <?php $seller = get_user($item->seller_id); ?>
                                                 <?php if (!empty($seller)): ?>
-                                                    <a href="<?php echo base_url(); ?>profile/<?php echo $seller->slug; ?>" target="_blank" class="table-product-title">
+                                                    <a href="<?php echo generate_profile_url($seller->slug); ?>" target="_blank" class="table-product-title">
                                                         <strong><?php echo html_escape($seller->username); ?></strong>
                                                     </a>
                                                 <?php endif; ?>
                                             </p>
                                         </td>
-                                        <td><?php echo print_price($item->product_unit_price, $item->product_currency); ?></td>
+                                        <td><?php echo price_formatted($item->product_unit_price, $item->product_currency); ?></td>
                                         <td><?php echo $item->product_quantity; ?></td>
                                         <td>
+                                            <?php if ($item->product_vat):
+                                                echo price_formatted($item->product_vat, $item->product_currency); ?>&nbsp;(<?php echo $item->product_vat_rate; ?>%)
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
                                             <?php if ($item->product_type == 'physical'):
-                                                echo print_price($item->product_shipping_cost, $item->product_currency);
+                                                echo price_formatted($item->product_shipping_cost, $item->product_currency);
                                             endif; ?>
                                         </td>
-                                        <td><?php echo print_price($item->product_total_price, $item->product_currency); ?></td>
+                                        <td><?php echo price_formatted($item->product_total_price, $item->product_currency); ?></td>
                                         <td>
                                             <strong><?php echo trans($item->order_status); ?></strong>
                                             <?php if ($item->buyer_id == 0): ?>
@@ -496,16 +502,26 @@
                     <strong> <?php echo trans("subtotal"); ?></strong>
                 </div>
                 <div class="col-sm-6">
-                    <strong class="font-right"><?php echo print_price($order->price_subtotal, $order->price_currency); ?></strong>
+                    <strong class="font-right"><?php echo price_formatted($order->price_subtotal, $order->price_currency); ?></strong>
                 </div>
             </div>
+            <?php if (!empty($order->price_vat)): ?>
+                <div class="row row-details">
+                    <div class="col-xs-12 col-sm-6 col-right">
+                        <strong> <?php echo trans("vat"); ?></strong>
+                    </div>
+                    <div class="col-sm-6">
+                        <strong class="font-right"><?php echo price_formatted($order->price_vat, $order->price_currency); ?></strong>
+                    </div>
+                </div>
+            <?php endif; ?>
             <?php if ($is_order_has_physical_product): ?>
                 <div class="row row-details">
                     <div class="col-xs-12 col-sm-6 col-right">
                         <strong> <?php echo trans("shipping"); ?></strong>
                     </div>
                     <div class="col-sm-6">
-                        <strong class="font-right"><?php echo print_price($order->price_shipping, $order->price_currency); ?></strong>
+                        <strong class="font-right"><?php echo price_formatted($order->price_shipping, $order->price_currency); ?></strong>
                     </div>
                 </div>
             <?php endif; ?>
@@ -515,7 +531,7 @@
                     <strong> <?php echo trans("total"); ?></strong>
                 </div>
                 <div class="col-sm-6">
-                    <strong class="font-right"><?php echo print_price($order->price_total, $order->price_currency); ?></strong>
+                    <strong class="font-right"><?php echo price_formatted($order->price_total, $order->price_currency); ?></strong>
                 </div>
             </div>
         </div>

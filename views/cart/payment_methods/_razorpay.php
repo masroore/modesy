@@ -23,12 +23,12 @@
 		<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 		<script>
             var options = {
-                "key": "<?php echo $payment_settings->razorpay_key_id; ?>",
+                "key": "<?php echo $this->payment_settings->razorpay_key_id; ?>",
                 "amount": "<?php echo $total_amount; ?>",
                 "currency": "<?php echo $currency; ?>",
-                "name": "<?php echo $general_settings->application_name; ?>",
+                "name": "<?php echo $this->general_settings->application_name; ?>",
                 "description": "<?php echo trans("pay"); ?>",
-                "image": "<?php echo get_logo_email($settings); ?>",
+                "image": "<?php echo get_logo_email($this->settings); ?>",
                 "order_id": "<?php echo $razorpay_order_id; ?>",
                 "handler": function (response) {
                     var data_array = {
@@ -39,16 +39,14 @@
                         'payment_amount': '<?php echo $total_amount; ?>',
                         'payment_status': '',
                         'mds_payment_type': '<?php echo $mds_payment_type; ?>',
-                        'lang_folder': lang_folder,
-                        'form_lang_base_url': '<?php echo lang_base_url(); ?>'
+                        'sys_lang_id': sys_lang_id
                     };
                     data_array[csfr_token_name] = $.cookie(csfr_cookie_name);
                     $.ajax({
                         type: "POST",
-                        url: base_url + "cart_controller/razorpay_payment_post",
+                        url: base_url + "razorpay-payment-post",
                         data: data_array,
                         success: function (response) {
-                            console.log(response);
                             var obj = JSON.parse(response);
                             if (obj.result == 1) {
                                 window.location.href = obj.redirect;

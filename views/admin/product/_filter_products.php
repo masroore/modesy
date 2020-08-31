@@ -17,10 +17,10 @@
 			<select id="categories" name="category" class="form-control" onchange="get_filter_subcategories(this.value);">
 				<option value=""><?php echo trans("all"); ?></option>
 				<?php
-				$categories = $this->category_model->get_parent_categories();
+				$categories = $this->category_model->get_all_parent_categories();
 				foreach ($categories as $item): ?>
 					<option value="<?php echo $item->id; ?>" <?php echo ($this->input->get('category', true) == $item->id) ? 'selected' : ''; ?>>
-						<?php echo html_escape(get_category_name_by_lang($item->id, $this->selected_lang->id)); ?>
+						<?php echo category_name($item); ?>
 					</option>
 				<?php endforeach; ?>
 			</select>
@@ -47,7 +47,7 @@
 
 		<div class="item-table-filter">
 			<label><?php echo trans("search"); ?></label>
-			<input name="q" class="form-control" placeholder="<?php echo trans("search"); ?>" type="search" value="<?php echo html_escape($this->input->get('q', true)); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+			<input name="q" class="form-control" placeholder="<?php echo trans("search"); ?>" type="search" value="<?php echo html_escape($this->input->get('q', true)); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
 		</div>
 
 		<div class="item-table-filter md-top-10" style="width: 65px; min-width: 65px;">

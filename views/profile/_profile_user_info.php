@@ -7,7 +7,9 @@
         </div>
         <div class="right">
             <div class="row-custom row-profile-username">
-                <h1 class="username"><?php echo get_shop_name($user); ?></h1>
+                <h1 class="username">
+                    <a href="<?php echo generate_profile_url($user->slug); ?>"> <?php echo get_shop_name($user); ?></a>
+                </h1>
                 <?php if ($user->role == 'vendor' || $user->role == 'admin'): ?>
                     <i class="icon-verified icon-verified-member"></i>
                 <?php endif; ?>
@@ -27,42 +29,42 @@
 
             <div class="row-custom user-contact">
                 <span class="info"><?php echo trans("member_since"); ?>&nbsp;<?php echo helper_date_format($user->created_at); ?></span>
-                <?php if (!empty($user->phone_number) && $user->show_phone == 1): ?>
-                    <span class="info"><i class="icon-phone"></i>
+                <?php if ($user->role == "admin" || $this->general_settings->hide_vendor_contact_information == 1):
+                    if (!empty($user->phone_number) && $user->show_phone == 1): ?>
+                        <span class="info"><i class="icon-phone"></i>
                         <a href="javascript:void(0)" id="show_phone_number"><?php echo trans("show"); ?></a>
                         <a href="tel:<?php echo html_escape($user->phone_number); ?>" id="phone_number" class="display-none"><?php echo html_escape($user->phone_number); ?></a>
                     </span>
-                <?php endif; ?>
-                <?php if (!empty($user->email) && $user->show_email == 1): ?>
+                    <?php endif; ?>
+                    <?php if (!empty($user->email) && $user->show_email == 1): ?>
                     <span class="info"><i class="icon-envelope"></i><?php echo html_escape($user->email); ?></span>
-                <?php endif; ?>
+                <?php endif;
+                endif; ?>
                 <?php if (!empty(get_location($user)) && $user->show_location == 1): ?>
                     <span class="info"><i class="icon-map-marker"></i><?php echo get_location($user); ?></span>
                 <?php endif; ?>
             </div>
 
-            <?php if ($general_settings->user_reviews == 1): ?>
+            <?php if ($this->general_settings->reviews == 1): ?>
                 <div class="profile-rating">
-                    <?php $rew_count = get_user_review_count($user->id);
-                    if ($rew_count > 0):?>
-                        <!--stars-->
-                        <?php $this->load->view('partials/_review_stars', ['review' => get_user_rating($user->id)]); ?>
-                        &nbsp;<span>(<?php echo $rew_count; ?>)</span>
+                    <?php if ($user_rating->count > 0):
+                        $this->load->view('partials/_review_stars', ['review' => $user_rating->rating]); ?>
+                        &nbsp;<span>(<?php echo $user_rating->count; ?>)</span>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
 
             <div class="row-custom profile-buttons">
                 <div class="buttons">
-                    <?php if (auth_check()): ?>
-                        <?php if (user()->id != $user->id): ?>
+                    <?php if ($this->auth_check): ?>
+                        <?php if ($this->auth_user->id != $user->id): ?>
                             <button class="btn btn-md btn-outline-gray" data-toggle="modal" data-target="#messageModal"><i class="icon-envelope"></i><?php echo trans("ask_question") ?></button>
 
                             <!--form follow-->
-                            <?php echo form_open('profile_controller/follow_unfollow_user', ['class' => 'form-inline']); ?>
+                            <?php echo form_open('follow-unfollow-user-post', ['class' => 'form-inline']); ?>
                             <input type="hidden" name="following_id" value="<?php echo $user->id; ?>">
-                            <input type="hidden" name="follower_id" value="<?php echo user()->id; ?>">
-                            <?php if (is_user_follows($user->id, user()->id)): ?>
+                            <input type="hidden" name="follower_id" value="<?php echo $this->auth_user->id; ?>">
+                            <?php if (is_user_follows($user->id, $this->auth_user->id)): ?>
                                 <button class="btn btn-md btn-outline-gray"><i class="icon-user-minus"></i><?php echo trans("unfollow"); ?></button>
                             <?php else: ?>
                                 <button class="btn btn-md btn-outline-gray"><i class="icon-user-plus"></i><?php echo trans("follow"); ?></button>
@@ -98,8 +100,8 @@
                         <?php if (!empty($user->youtube_url)): ?>
                             <li><a href="<?php echo $user->youtube_url; ?>" target="_blank"><i class="icon-youtube"></i></a></li>
                         <?php endif; ?>
-                        <?php if ($this->general_settings->rss_system == 1 && $user->show_rss_feeds == 1 && get_user_products_count($user->slug) > 0): ?>
-                            <li><a href="<?php echo lang_base_url() . "rss/seller/" . $user->slug; ?>" target="_blank"><i class="icon-rss"></i></a></li>
+                        <?php if ($this->general_settings->rss_system == 1 && $user->show_rss_feeds == 1 && get_user_products_count($user->id) > 0): ?>
+                            <li><a href="<?php echo lang_base_url() . "rss/" . get_route("seller", true) . $user->slug; ?>" target="_blank"><i class="icon-rss"></i></a></li>
                         <?php endif; ?>
                     </ul>
                 </div>

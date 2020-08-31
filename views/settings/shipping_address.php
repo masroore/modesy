@@ -29,7 +29,7 @@
                         <!-- include message block -->
                         <?php $this->load->view('partials/_messages'); ?>
 
-                        <?php echo form_open("profile_controller/shipping_address_post", ['id' => 'form_validate']); ?>
+                        <?php echo form_open("shipping-address-post", ['id' => 'form_validate']); ?>
 
                         <div class="form-group">
                             <div class="row">
@@ -70,7 +70,7 @@
                                     <div class="selectdiv">
                                         <select id="countries" name="shipping_country_id" class="form-control" required>
                                             <option value="" selected><?php echo trans("select_country"); ?></option>
-                                            <?php foreach ($countries as $item): ?>
+                                            <?php foreach ($this->countries as $item): ?>
                                                 <option value="<?php echo $item->id; ?>" <?php echo ($user->shipping_country_id == $item->id) ? 'selected' : ''; ?>><?php echo html_escape($item->name); ?></option>
                                             <?php endforeach; ?>
                                         </select>

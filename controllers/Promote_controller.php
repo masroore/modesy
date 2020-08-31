@@ -8,7 +8,7 @@ class Promote_controller extends Home_Core_Controller
     {
         parent::__construct();
         //check auth
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
     }
@@ -18,7 +18,7 @@ class Promote_controller extends Home_Core_Controller
      */
     public function pricing($product_id)
     {
-        if (1 != $this->promoted_products_enabled) {
+        if (1 != $this->general_settings->promoted_products) {
             redirect(lang_base_url());
         }
 
@@ -27,7 +27,7 @@ class Promote_controller extends Home_Core_Controller
             redirect(lang_base_url());
         }
         //check product user
-        if ($data['product']->user_id != user()->id) {
+        if ($data['product']->user_id != $this->auth_user->id) {
             redirect(lang_base_url());
         }
 
@@ -35,6 +35,7 @@ class Promote_controller extends Home_Core_Controller
         $data['description'] = trans('promote_your_product') . ' - ' . $this->app_name;
         $data['keywords'] = trans('promote_your_product') . ',' . $this->app_name;
         $data['type'] = $this->input->get('type');
+
         if ('new' != $data['type'] && 'exist' != $data['type']) {
             redirect($this->agent->referrer());
         } else {
@@ -57,8 +58,8 @@ class Promote_controller extends Home_Core_Controller
     public function pricing_post()
     {
         $plan_type = $this->input->post('plan_type', true);
-        $price_per_day = price_format_decimal($this->payment_settings->price_per_day);
-        $price_per_month = price_format_decimal($this->payment_settings->price_per_month);
+        $price_per_day = get_price($this->payment_settings->price_per_day, 'decimal');
+        $price_per_month = get_price($this->payment_settings->price_per_month, 'decimal');
 
         $day_count = $this->input->post('day_count', true);
         $month_count = $this->input->post('month_count', true);
@@ -84,13 +85,13 @@ class Promote_controller extends Home_Core_Controller
             $this->promote_model->add_to_promoted_products($data);
             $product = get_product($data->product_id);
             if (!empty($product)) {
-                redirect(lang_base_url() . $product->slug);
+                redirect(generate_product_url($product));
             } else {
                 redirect(lang_base_url());
             }
         } else {
             $this->session->set_userdata('modesy_selected_promoted_plan', $data);
-            redirect(lang_base_url() . 'cart/payment-method?payment_type=promote');
+            redirect(generate_url('cart', 'payment_method') . '?payment_type=promote');
         }
     }
 

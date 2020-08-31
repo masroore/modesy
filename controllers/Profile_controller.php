@@ -7,7 +7,6 @@ class Profile_controller extends Home_Core_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->pagination_per_page = 15;
     }
 
     /**
@@ -15,7 +14,7 @@ class Profile_controller extends Home_Core_Controller
      */
     public function profile($slug)
     {
-        $slug = decode_slug($slug);
+        $slug = clean_slug($slug);
         $data['user'] = $this->auth_model->get_user_by_slug($slug);
         if (empty($data['user'])) {
             redirect(lang_base_url());
@@ -25,14 +24,11 @@ class Profile_controller extends Home_Core_Controller
         $data['description'] = $data['user']->username . ' - ' . $this->app_name;
         $data['keywords'] = $data['user']->username . ',' . $this->app_name;
         $data['active_tab'] = 'products';
-
-        if ('member' == $data['user']->role) {
-            redirect(lang_base_url() . 'favorites/' . $data['user']->slug);
-        }
+        $data['user_rating'] = calculate_user_rating($data['user']->id);
 
         //set pagination
-        $pagination = $this->paginate(generate_profile_url($data['user']), $this->product_model->get_user_products_count($data['user']->slug), $this->pagination_per_page);
-        $data['products'] = $this->product_model->get_paginated_user_products($data['user']->slug, $pagination['per_page'], $pagination['offset']);
+        $pagination = $this->paginate(generate_profile_url($data['user']->slug), $this->product_model->get_user_products_count($data['user']->id), $this->product_paginate_per_page);
+        $data['products'] = $this->product_model->get_paginated_user_products($data['user']->id, $pagination['offset'], $pagination['per_page']);
 
         $this->load->view('partials/_header', $data);
         $this->load->view('profile/profile', $data);
@@ -44,20 +40,22 @@ class Profile_controller extends Home_Core_Controller
      */
     public function pending_products()
     {
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_multi_vendor_active()) {
             redirect(lang_base_url());
         }
-        $data['user'] = user();
+        $data['user'] = $this->auth_user;
         $data['title'] = trans('pending_products');
         $data['description'] = trans('pending_products') . ' - ' . $this->app_name;
         $data['keywords'] = trans('pending_products') . ',' . $this->app_name;
         $data['active_tab'] = 'pending_products';
+        $data['user_rating'] = calculate_user_rating($data['user']->id);
+
         //set pagination
-        $pagination = $this->paginate(lang_base_url() . 'pending-products', $this->product_model->get_user_pending_products_count($data['user']->id), $this->pagination_per_page);
-        $data['products'] = $this->product_model->get_paginated_user_pending_products($data['user']->id, $pagination['per_page'], $pagination['offset']);
+        $pagination = $this->paginate(generate_url('pending_products'), $this->product_model->get_user_pending_products_count($data['user']->id), $this->product_paginate_per_page);
+        $data['products'] = $this->product_model->get_paginated_user_pending_products($data['user']->id, $pagination['offset'], $pagination['per_page']);
 
         $this->load->view('partials/_header', $data);
         $this->load->view('profile/pending_products', $data);
@@ -69,20 +67,22 @@ class Profile_controller extends Home_Core_Controller
      */
     public function drafts()
     {
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_multi_vendor_active()) {
             redirect(lang_base_url());
         }
-        $data['user'] = user();
+        $data['user'] = $this->auth_user;
         $data['title'] = trans('drafts');
         $data['description'] = trans('drafts') . ' - ' . $this->app_name;
         $data['keywords'] = trans('drafts') . ',' . $this->app_name;
         $data['active_tab'] = 'drafts';
+        $data['user_rating'] = calculate_user_rating($data['user']->id);
+
         //set pagination
-        $pagination = $this->paginate(lang_base_url() . 'drafts', $this->product_model->get_user_drafts_count($data['user']->id), $this->pagination_per_page);
-        $data['products'] = $this->product_model->get_paginated_user_drafts($data['user']->id, $pagination['per_page'], $pagination['offset']);
+        $pagination = $this->paginate(generate_url('drafts'), $this->product_model->get_user_drafts_count($data['user']->id), $this->product_paginate_per_page);
+        $data['products'] = $this->product_model->get_paginated_user_drafts($data['user']->id, $pagination['offset'], $pagination['per_page']);
 
         $this->load->view('partials/_header', $data);
         $this->load->view('profile/drafts', $data);
@@ -94,7 +94,7 @@ class Profile_controller extends Home_Core_Controller
      */
     public function downloads()
     {
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_sale_active()) {
@@ -103,14 +103,16 @@ class Profile_controller extends Home_Core_Controller
         if (0 == $this->general_settings->digital_products_system) {
             redirect(lang_base_url());
         }
-        $data['user'] = user();
+        $data['user'] = $this->auth_user;
         $data['title'] = trans('downloads');
         $data['description'] = trans('downloads') . ' - ' . $this->app_name;
         $data['keywords'] = trans('downloads') . ',' . $this->app_name;
         $data['active_tab'] = 'downloads';
+        $data['user_rating'] = calculate_user_rating($data['user']->id);
+
         //set pagination
-        $pagination = $this->paginate(lang_base_url() . 'downloads', $this->product_model->get_user_downloads_count($data['user']->id), $this->pagination_per_page);
-        $data['items'] = $this->product_model->get_paginated_user_downloads($data['user']->id, $pagination['per_page'], $pagination['offset']);
+        $pagination = $this->paginate(generate_url('downloads'), $this->product_model->get_user_downloads_count($data['user']->id), $this->product_paginate_per_page);
+        $data['items'] = $this->product_model->get_paginated_user_downloads($data['user']->id, $pagination['offset'], $pagination['per_page']);
 
         $this->load->view('partials/_header', $data);
         $this->load->view('profile/downloads', $data);
@@ -122,22 +124,23 @@ class Profile_controller extends Home_Core_Controller
      */
     public function hidden_products()
     {
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_multi_vendor_active()) {
             redirect(lang_base_url());
         }
-        $data['user'] = user();
+        $data['user'] = $this->auth_user;
 
         $data['title'] = trans('hidden_products');
         $data['description'] = trans('hidden_products') . ' - ' . $this->app_name;
         $data['keywords'] = trans('hidden_products') . ',' . $this->app_name;
-
         $data['active_tab'] = 'hidden_products';
+        $data['user_rating'] = calculate_user_rating($data['user']->id);
+
         //set pagination
-        $pagination = $this->paginate(lang_base_url() . 'hidden-products', $this->product_model->get_user_hidden_products_count($data['user']->id), $this->pagination_per_page);
-        $data['products'] = $this->product_model->get_paginated_user_hidden_products($data['user']->id, $pagination['per_page'], $pagination['offset']);
+        $pagination = $this->paginate(generate_url('hidden_products'), $this->product_model->get_user_hidden_products_count($data['user']->id), $this->product_paginate_per_page);
+        $data['products'] = $this->product_model->get_paginated_user_hidden_products($data['user']->id, $pagination['offset'], $pagination['per_page']);
 
         $this->load->view('partials/_header', $data);
         $this->load->view('profile/pending_products', $data);
@@ -145,24 +148,28 @@ class Profile_controller extends Home_Core_Controller
     }
 
     /**
-     * Favorites.
+     * Wishlist.
      */
-    public function favorites($slug)
+    public function wishlist($slug)
     {
-        $slug = decode_slug($slug);
+        $slug = clean_slug($slug);
         $data['user'] = $this->auth_model->get_user_by_slug($slug);
         if (empty($data['user'])) {
             redirect(lang_base_url());
         }
 
-        $data['title'] = trans('favorites');
-        $data['description'] = trans('favorites') . ' - ' . $this->app_name;
-        $data['keywords'] = trans('favorites') . ',' . $this->app_name;
-        $data['active_tab'] = 'favorites';
-        $data['products'] = $this->product_model->get_user_favorited_products($data['user']->id);
+        $data['title'] = trans('wishlist');
+        $data['description'] = trans('wishlist') . ' - ' . $this->app_name;
+        $data['keywords'] = trans('wishlist') . ',' . $this->app_name;
+        $data['active_tab'] = 'wishlist';
+        $data['user_rating'] = calculate_user_rating($data['user']->id);
+
+        //set pagination
+        $pagination = $this->paginate(generate_url('wishlist') . '/' . $data['user']->slug, $this->product_model->get_user_wishlist_products_count($data['user']->id), $this->product_paginate_per_page);
+        $data['products'] = $this->product_model->get_paginated_user_wishlist_products($data['user']->id, $pagination['offset'], $pagination['per_page']);
 
         $this->load->view('partials/_header', $data);
-        $this->load->view('profile/favorites', $data);
+        $this->load->view('profile/wishlist', $data);
         $this->load->view('partials/_footer');
     }
 
@@ -171,7 +178,7 @@ class Profile_controller extends Home_Core_Controller
      */
     public function followers($slug)
     {
-        $slug = decode_slug($slug);
+        $slug = clean_slug($slug);
         $data['user'] = $this->auth_model->get_user_by_slug($slug);
         if (empty($data['user'])) {
             redirect(lang_base_url());
@@ -180,6 +187,7 @@ class Profile_controller extends Home_Core_Controller
         $data['description'] = trans('followers') . ' - ' . $this->app_name;
         $data['keywords'] = trans('followers') . ',' . $this->app_name;
         $data['active_tab'] = 'followers';
+        $data['user_rating'] = calculate_user_rating($data['user']->id);
         $data['followers'] = $this->profile_model->get_followers($data['user']->id);
 
         $this->load->view('partials/_header', $data);
@@ -192,7 +200,7 @@ class Profile_controller extends Home_Core_Controller
      */
     public function following($slug)
     {
-        $slug = decode_slug($slug);
+        $slug = clean_slug($slug);
         $data['user'] = $this->auth_model->get_user_by_slug($slug);
         if (empty($data['user'])) {
             redirect(lang_base_url());
@@ -201,7 +209,9 @@ class Profile_controller extends Home_Core_Controller
         $data['description'] = trans('following') . ' - ' . $this->app_name;
         $data['keywords'] = trans('following') . ',' . $this->app_name;
         $data['active_tab'] = 'following';
+        $data['user_rating'] = calculate_user_rating($data['user']->id);
         $data['following_users'] = $this->profile_model->get_following_users($data['user']->id);
+
         $this->load->view('partials/_header', $data);
         $this->load->view('profile/following', $data);
         $this->load->view('partials/_footer');
@@ -212,8 +222,8 @@ class Profile_controller extends Home_Core_Controller
      */
     public function reviews($slug)
     {
-        $slug = decode_slug($slug);
-        if (1 != $this->general_settings->user_reviews) {
+        $slug = clean_slug($slug);
+        if (1 != $this->general_settings->reviews) {
             redirect(lang_base_url());
         }
 
@@ -229,11 +239,11 @@ class Profile_controller extends Home_Core_Controller
         $data['description'] = $data['user']->username . ' ' . trans('reviews') . ' - ' . $this->app_name;
         $data['keywords'] = $data['user']->username . ' ' . trans('reviews') . ',' . $this->app_name;
         $data['active_tab'] = 'reviews';
-        $data['reviews'] = $this->user_review_model->get_reviews($data['user']->id);
+        $data['user_rating'] = calculate_user_rating($data['user']->id);
 
-        $data['review_count'] = $this->user_review_model->get_review_count($data['user']->id);
-        $data['reviews'] = $this->user_review_model->get_limited_reviews($data['user']->id, 5);
-        $data['review_limit'] = 5;
+        //set pagination
+        $pagination = $this->paginate(generate_url('reviews') . '/' . $data['user']->slug, $this->review_model->get_user_reviews_count($data['user']->id), 10);
+        $data['reviews'] = $this->review_model->get_user_reviews_orders($data['user']->id, $pagination['offset'], $pagination['per_page']);
 
         $this->load->view('partials/_header', $data);
         $this->load->view('profile/reviews', $data);
@@ -246,13 +256,13 @@ class Profile_controller extends Home_Core_Controller
     public function update_profile()
     {
         //check user
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         $data['title'] = trans('update_profile');
         $data['description'] = trans('update_profile') . ' - ' . $this->app_name;
         $data['keywords'] = trans('update_profile') . ',' . $this->app_name;
-        $data['user'] = user();
+        $data['user'] = $this->auth_user;
         if (empty($data['user'])) {
             redirect(lang_base_url());
         }
@@ -269,11 +279,11 @@ class Profile_controller extends Home_Core_Controller
     public function update_profile_post()
     {
         //check user
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
 
-        $user_id = user()->id;
+        $user_id = $this->auth_user->id;
         $action = $this->input->post('submit', true);
 
         if ('resend_activation_email' == $action) {
@@ -337,7 +347,7 @@ class Profile_controller extends Home_Core_Controller
     public function shop_settings()
     {
         //check user
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_user_vendor()) {
@@ -346,7 +356,7 @@ class Profile_controller extends Home_Core_Controller
         $data['title'] = trans('shop_settings');
         $data['description'] = trans('shop_settings') . ' - ' . $this->app_name;
         $data['keywords'] = trans('shop_settings') . ',' . $this->app_name;
-        $data['user'] = user();
+        $data['user'] = $this->auth_user;
         if (empty($data['user'])) {
             redirect(lang_base_url());
         }
@@ -363,7 +373,7 @@ class Profile_controller extends Home_Core_Controller
     public function shop_settings_post()
     {
         //check user
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_user_vendor()) {
@@ -379,43 +389,40 @@ class Profile_controller extends Home_Core_Controller
     }
 
     /**
-     * Contact Informations.
+     * Personal Information.
      */
-    public function contact_informations()
+    public function personal_information()
     {
         //check user
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
 
-        $data['title'] = trans('contact_informations');
-        $data['description'] = trans('contact_informations') . ' - ' . $this->app_name;
-        $data['keywords'] = trans('contact_informations') . ',' . $this->app_name;
-        $data['user'] = user();
-        if (empty($data['user'])) {
-            redirect(lang_base_url());
-        }
-        $data['active_tab'] = 'contact_informations';
+        $data['title'] = trans('personal_information');
+        $data['description'] = trans('personal_information') . ' - ' . $this->app_name;
+        $data['keywords'] = trans('personal_information') . ',' . $this->app_name;
+
+        $data['active_tab'] = 'personal_information';
         $data['countries'] = $this->location_model->get_countries();
-        $data['states'] = $this->location_model->get_states_by_country($data['user']->country_id);
-        $data['cities'] = $this->location_model->get_cities_by_state($data['user']->state_id);
+        $data['states'] = $this->location_model->get_states_by_country($this->auth_user->country_id);
+        $data['cities'] = $this->location_model->get_cities_by_state($this->auth_user->state_id);
 
         $this->load->view('partials/_header', $data);
-        $this->load->view('settings/contact_informations', $data);
+        $this->load->view('settings/personal_information', $data);
         $this->load->view('partials/_footer');
     }
 
     /**
-     * Contact Informations Post.
+     * Personal Information Post.
      */
-    public function contact_informations_post()
+    public function personal_information_post()
     {
         //check user
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
 
-        if ($this->profile_model->update_contact_informations()) {
+        if ($this->profile_model->update_personal_information()) {
             $this->session->set_flashdata('success', trans('msg_updated'));
         } else {
             $this->session->set_flashdata('error', trans('msg_error'));
@@ -429,13 +436,13 @@ class Profile_controller extends Home_Core_Controller
     public function shipping_address()
     {
         //check user
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         $data['title'] = trans('shipping_address');
         $data['description'] = trans('shipping_address') . ' - ' . $this->app_name;
         $data['keywords'] = trans('shipping_address') . ',' . $this->app_name;
-        $data['user'] = user();
+        $data['user'] = $this->auth_user;
         if (empty($data['user'])) {
             redirect(lang_base_url());
         }
@@ -453,7 +460,7 @@ class Profile_controller extends Home_Core_Controller
     public function shipping_address_post()
     {
         //check user
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
 
@@ -471,14 +478,14 @@ class Profile_controller extends Home_Core_Controller
     public function social_media()
     {
         //check user
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
 
         $data['title'] = trans('social_media');
         $data['description'] = trans('social_media') . ' - ' . $this->app_name;
         $data['keywords'] = trans('social_media') . ',' . $this->app_name;
-        $data['user'] = user();
+        $data['user'] = $this->auth_user;
         if (empty($data['user'])) {
             redirect(lang_base_url());
         }
@@ -495,7 +502,7 @@ class Profile_controller extends Home_Core_Controller
     public function social_media_post()
     {
         //check user
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
 
@@ -513,14 +520,14 @@ class Profile_controller extends Home_Core_Controller
     public function change_password()
     {
         //check user
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
 
         $data['title'] = trans('change_password');
         $data['description'] = trans('change_password') . ' - ' . $this->app_name;
         $data['keywords'] = trans('change_password') . ',' . $this->app_name;
-        $data['user'] = user();
+        $data['user'] = $this->auth_user;
         if (empty($data['user'])) {
             redirect(lang_base_url());
         }
@@ -537,7 +544,7 @@ class Profile_controller extends Home_Core_Controller
     public function change_password_post()
     {
         //check user
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
 
@@ -570,7 +577,7 @@ class Profile_controller extends Home_Core_Controller
     public function follow_unfollow_user()
     {
         //check user
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
 

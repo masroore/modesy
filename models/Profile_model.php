@@ -12,21 +12,64 @@ class Profile_model extends CI_Model
         $temp_path = $this->upload_model->upload_temp_image('file');
         if (!empty($temp_path)) {
             //delete old avatar
-            delete_file_from_server(user()->avatar);
+            delete_file_from_server($this->auth_user->avatar);
             $data['avatar'] = $this->upload_model->avatar_upload($temp_path);
             $this->upload_model->delete_temp_image($temp_path);
         }
-        $this->session->set_userdata('modesy_user_old_email', user()->email);
+        $this->session->set_userdata('modesy_user_old_email', $this->auth_user->email);
 
         $this->db->where('id', $user_id);
 
         return $this->db->update('users', $data);
     }
 
+    //edit user
+    public function edit_user($id)
+    {
+        $user = $this->auth_model->get_user($id);
+        if (!empty($user)) {
+            $data = [
+                'username' => $this->input->post('username', true),
+                'email' => $this->input->post('email', true),
+                'slug' => $this->input->post('slug', true),
+                'first_name' => $this->input->post('first_name', true),
+                'last_name' => $this->input->post('last_name', true),
+                'phone_number' => $this->input->post('phone_number', true),
+                'shop_name' => $this->input->post('shop_name', true),
+                'about_me' => $this->input->post('about_me', true),
+                'country_id' => $this->input->post('country_id', true),
+                'state_id' => $this->input->post('state_id', true),
+                'city_id' => $this->input->post('city_id', true),
+                'address' => $this->input->post('address', true),
+                'zip_code' => $this->input->post('zip_code', true),
+                'facebook_url' => $this->input->post('facebook_url', true),
+                'twitter_url' => $this->input->post('twitter_url', true),
+                'instagram_url' => $this->input->post('instagram_url', true),
+                'pinterest_url' => $this->input->post('pinterest_url', true),
+                'linkedin_url' => $this->input->post('linkedin_url', true),
+                'vk_url' => $this->input->post('vk_url', true),
+                'youtube_url' => $this->input->post('youtube_url', true),
+            ];
+
+            $this->load->model('upload_model');
+            $temp_path = $this->upload_model->upload_temp_image('file');
+            if (!empty($temp_path)) {
+                $data['avatar'] = $this->upload_model->avatar_upload($temp_path);
+                $this->upload_model->delete_temp_image($temp_path);
+                //delete old
+                delete_file_from_server($user->avatar);
+            }
+
+            $this->db->where('id', $user->id);
+
+            return $this->db->update('users', $data);
+        }
+    }
+
     //update shop settings
     public function update_shop_settings()
     {
-        $user_id = user()->id;
+        $user_id = $this->auth_user->id;
         $data = [
             'shop_name' => remove_special_characters($this->input->post('shop_name', true)),
             'about_me' => $this->input->post('about_me', true),
@@ -67,11 +110,13 @@ class Profile_model extends CI_Model
         return false;
     }
 
-    //update contact informations
-    public function update_contact_informations()
+    //update personal information
+    public function update_personal_information()
     {
-        $user_id = user()->id;
+        $user_id = $this->auth_user->id;
         $data = [
+            'first_name' => $this->input->post('first_name', true),
+            'last_name' => $this->input->post('last_name', true),
             'country_id' => $this->input->post('country_id', true),
             'state_id' => $this->input->post('state_id', true),
             'city_id' => $this->input->post('city_id', true),
@@ -83,6 +128,12 @@ class Profile_model extends CI_Model
             'show_location' => $this->input->post('show_location', true),
         ];
 
+        if (empty($data['state_id'])) {
+            $data['state_id'] = 0;
+        }
+        if (empty($data['city_id'])) {
+            $data['city_id'] = 0;
+        }
         if (empty($data['show_email'])) {
             $data['show_email'] = 0;
         }
@@ -92,7 +143,6 @@ class Profile_model extends CI_Model
         if (empty($data['show_location'])) {
             $data['show_location'] = 0;
         }
-
         $this->db->where('id', $user_id);
 
         return $this->db->update('users', $data);
@@ -101,7 +151,7 @@ class Profile_model extends CI_Model
     //update shipping address
     public function update_shipping_address()
     {
-        $user_id = user()->id;
+        $user_id = $this->auth_user->id;
         $data = [
             'shipping_first_name' => $this->input->post('shipping_first_name', true),
             'shipping_last_name' => $this->input->post('shipping_last_name', true),
@@ -122,7 +172,7 @@ class Profile_model extends CI_Model
     //update update social media
     public function update_social_media()
     {
-        $user_id = user()->id;
+        $user_id = $this->auth_user->id;
         $data = [
             'facebook_url' => $this->input->post('facebook_url', true),
             'twitter_url' => $this->input->post('twitter_url', true),
@@ -152,8 +202,7 @@ class Profile_model extends CI_Model
     public function change_password($old_password_exists)
     {
         $this->load->library('bcrypt');
-
-        $user = user();
+        $user = $this->auth_user;
         if (!empty($user)) {
             $data = $this->change_password_input_values();
             if (1 == $old_password_exists) {

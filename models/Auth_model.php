@@ -10,6 +10,8 @@ class Auth_model extends CI_Model
         return [
             'username' => remove_special_characters($this->input->post('username', true)),
             'email' => $this->input->post('email', true),
+            'first_name' => $this->input->post('first_name', true),
+            'last_name' => $this->input->post('last_name', true),
             'password' => $this->input->post('password', true),
         ];
     }
@@ -89,12 +91,17 @@ class Auth_model extends CI_Model
                     'email' => $fb_user->email,
                     'email_status' => 1,
                     'token' => generate_token(),
+                    'role' => 'member',
                     'username' => $username,
+                    'first_name' => $fb_user->name,
                     'slug' => $slug,
                     'avatar' => 'https://graph.facebook.com/' . $fb_user->id . '/picture?type=large',
                     'user_type' => 'facebook',
                     'created_at' => date('Y-m-d H:i:s'),
                 ];
+                if (1 != $this->general_settings->vendor_verification_system) {
+                    $data['role'] = 'vendor';
+                }
                 if (!empty($data['email'])) {
                     $this->db->insert('users', $data);
                     $user = $this->get_user_by_email($fb_user->email);
@@ -125,15 +132,61 @@ class Auth_model extends CI_Model
                     'email' => $g_user->email,
                     'email_status' => 1,
                     'token' => generate_unique_id(),
+                    'role' => 'member',
                     'username' => $username,
+                    'first_name' => $g_user->name,
                     'slug' => $slug,
                     'avatar' => $g_user->avatar,
                     'user_type' => 'google',
                     'created_at' => date('Y-m-d H:i:s'),
                 ];
+                if (1 != $this->general_settings->vendor_verification_system) {
+                    $data['role'] = 'vendor';
+                }
                 if (!empty($data['email'])) {
                     $this->db->insert('users', $data);
                     $user = $this->get_user_by_email($g_user->email);
+                    $this->login_direct($user);
+                }
+            } else {
+                //login
+                $this->login_direct($user);
+            }
+        }
+    }
+
+    //login with vk
+    public function login_with_vk($vk_user)
+    {
+        if (!empty($vk_user)) {
+            $user = $this->get_user_by_email($vk_user->email);
+            //check if user registered
+            if (empty($user)) {
+                if (empty($vk_user->name)) {
+                    $vk_user->name = 'user-' . uniqid();
+                }
+                $username = $this->generate_uniqe_username($vk_user->name);
+                $slug = $this->generate_uniqe_slug($username);
+                //add user to database
+                $data = [
+                    'google_id' => $vk_user->id,
+                    'email' => $vk_user->email,
+                    'email_status' => 1,
+                    'token' => generate_unique_id(),
+                    'role' => 'member',
+                    'username' => $username,
+                    'first_name' => $vk_user->name,
+                    'slug' => $slug,
+                    'avatar' => $vk_user->avatar,
+                    'user_type' => 'vkontakte',
+                    'created_at' => date('Y-m-d H:i:s'),
+                ];
+                if (1 != $this->general_settings->vendor_verification_system) {
+                    $data['role'] = 'vendor';
+                }
+                if (!empty($data['email'])) {
+                    $this->db->insert('users', $data);
+                    $user = $this->get_user_by_email($vk_user->email);
                     $this->login_direct($user);
                 }
             } else {
@@ -192,6 +245,7 @@ class Auth_model extends CI_Model
         $data['username'] = remove_special_characters($data['username']);
         //secure password
         $data['password'] = $this->bcrypt->hash_password($data['password']);
+        $data['role'] = 'member';
         $data['user_type'] = 'registered';
         $data['slug'] = $this->generate_uniqe_slug($data['username']);
         $data['banned'] = 0;
@@ -200,6 +254,9 @@ class Auth_model extends CI_Model
         $data['email_status'] = 1;
         if (1 == $this->general_settings->email_verification) {
             $data['email_status'] = 0;
+        }
+        if (1 != $this->general_settings->vendor_verification_system) {
+            $data['role'] = 'vendor';
         }
         if ($this->db->insert('users', $data)) {
             $last_id = $this->db->insert_id();
@@ -367,7 +424,14 @@ class Auth_model extends CI_Model
     public function add_shop_opening_requests($data)
     {
         if ($this->is_logged_in()) {
-            $user = user();
+            if (empty($data['country_id'])) {
+                $data['country_id'] = 0;
+            }
+            if (empty($data['state_id'])) {
+                $data['state_id'] = 0;
+            }
+
+            $user = $this->auth_user;
             $this->db->where('id', $user->id);
 
             return $this->db->update('users', $data);
@@ -401,13 +465,12 @@ class Auth_model extends CI_Model
     //update last seen time
     public function update_last_seen()
     {
-        if ($this->is_logged_in()) {
-            $user = user();
+        if ($this->auth_check) {
             //update last seen
             $data = [
                 'last_seen' => date('Y-m-d H:i:s'),
             ];
-            $this->db->where('id', $user->id);
+            $this->db->where('id', $this->auth_user->id);
             $this->db->update('users', $data);
         }
     }
@@ -438,20 +501,6 @@ class Auth_model extends CI_Model
 
             return $query->row();
         }
-    }
-
-    //is admin
-    public function is_admin()
-    {
-        //check logged in
-        if ($this->is_logged_in()) {
-            $user = $this->get_logged_user();
-            if ('admin' == $user->role) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     //get user by id

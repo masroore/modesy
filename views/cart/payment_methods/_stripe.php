@@ -13,7 +13,7 @@
 	<script src="https://checkout.stripe.com/v2/checkout.js"></script>
 	<script>
         var handler = StripeCheckout.configure({
-            key: '<?php echo $payment_settings->stripe_publishable_key; ?>',
+            key: '<?php echo $this->payment_settings->stripe_publishable_key; ?>',
             image: 'https://stripe.com/img/documentation/checkout/marketplace.png',
             locale: 'auto',
             currency: '<?php echo $currency; ?>',
@@ -25,13 +25,12 @@
                     'payment_amount': '<?php echo $total_amount; ?>',
                     'payment_status': 'success',
                     'mds_payment_type': '<?php echo $mds_payment_type; ?>',
-                    'lang_folder': lang_folder,
-                    'form_lang_base_url': '<?php echo lang_base_url(); ?>'
+                    'sys_lang_id': sys_lang_id
                 };
                 data[csfr_token_name] = $.cookie(csfr_cookie_name);
                 $.ajax({
                     type: "POST",
-                    url: base_url + "cart_controller/stripe_payment_post",
+                    url: base_url + "stripe-payment-post",
                     data: data,
                     success: function (response) {
                         var obj = JSON.parse(response);
@@ -46,7 +45,7 @@
         });
         document.getElementById('btn_stripe_checkout').addEventListener('click', function (e) {
             handler.open({
-                name: '<?php echo html_escape($general_settings->application_name); ?>',
+                name: '<?php echo html_escape($this->general_settings->application_name); ?>',
                 description: '<?php echo trans("stripe_checkout"); ?>',
                 amount: '<?php echo $total_amount; ?>'
             });

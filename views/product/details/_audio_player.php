@@ -66,3 +66,4 @@
         Amplitude.setSongPlayedPercentage(new_progress);
     }
 </script>
+

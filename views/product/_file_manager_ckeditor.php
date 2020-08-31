@@ -12,7 +12,7 @@
             <div class="modal-body">
                 <div class="file-manager">
                     <div class="file-manager-left">
-                        <?php echo form_open_multipart('file_controller/upload_file_manager_images', ['id' => 'form_image_ck_file_manager']); ?>
+                        <?php echo form_open_multipart('upload-file-manager-images-post', ['id' => 'form_image_ck_file_manager']); ?>
                         <div class="row">
                             <div class="col-sm-12">
                                 <a id="btn_ckimg_upload" class='btn btn-file-upload btn-secondary btn-file-manager'>

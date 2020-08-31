@@ -51,348 +51,234 @@ defined('BASEPATH') or exit('No direct script access allowed');
 |		my-controller/my-method	-> my_controller/my_method
 */
 
+$routes = $this->config->item('routes');
+
 $route['default_controller'] = 'home_controller';
 $route['404_override'] = 'home_controller/error_404';
 $route['translate_uri_dashes'] = false;
 $route['error-404'] = 'home_controller/error_404';
 
-include_once 'route_controllers.php';
-include_once 'route_slugs.php';
-//routes
-$r_admin = $custom_slug_array['admin'];
-
-//auth routes
-$route['logout'] = 'common_controller/logout';
-$route['register'] = 'auth_controller/register';
-$route['forgot-password'] = 'auth_controller/forgot_password';
-$route['reset-password'] = 'auth_controller/reset_password';
-$route['confirm'] = 'auth_controller/confirm_email';
-$route['connect-with-facebook'] = 'auth_controller/connect_with_facebook';
-$route['facebook-callback'] = 'auth_controller/facebook_callback';
-$route['connect-with-google'] = 'auth_controller/connect_with_google';
-//profile routes
-$route['profile/(:any)'] = 'profile_controller/profile/$1';
-$route['favorites/(:any)'] = 'profile_controller/favorites/$1';
-$route['favorites'] = 'home_controller/guest_favorites/$1';
-$route['followers/(:any)'] = 'profile_controller/followers/$1';
-$route['following/(:any)'] = 'profile_controller/following/$1';
-$route['reviews/(:any)'] = 'profile_controller/reviews/$1';
-// settings
-$route['settings'] = 'profile_controller/update_profile';
-$route['settings/update-profile'] = 'profile_controller/update_profile';
-$route['settings/shop-settings'] = 'profile_controller/shop_settings';
-$route['settings/contact-informations'] = 'profile_controller/contact_informations';
-$route['settings/social-media'] = 'profile_controller/social_media';
-$route['settings/change-password'] = 'profile_controller/change_password';
-$route['settings/shipping-address'] = 'profile_controller/shipping_address';
-
-$route['contact'] = 'home_controller/contact';
-$route['members'] = 'home_controller/members';
-// product routes
-$route['start-selling'] = 'product_controller/start_selling';
-$route['sell-now'] = 'product_controller/add_product';
-$route['sell-now/(:num)'] = 'product_controller/edit_draft/$1';
-$route['sell-now/product-details/(:num)'] = 'product_controller/edit_product_details/$1';
-$route['sell-now/edit-product/(:num)'] = 'product_controller/edit_product/$1';
-$route['search'] = 'home_controller/search';
-$route['products'] = 'home_controller/products';
-$route['drafts'] = 'profile_controller/drafts';
-$route['downloads'] = 'profile_controller/downloads';
-$route['pending-products'] = 'profile_controller/pending_products';
-$route['hidden-products'] = 'profile_controller/hidden_products';
-// promote product routes
-$route['promote-product/pricing/(:num)'] = 'promote_controller/pricing/$1';
-// blog routes
-$route['blog'] = 'home_controller/blog';
-$route['blog/(:any)'] = 'home_controller/blog_category/$1';
-$route['blog/tag/(:any)'] = 'home_controller/tag/$1';
-$route['blog/(:any)/(:any)'] = 'home_controller/post/$1/$2';
-
-$route['category/(:any)'] = 'product_controller/category/$1';
-$route['category/(:any)/(:any)'] = 'product_controller/subcategory/$1/$2';
-$route['category/(:any)/(:any)/(:any)'] = 'product_controller/third_category/$1/$2/$3';
-
-$route['messages'] = 'message_controller/messages';
-$route['messages/conversation/(:num)'] = 'message_controller/conversation/$1';
-// paypal routes
-$route['execute-paypal-payment'] = 'product_controller/execute_paypal_payment';
-
-$route['cron/update-sitemap'] = 'cron_controller/update_sitemap';
-$route['unsubscribe'] = 'home_controller/unsubscribe';
-// rss feeds
-$route['rss-feeds'] = 'rss_controller/rss_feeds';
-$route['rss/latest-products'] = 'rss_controller/latest_products';
-$route['rss/promoted-products'] = 'rss_controller/promoted_products';
-$route['rss/category/(:any)'] = 'rss_controller/rss_by_category/$1';
-$route['rss/seller/(:any)'] = 'rss_controller/rss_by_seller/$1';
-// cart
-$route['cart'] = 'cart_controller/cart';
-$route['cart/shipping'] = 'cart_controller/shipping';
-$route['cart/payment-method'] = 'cart_controller/payment_method';
-$route['cart/payment'] = 'cart_controller/payment';
-$route['add-to-cart']['POST'] = 'cart_controller/add_to_cart';
-$route['add-to-cart-quote']['POST'] = 'cart_controller/add_to_cart_quote';
-$route['order-completed/(:num)'] = 'cart_controller/order_completed/$1';
-$route['promote-payment-completed'] = 'cart_controller/promote_payment_completed';
-// orders
-$route['orders'] = 'order_controller/orders';
-$route['orders/completed-orders'] = 'order_controller/completed_orders';
-$route['order/(:num)'] = 'order_controller/order/$1';
-// sales
-$route['sales'] = 'order_controller/sales';
-$route['sales/completed-sales'] = 'order_controller/completed_sales';
-$route['sale/(:num)'] = 'order_controller/sale/$1';
-// earnings
-$route['earnings'] = 'earnings_controller/earnings';
-$route['set-payout-account'] = 'earnings_controller/set_payout_account';
-$route['payouts'] = 'earnings_controller/payouts';
-// bidding
-$route['request-quote']['POST'] = 'bidding_controller/request_quote';
-$route['quote-requests']['GET'] = 'bidding_controller/quote_requests';
-$route['sent-quote-requests']['GET'] = 'bidding_controller/sent_quote_requests';
-
-// old category routes
-$route['category/(:any)'] = 'home_controller/any/$1';
-$route['category/(:any)/(:any)'] = 'home_controller/subcategory/$1/$2';
-$route['category/(:any)/(:any)/(:any)'] = 'home_controller/subcategory/$2/$3';
-
-// ADMIN ROUTES
-//login
-$route[$r_admin . '/login'] = 'common_controller/admin_login';
-// navigation routes
-$route[$r_admin . '/navigation'] = 'admin_controller/navigation';
-// slider routes
-$route[$r_admin . '/add-slider-item'] = 'admin_controller/add_slider_item';
-$route[$r_admin . '/slider-items'] = 'admin_controller/slider_items';
-$route[$r_admin . '/update-slider-item/(:num)'] = 'admin_controller/update_slider_item/$1';
-// page routes
-$route[$r_admin] = 'admin_controller/index';
-$route[$r_admin . '/settings'] = 'admin_controller/settings';
-$route[$r_admin . '/email-settings'] = 'admin_controller/email_settings';
-$route[$r_admin . '/social-login'] = 'admin_controller/social_login_settings';
-
-$route[$r_admin . '/add-page'] = 'page_controller/add_page';
-$route[$r_admin . '/update-page'] = 'page_controller/update_page';
-$route[$r_admin . '/pages'] = 'page_controller/pages';
-$route[$r_admin . '/pages'] = 'page_controller/pages';
-// order routes
-$route[$r_admin . '/orders'] = 'order_admin_controller/orders';
-$route[$r_admin . '/order-details/(:num)'] = 'order_admin_controller/order_details/$1';
-$route[$r_admin . '/transactions'] = 'order_admin_controller/transactions';
-$route[$r_admin . '/order-bank-transfers'] = 'order_admin_controller/order_bank_transfers';
-$route[$r_admin . '/digital-sales'] = 'order_admin_controller/digital_sales';
-// product routes
-$route[$r_admin . '/products'] = 'product_admin_controller/products';
-$route[$r_admin . '/pending-products'] = 'product_admin_controller/pending_products';
-$route[$r_admin . '/hidden-products'] = 'product_admin_controller/hidden_products';
-$route[$r_admin . '/sold-products'] = 'product_admin_controller/sold_products';
-$route[$r_admin . '/drafts'] = 'product_admin_controller/drafts';
-$route[$r_admin . '/deleted-products'] = 'product_admin_controller/deleted_products';
-$route[$r_admin . '/product-details/(:num)'] = 'product_admin_controller/product_details/$1';
-// promoted product routes
-$route[$r_admin . '/promoted-products'] = 'product_admin_controller/promoted_products';
-$route[$r_admin . '/promoted-products-transactions'] = 'product_admin_controller/promoted_products_transactions';
-$route[$r_admin . '/promoted-products-pricing'] = 'product_admin_controller/promoted_products_pricing';
-// bidding system
-$route[$r_admin . '/quote-requests'] = 'admin_controller/quote_requests';
-// page routes
-$route[$r_admin . '/pages'] = 'page_controller/pages';
-$route[$r_admin . '/update-page/(:num)'] = 'page_controller/update_page/$1';
-// category routes
-$route[$r_admin . '/add-category'] = 'category_controller/add_category';
-$route[$r_admin . '/categories'] = 'category_controller/categories';
-$route[$r_admin . '/update-category/(:num)'] = 'category_controller/update_category/$1';
-$route[$r_admin . '/update-subcategory/(:num)'] = 'category_controller/update_subcategory/$1';
-$route[$r_admin . '/subcategories'] = 'category_controller/subcategories';
-$route[$r_admin . '/add-subcategory'] = 'category_controller/add_subcategory';
-// custom fields
-$route[$r_admin . '/add-custom-field'] = 'category_controller/add_custom_field';
-$route[$r_admin . '/custom-fields'] = 'category_controller/custom_fields';
-$route[$r_admin . '/update-custom-field/(:num)'] = 'category_controller/update_custom_field/$1';
-$route[$r_admin . '/custom-field-options/(:num)'] = 'category_controller/custom_field_options/$1';
-// earnings
-$route[$r_admin . '/earnings'] = 'earnings_admin_controller/earnings';
-$route[$r_admin . '/completed-payouts'] = 'earnings_admin_controller/completed_payouts';
-$route[$r_admin . '/payout-requests'] = 'earnings_admin_controller/payout_requests';
-$route[$r_admin . '/payout-settings'] = 'earnings_admin_controller/payout_settings';
-$route[$r_admin . '/add-payout'] = 'earnings_admin_controller/add_payout';
-$route[$r_admin . '/seller-balances'] = 'earnings_admin_controller/seller_balances';
-$route[$r_admin . '/update-seller-balance/(:num)'] = 'earnings_admin_controller/update_seller_balance/$1';
-// blog routes
-$route[$r_admin . '/blog-add-post'] = 'blog_controller/add_post';
-$route[$r_admin . '/blog-posts'] = 'blog_controller/posts';
-$route[$r_admin . '/update-blog-post/(:num)'] = 'blog_controller/update_post/$1';
-$route[$r_admin . '/blog-categories'] = 'blog_controller/categories';
-$route[$r_admin . '/update-blog-category/(:num)'] = 'blog_controller/update_category/$1';
-// comment routes
-$route[$r_admin . '/product-comments'] = 'product_admin_controller/comments';
-$route[$r_admin . '/blog-comments'] = 'blog_controller/comments';
-// review routes
-$route[$r_admin . '/product-reviews'] = 'product_admin_controller/product_reviews';
-$route[$r_admin . '/user-reviews'] = 'admin_controller/user_reviews';
-// ad spaces routes
-$route[$r_admin . '/ad-spaces'] = 'admin_controller/ad_spaces';
-// seo tools routes
-$route[$r_admin . '/seo-tools'] = 'admin_controller/seo_tools';
-// location
-$route[$r_admin . '/location-settings'] = 'admin_controller/location_settings';
-$route[$r_admin . '/countries'] = 'admin_controller/countries';
-$route[$r_admin . '/states'] = 'admin_controller/states';
-$route[$r_admin . '/add-country'] = 'admin_controller/add_country';
-$route[$r_admin . '/update-country/(:num)'] = 'admin_controller/update_country/$1';
-$route[$r_admin . '/add-state'] = 'admin_controller/add_state';
-$route[$r_admin . '/update-state/(:num)'] = 'admin_controller/update_state/$1';
-$route[$r_admin . '/cities'] = 'admin_controller/cities';
-$route[$r_admin . '/add-city'] = 'admin_controller/add_city';
-$route[$r_admin . '/update-city/(:num)'] = 'admin_controller/update_city/$1';
-// users routes
-$route[$r_admin . '/members'] = 'admin_controller/members';
-$route[$r_admin . '/vendors'] = 'admin_controller/vendors';
-$route[$r_admin . '/administrators'] = 'admin_controller/administrators';
-$route[$r_admin . '/shop-opening-requests'] = 'admin_controller/shop_opening_requests';
-$route[$r_admin . '/add-administrator'] = 'admin_controller/add_administrator';
-
-$route[$r_admin . '/cache-system'] = 'admin_controller/cache_system';
-$route[$r_admin . '/storage'] = 'admin_controller/storage';
-// languages routes
-$route[$r_admin . '/languages'] = 'language_controller/languages';
-$route[$r_admin . '/update-language/(:num)'] = 'language_controller/update_language/$1';
-$route[$r_admin . '/update-phrases/(:num)'] = 'language_controller/update_phrases/$1';
-$route[$r_admin . '/search-phrases'] = 'language_controller/search_phrases';
-// payment routes
-$route[$r_admin . '/payment-settings'] = 'settings_controller/payment_settings';
-$route[$r_admin . '/visual-settings'] = 'admin_controller/visual_settings';
-$route[$r_admin . '/system-settings'] = 'admin_controller/system_settings';
-// currency
-$route[$r_admin . '/currency-settings'] = 'admin_controller/currency_settings';
-$route[$r_admin . '/update-currency/(:num)'] = 'admin_controller/update_currency/$1';
-//newsletter
-$route[$r_admin . '/send-email-subscribers'] = 'admin_controller/send_email_subscribers';
-$route[$r_admin . '/subscribers'] = 'admin_controller/subscribers';
-
-$route[$r_admin . '/contact-messages'] = 'admin_controller/contact_messages';
-$route[$r_admin . '/preferences'] = 'admin_controller/preferences';
-
-//form settings
-$route[$r_admin . '/form-settings'] = 'settings_controller/form_settings';
-$route[$r_admin . '/form-settings/shipping-options'] = 'settings_controller/shipping_options';
-$route[$r_admin . '/form-settings/edit-shipping-option/(:num)'] = 'settings_controller/edit_shipping_option/$1';
-$route[$r_admin . '/form-settings/product-conditions'] = 'settings_controller/product_conditions';
-$route[$r_admin . '/form-settings/edit-product-condition/(:num)'] = 'settings_controller/edit_product_condition/$1';
-/*
-*-------------------------------------------------------------------------------------------------
-* DYNAMIC ROUTES
-*-------------------------------------------------------------------------------------------------
-*/
-require_once BASEPATH . 'database/DB.php';
-$db = &DB();
-$general_settings = $db->get('general_settings')->row();
-defined('SITE_MDS_KEY') or define('SITE_MDS_KEY', trim($general_settings->mds_key));
-defined('SITE_PRC_CD') or define('SITE_PRC_CD', trim($general_settings->purchase_code));
-$languages = $db->get('languages')->result();
+$general_settings = $this->config->item('general_settings');
+$languages = $this->config->item('languages');
 foreach ($languages as $language) {
-    if (1 == $language->status && $general_settings->site_lang != $language->id) {
-        $key = $language->short_form;
+    if (1 == $language->status) {
+        $key = '';
+        if ($general_settings->site_lang != $language->id) {
+            $key = $language->short_form . '/';
+            $route[$language->short_form] = 'home_controller/index';
+            $route[$key . '/error-404'] = 'home_controller/error_404';
+        }
 
-        $route[$key] = 'home_controller/index';
-        $route[$key . '/error-404'] = 'home_controller/error_404';
-
-        //auth routes
-        $route[$key . '/logout'] = 'common_controller/logout';
-        $route[$key . '/register'] = 'auth_controller/register';
-        $route[$key . '/forgot-password'] = 'auth_controller/forgot_password';
-        $route[$key . '/reset-password'] = 'auth_controller/reset_password';
-        $route[$key . '/confirm'] = 'auth_controller/confirm_email';
-        //profile routes
-        $route[$key . '/profile/(:any)'] = 'profile_controller/profile/$1';
-        $route[$key . '/favorites/(:any)'] = 'profile_controller/favorites/$1';
-        $route[$key . '/favorites'] = 'home_controller/guest_favorites/$1';
-        $route[$key . '/followers/(:any)'] = 'profile_controller/followers/$1';
-        $route[$key . '/following/(:any)'] = 'profile_controller/following/$1';
-        $route[$key . '/reviews/(:any)'] = 'profile_controller/reviews/$1';
+        //auth
+        $route[$key . $routes->register]['GET'] = 'auth_controller/register';
+        $route[$key . $routes->forgot_password]['GET'] = 'auth_controller/forgot_password';
+        $route[$key . $routes->reset_password]['GET'] = 'auth_controller/reset_password';
+        //profile
+        $route[$key . $routes->profile . '/(:any)']['GET'] = 'profile_controller/profile/$1';
+        $route[$key . $routes->wishlist . '/(:any)']['GET'] = 'profile_controller/wishlist/$1';
+        $route[$key . $routes->wishlist]['GET'] = 'home_controller/guest_wishlist/$1';
+        $route[$key . $routes->followers . '/(:any)']['GET'] = 'profile_controller/followers/$1';
+        $route[$key . $routes->following . '/(:any)']['GET'] = 'profile_controller/following/$1';
+        $route[$key . $routes->reviews . '/(:any)']['GET'] = 'profile_controller/reviews/$1';
         // settings
-        $route[$key . '/settings'] = 'profile_controller/update_profile';
-        $route[$key . '/settings/update-profile'] = 'profile_controller/update_profile';
-        $route[$key . '/settings/shop-settings'] = 'profile_controller/shop_settings';
-        $route[$key . '/settings/contact-informations'] = 'profile_controller/contact_informations';
-        $route[$key . '/settings/social-media'] = 'profile_controller/social_media';
-        $route[$key . '/settings/change-password'] = 'profile_controller/change_password';
-        $route[$key . '/settings/shipping-address'] = 'profile_controller/shipping_address';
-
-        $route[$key . '/contact'] = 'home_controller/contact';
-        $route[$key . '/members'] = 'home_controller/members';
-        // product routes
-        $route[$key . '/start-selling'] = 'product_controller/start_selling';
-        $route[$key . '/sell-now'] = 'product_controller/add_product';
-        $route[$key . '/sell-now/(:num)'] = 'product_controller/edit_draft/$1';
-        $route[$key . '/sell-now/product-details/(:num)'] = 'product_controller/edit_product_details/$1';
-        $route[$key . '/sell-now/edit-product/(:num)'] = 'product_controller/edit_product/$1';
-        $route[$key . '/search'] = 'home_controller/search';
-        $route[$key . '/products'] = 'home_controller/products';
-        $route[$key . '/drafts'] = 'profile_controller/drafts';
-        $route[$key . '/downloads'] = 'profile_controller/downloads';
-        $route[$key . '/pending-products'] = 'profile_controller/pending_products';
-        $route[$key . '/hidden-products'] = 'profile_controller/hidden_products';
-        // promote product routes
-        $route[$key . '/promote-product/pricing/(:num)'] = 'promote_controller/pricing/$1';
-        // blog routes
-        $route[$key . '/blog'] = 'home_controller/blog';
-        $route[$key . '/blog/(:any)'] = 'home_controller/blog_category/$1';
-        $route[$key . '/blog/tag/(:any)'] = 'home_controller/tag/$1';
-        $route[$key . '/blog/(:any)/(:any)'] = 'home_controller/post/$1/$2';
-
-        $route[$key . '/category/(:any)'] = 'product_controller/category/$1';
-        $route[$key . '/category/(:any)/(:any)'] = 'product_controller/subcategory/$1/$2';
-        $route[$key . '/category/(:any)/(:any)/(:any)'] = 'product_controller/third_category/$1/$2/$3';
-
-        $route[$key . '/messages'] = 'message_controller/messages';
-        $route[$key . '/messages/conversation/(:num)'] = 'message_controller/conversation/$1';
-        // paypal routes
-        $route[$key . '/execute-paypal-payment'] = 'product_controller/execute_paypal_payment';
-
-        $route[$key . '/cron/update-sitemap'] = 'cron_controller/update_sitemap';
-        $route[$key . '/unsubscribe'] = 'home_controller/unsubscribe';
+        $route[$key . $routes->settings]['GET'] = 'profile_controller/update_profile';
+        $route[$key . $routes->settings . '/' . $routes->update_profile]['GET'] = 'profile_controller/update_profile';
+        $route[$key . $routes->settings . '/' . $routes->shop_settings]['GET'] = 'profile_controller/shop_settings';
+        $route[$key . $routes->settings . '/' . $routes->personal_information]['GET'] = 'profile_controller/personal_information';
+        $route[$key . $routes->settings . '/' . $routes->social_media]['GET'] = 'profile_controller/social_media';
+        $route[$key . $routes->settings . '/' . $routes->change_password]['GET'] = 'profile_controller/change_password';
+        $route[$key . $routes->settings . '/' . $routes->shipping_address]['GET'] = 'profile_controller/shipping_address';
+        $route[$key . $routes->members]['GET'] = 'home_controller/members';
+        // product
+        $route[$key . $routes->start_selling]['GET'] = 'product_controller/start_selling';
+        $route[$key . $routes->sell_now]['GET'] = 'product_controller/add_product';
+        $route[$key . $routes->sell_now . '/(:num)']['GET'] = 'product_controller/edit_draft/$1';
+        $route[$key . $routes->sell_now . '/' . $routes->product_details . '/(:num)']['GET'] = 'product_controller/edit_product_details/$1';
+        $route[$key . $routes->sell_now . '/' . $routes->edit_product . '/(:num)']['GET'] = 'product_controller/edit_product/$1';
+        $route[$key . $routes->search]['GET'] = 'home_controller/search';
+        $route[$key . $routes->products]['GET'] = 'home_controller/products';
+        $route[$key . $routes->drafts]['GET'] = 'profile_controller/drafts';
+        $route[$key . $routes->downloads]['GET'] = 'profile_controller/downloads';
+        $route[$key . $routes->pending_products]['GET'] = 'profile_controller/pending_products';
+        $route[$key . $routes->hidden_products]['GET'] = 'profile_controller/hidden_products';
+        // promoted product
+        $route[$key . $routes->promote_product . '/' . $routes->pricing . '/(:num)']['GET'] = 'promote_controller/pricing/$1';
+        // blog
+        $route[$key . $routes->blog . '/(:any)']['GET'] = 'home_controller/blog_category/$1';
+        $route[$key . $routes->blog . '/' . $routes->tag . '/(:any)']['GET'] = 'home_controller/tag/$1';
+        $route[$key . $routes->blog . '/(:any)/(:any)']['GET'] = 'home_controller/post/$1/$2';
+        // messages
+        $route[$key . $routes->messages]['GET'] = 'message_controller/messages';
+        $route[$key . $routes->messages . '/' . $routes->conversation . '/(:num)']['GET'] = 'message_controller/conversation/$1';
         // rss feeds
-        $route[$key . '/rss-feeds'] = 'rss_controller/rss_feeds';
-        $route[$key . '/rss/latest-products'] = 'rss_controller/latest_products';
-        $route[$key . '/rss/promoted-products'] = 'rss_controller/promoted_products';
-        $route[$key . '/rss/category/(:any)'] = 'rss_controller/rss_by_category/$1';
-        $route[$key . '/rss/seller/(:any)'] = 'rss_controller/rss_by_seller/$1';
+        $route[$key . $routes->rss_feeds]['GET'] = 'rss_controller/rss_feeds';
+        $route[$key . 'rss/' . $routes->latest_products]['GET'] = 'rss_controller/latest_products';
+        $route[$key . 'rss/' . $routes->featured_products]['GET'] = 'rss_controller/featured_products';
+        $route[$key . 'rss/' . $routes->category . '/(:any)']['GET'] = 'rss_controller/rss_by_category/$1';
+        $route[$key . 'rss/' . $routes->seller . '/(:any)']['GET'] = 'rss_controller/rss_by_seller/$1';
         // cart
-        $route[$key . '/cart'] = 'cart_controller/cart';
-        $route[$key . '/cart/shipping'] = 'cart_controller/shipping';
-        $route[$key . '/cart/payment-method'] = 'cart_controller/payment_method';
-        $route[$key . '/cart/payment'] = 'cart_controller/payment';
-        $route[$key . '/add-to-cart']['POST'] = 'cart_controller/add_to_cart';
-        $route[$key . '/add-to-cart-quote']['POST'] = 'cart_controller/add_to_cart_quote';
-        $route[$key . '/order-completed/(:num)'] = 'cart_controller/order_completed/$1';
-        $route[$key . '/promote-payment-completed'] = 'cart_controller/promote_payment_completed';
+        $route[$key . $routes->cart]['GET'] = 'cart_controller/cart';
+        $route[$key . $routes->cart . '/' . $routes->shipping]['GET'] = 'cart_controller/shipping';
+        $route[$key . $routes->cart . '/' . $routes->payment_method]['GET'] = 'cart_controller/payment_method';
+        $route[$key . $routes->cart . '/' . $routes->payment]['GET'] = 'cart_controller/payment';
         // orders
-        $route[$key . '/orders'] = 'order_controller/orders';
-        $route[$key . '/orders/completed-orders'] = 'order_controller/completed_orders';
-        $route[$key . '/order/(:num)'] = 'order_controller/order/$1';
+        $route[$key . $routes->orders]['GET'] = 'order_controller/orders';
+        $route[$key . $routes->orders . '/' . $routes->completed_orders]['GET'] = 'order_controller/completed_orders';
+        $route[$key . $routes->order_details . '/(:num)']['GET'] = 'order_controller/order/$1';
+        $route[$key . $routes->order_completed . '/(:num)']['GET'] = 'cart_controller/order_completed/$1';
+        $route[$key . $routes->promote_payment_completed]['GET'] = 'cart_controller/promote_payment_completed';
+        $route[$key . 'invoice/(:num)']['GET'] = 'order_controller/invoice/$1';
         // sales
-        $route[$key . '/sales'] = 'order_controller/sales';
-        $route[$key . '/sales/completed-sales'] = 'order_controller/completed_sales';
-        $route[$key . '/sale/(:num)'] = 'order_controller/sale/$1';
+        $route[$key . $routes->sales]['GET'] = 'order_controller/sales';
+        $route[$key . $routes->sales . '/' . $routes->completed_sales]['GET'] = 'order_controller/completed_sales';
+        $route[$key . $routes->sale . '/(:num)']['GET'] = 'order_controller/sale/$1';
         // earnings
-        $route[$key . '/earnings'] = 'earnings_controller/earnings';
-        $route[$key . '/set-payout-account'] = 'earnings_controller/set_payout_account';
-        $route[$key . '/payouts'] = 'earnings_controller/payouts';
+        $route[$key . $routes->earnings]['GET'] = 'earnings_controller/earnings';
+        $route[$key . $routes->set_payout_account]['GET'] = 'earnings_controller/set_payout_account';
+        $route[$key . $routes->payouts]['GET'] = 'earnings_controller/payouts';
         // bidding
-        $route[$key . '/request-quote']['POST'] = 'bidding_controller/request_quote';
-        $route[$key . '/quote-requests']['GET'] = 'bidding_controller/quote_requests';
-        $route[$key . '/sent-quote-requests']['GET'] = 'bidding_controller/sent_quote_requests';
-        // old category routes
-        $route[$key . '/category/(:any)'] = 'home_controller/any/$1';
-        $route[$key . '/category/(:any)/(:any)'] = 'home_controller/subcategory/$1/$2';
-        $route[$key . '/category/(:any)/(:any)/(:any)'] = 'home_controller/subcategory/$2/$3';
-
-        $route[$key . '/(:any)/(:any)']['GET'] = 'home_controller/subcategory/$1/$2';
-        $route[$key . '/(:any)']['GET'] = 'home_controller/any/$1';
+        $route[$key . $routes->quote_requests]['GET'] = 'bidding_controller/quote_requests';
+        $route[$key . $routes->sent_quote_requests]['GET'] = 'bidding_controller/sent_quote_requests';
+        // any
+        if ($general_settings->site_lang != $language->id) {
+            $route[$key . '(:any)/(:any)']['GET'] = 'home_controller/subcategory/$1/$2';
+            $route[$key . '(:any)']['GET'] = 'home_controller/any/$1';
+        }
     }
 }
-$db->close();
+
+//static routes
+include_once 'routes_static.php';
+
+// ADMIN ROUTES
+$route[$routes->admin] = 'admin_controller/index';
+//login
+$route[$routes->admin . '/login'] = 'common_controller/admin_login';
+// navigation routes
+$route[$routes->admin . '/navigation'] = 'admin_controller/navigation';
+// slider routes
+$route[$routes->admin . '/slider'] = 'admin_controller/slider';
+$route[$routes->admin . '/update-slider-item/(:num)'] = 'admin_controller/update_slider_item/$1';
+// page routes
+$route[$routes->admin] = 'admin_controller/index';
+$route[$routes->admin . '/settings'] = 'admin_controller/settings';
+$route[$routes->admin . '/email-settings'] = 'admin_controller/email_settings';
+$route[$routes->admin . '/social-login'] = 'admin_controller/social_login_settings';
+
+$route[$routes->admin . '/add-page'] = 'page_controller/add_page';
+$route[$routes->admin . '/update-page'] = 'page_controller/update_page';
+$route[$routes->admin . '/pages'] = 'page_controller/pages';
+$route[$routes->admin . '/pages'] = 'page_controller/pages';
+// order routes
+$route[$routes->admin . '/orders'] = 'order_admin_controller/orders';
+$route[$routes->admin . '/order-details/(:num)'] = 'order_admin_controller/order_details/$1';
+$route[$routes->admin . '/transactions'] = 'order_admin_controller/transactions';
+$route[$routes->admin . '/order-bank-transfers'] = 'order_admin_controller/order_bank_transfers';
+$route[$routes->admin . '/invoices'] = 'order_admin_controller/invoices';
+$route[$routes->admin . '/digital-sales'] = 'order_admin_controller/digital_sales';
+// product routes
+$route[$routes->admin . '/products'] = 'product_admin_controller/products';
+$route[$routes->admin . '/pending-products'] = 'product_admin_controller/pending_products';
+$route[$routes->admin . '/hidden-products'] = 'product_admin_controller/hidden_products';
+$route[$routes->admin . '/drafts'] = 'product_admin_controller/drafts';
+$route[$routes->admin . '/deleted-products'] = 'product_admin_controller/deleted_products';
+$route[$routes->admin . '/product-details/(:num)'] = 'product_admin_controller/product_details/$1';
+// featured product routes
+$route[$routes->admin . '/featured-products'] = 'product_admin_controller/featured_products';
+$route[$routes->admin . '/featured-products-transactions'] = 'product_admin_controller/featured_products_transactions';
+$route[$routes->admin . '/featured-products-pricing'] = 'product_admin_controller/featured_products_pricing';
+// bidding system
+$route[$routes->admin . '/quote-requests'] = 'admin_controller/quote_requests';
+// page routes
+$route[$routes->admin . '/pages'] = 'page_controller/pages';
+$route[$routes->admin . '/update-page/(:num)'] = 'page_controller/update_page/$1';
+// category routes
+$route[$routes->admin . '/add-category'] = 'category_controller/add_category';
+$route[$routes->admin . '/categories'] = 'category_controller/categories';
+$route[$routes->admin . '/update-category/(:num)'] = 'category_controller/update_category/$1';
+$route[$routes->admin . '/update-subcategory/(:num)'] = 'category_controller/update_subcategory/$1';
+$route[$routes->admin . '/subcategories'] = 'category_controller/subcategories';
+$route[$routes->admin . '/add-subcategory'] = 'category_controller/add_subcategory';
+// custom fields
+$route[$routes->admin . '/add-custom-field'] = 'category_controller/add_custom_field';
+$route[$routes->admin . '/custom-fields'] = 'category_controller/custom_fields';
+$route[$routes->admin . '/update-custom-field/(:num)'] = 'category_controller/update_custom_field/$1';
+$route[$routes->admin . '/custom-field-options/(:num)'] = 'category_controller/custom_field_options/$1';
+// earnings
+$route[$routes->admin . '/earnings'] = 'earnings_admin_controller/earnings';
+$route[$routes->admin . '/completed-payouts'] = 'earnings_admin_controller/completed_payouts';
+$route[$routes->admin . '/payout-requests'] = 'earnings_admin_controller/payout_requests';
+$route[$routes->admin . '/payout-settings'] = 'earnings_admin_controller/payout_settings';
+$route[$routes->admin . '/add-payout'] = 'earnings_admin_controller/add_payout';
+$route[$routes->admin . '/seller-balances'] = 'earnings_admin_controller/seller_balances';
+$route[$routes->admin . '/update-seller-balance/(:num)'] = 'earnings_admin_controller/update_seller_balance/$1';
+// blog routes
+$route[$routes->admin . '/blog-add-post'] = 'blog_controller/add_post';
+$route[$routes->admin . '/blog-posts'] = 'blog_controller/posts';
+$route[$routes->admin . '/update-blog-post/(:num)'] = 'blog_controller/update_post/$1';
+$route[$routes->admin . '/blog-categories'] = 'blog_controller/categories';
+$route[$routes->admin . '/update-blog-category/(:num)'] = 'blog_controller/update_category/$1';
+// comment routes
+$route[$routes->admin . '/pending-product-comments'] = 'product_admin_controller/pending_comments';
+$route[$routes->admin . '/product-comments'] = 'product_admin_controller/comments';
+$route[$routes->admin . '/pending-blog-comments'] = 'blog_controller/pending_comments';
+$route[$routes->admin . '/blog-comments'] = 'blog_controller/comments';
+// review routes
+$route[$routes->admin . '/reviews'] = 'product_admin_controller/reviews';
+// ad spaces routes
+$route[$routes->admin . '/ad-spaces'] = 'admin_controller/ad_spaces';
+// seo tools routes
+$route[$routes->admin . '/seo-tools'] = 'admin_controller/seo_tools';
+// location
+$route[$routes->admin . '/location-settings'] = 'admin_controller/location_settings';
+$route[$routes->admin . '/countries'] = 'admin_controller/countries';
+$route[$routes->admin . '/states'] = 'admin_controller/states';
+$route[$routes->admin . '/add-country'] = 'admin_controller/add_country';
+$route[$routes->admin . '/update-country/(:num)'] = 'admin_controller/update_country/$1';
+$route[$routes->admin . '/add-state'] = 'admin_controller/add_state';
+$route[$routes->admin . '/update-state/(:num)'] = 'admin_controller/update_state/$1';
+$route[$routes->admin . '/cities'] = 'admin_controller/cities';
+$route[$routes->admin . '/add-city'] = 'admin_controller/add_city';
+$route[$routes->admin . '/update-city/(:num)'] = 'admin_controller/update_city/$1';
+// users routes
+$route[$routes->admin . '/members'] = 'admin_controller/members';
+$route[$routes->admin . '/vendors'] = 'admin_controller/vendors';
+$route[$routes->admin . '/administrators'] = 'admin_controller/administrators';
+$route[$routes->admin . '/shop-opening-requests'] = 'admin_controller/shop_opening_requests';
+$route[$routes->admin . '/add-administrator'] = 'admin_controller/add_administrator';
+$route[$routes->admin . '/edit-user/(:num)'] = 'admin_controller/edit_user/$1';
+
+$route[$routes->admin . '/cache-system'] = 'admin_controller/cache_system';
+$route[$routes->admin . '/storage'] = 'admin_controller/storage';
+// languages routes
+$route[$routes->admin . '/languages'] = 'language_controller/languages';
+$route[$routes->admin . '/update-language/(:num)'] = 'language_controller/update_language/$1';
+$route[$routes->admin . '/translations/(:num)'] = 'language_controller/update_translations/$1';
+$route[$routes->admin . '/search-phrases'] = 'language_controller/search_phrases';
+// payment routes
+$route[$routes->admin . '/payment-settings'] = 'settings_controller/payment_settings';
+$route[$routes->admin . '/visual-settings'] = 'admin_controller/visual_settings';
+$route[$routes->admin . '/system-settings'] = 'admin_controller/system_settings';
+// currency
+$route[$routes->admin . '/currency-settings'] = 'admin_controller/currency_settings';
+$route[$routes->admin . '/update-currency/(:num)'] = 'admin_controller/update_currency/$1';
+//newsletter
+$route[$routes->admin . '/send-email-subscribers'] = 'admin_controller/send_email_subscribers';
+$route[$routes->admin . '/subscribers'] = 'admin_controller/subscribers';
+
+$route[$routes->admin . '/contact-messages'] = 'admin_controller/contact_messages';
+$route[$routes->admin . '/preferences'] = 'admin_controller/preferences';
+
+//form settings
+$route[$routes->admin . '/form-settings'] = 'settings_controller/form_settings';
+$route[$routes->admin . '/form-settings/shipping-options'] = 'settings_controller/shipping_options';
+$route[$routes->admin . '/form-settings/edit-shipping-option/(:num)'] = 'settings_controller/edit_shipping_option/$1';
+$route[$routes->admin . '/form-settings/product-conditions'] = 'settings_controller/product_conditions';
+$route[$routes->admin . '/form-settings/edit-product-condition/(:num)'] = 'settings_controller/edit_product_condition/$1';
+
+$route[$routes->admin . '/font-settings'] = 'settings_controller/font_settings';
+$route[$routes->admin . '/update-font/(:num)'] = 'settings_controller/update_font/$1';
+$route[$routes->admin . '/route-settings'] = 'settings_controller/route_settings';
 
 $route['(:any)/(:any)']['GET'] = 'home_controller/subcategory/$1/$2';
 $route['(:any)']['GET'] = 'home_controller/any/$1';

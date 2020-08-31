@@ -23,7 +23,7 @@
 				<!-- include message block -->
 				<?php $this->load->view('admin/includes/_messages_form'); ?>
 
-				<?php foreach ($languages as $language): ?>
+				<?php foreach ($this->languages as $language): ?>
 					<div class="form-group">
 						<label><?php echo trans("category_name"); ?> (<?php echo $language->name; ?>)</label>
 						<input type="text" class="form-control" name="name_lang_<?php echo $language->id; ?>" placeholder="<?php echo trans("category_name"); ?>" maxlength="255" required>
@@ -72,7 +72,7 @@
 					<select class="form-control" name="parent_id[]" onchange="get_subcategories(this.value, 0);" required>
 						<option value="0"><?php echo trans('none'); ?></option>
 						<?php foreach ($parent_categories as $parent_category): ?>
-							<option value="<?php echo $parent_category->id; ?>"><?php echo html_escape(get_category_name_by_lang($parent_category->id, $this->selected_lang->id)); ?></option>
+							<option value="<?php echo $parent_category->id; ?>"><?php echo category_name($parent_category); ?></option>
 						<?php endforeach; ?>
 					</select>
 					<div id="subcategories_container"></div>
@@ -184,7 +184,6 @@
                 subcategories_array.push(categories_array[i]);
             }
         }
-        console.log(subcategories_array);
         return subcategories_array;
     }
 </script>

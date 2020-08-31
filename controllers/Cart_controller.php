@@ -49,7 +49,7 @@ class Cart_controller extends Home_Core_Controller
                 $this->session->set_flashdata('product_details_error', trans('msg_error_cart_unapproved_products'));
             } else {
                 $this->cart_model->add_to_cart($product);
-                redirect(lang_base_url() . 'cart');
+                redirect(generate_url('cart'));
             }
         }
         redirect($this->agent->referrer());
@@ -62,7 +62,7 @@ class Cart_controller extends Home_Core_Controller
     {
         $quote_request_id = $this->input->post('id', true);
         if (!empty($this->cart_model->add_to_cart_quote($quote_request_id))) {
-            redirect(lang_base_url() . 'cart');
+            redirect(generate_url('cart'));
         }
         redirect($this->agent->referrer());
     }
@@ -99,21 +99,21 @@ class Cart_controller extends Home_Core_Controller
         $data['mds_payment_type'] = 'sale';
 
         if (null == $data['cart_items']) {
-            redirect(lang_base_url() . 'cart');
+            redirect(generate_url('cart'));
         }
         //check shipping status
         if (1 != $this->form_settings->shipping) {
-            redirect(lang_base_url() . 'cart');
+            redirect(generate_url('cart'));
             exit();
         }
         //check guest checkout
         if (empty($this->auth_check) && 1 != $this->general_settings->guest_checkout) {
-            redirect(lang_base_url() . 'cart');
+            redirect(generate_url('cart'));
             exit();
         }
         //check physical products
         if (false == $this->cart_model->check_cart_has_physical_product()) {
-            redirect(lang_base_url() . 'cart');
+            redirect(generate_url('cart'));
             exit();
         }
 
@@ -131,7 +131,7 @@ class Cart_controller extends Home_Core_Controller
     public function shipping_post()
     {
         $this->cart_model->set_sess_cart_shipping_address();
-        redirect(lang_base_url() . 'cart/payment-method?payment_type=sale');
+        redirect(generate_url('cart', 'payment_method') . '?payment_type=sale');
     }
 
     /**
@@ -147,7 +147,7 @@ class Cart_controller extends Home_Core_Controller
         $payment_type = $this->input->get('payment_type', true);
 
         if (!empty($payment_type) && 'promote' == $payment_type) {
-            if (1 != $this->promoted_products_enabled) {
+            if (1 != $this->general_settings->promoted_products) {
                 redirect(lang_base_url());
             }
             $data['mds_payment_type'] = 'promote';
@@ -158,20 +158,20 @@ class Cart_controller extends Home_Core_Controller
         } else {
             $data['cart_items'] = $this->cart_model->get_sess_cart_items();
             if (null == $data['cart_items']) {
-                redirect(lang_base_url() . 'cart');
+                redirect(generate_url('cart'));
             }
 
             //check auth for digital products
-            if (!auth_check() && true == $this->cart_model->check_cart_has_digital_product()) {
+            if (!$this->auth_check && true == $this->cart_model->check_cart_has_digital_product()) {
                 $this->session->set_flashdata('error', trans('msg_digital_product_register_error'));
-                redirect(lang_base_url() . 'register');
+                redirect(generate_url('register'));
                 exit();
             }
 
             $data['cart_total'] = $this->cart_model->get_sess_cart_total();
             $user_id = null;
-            if (auth_check()) {
-                $user_id = user()->id;
+            if ($this->auth_check) {
+                $user_id = $this->auth_user->id;
             }
 
             $data['cart_has_physical_product'] = $this->cart_model->check_cart_has_physical_product();
@@ -195,9 +195,9 @@ class Cart_controller extends Home_Core_Controller
         if (!empty($mds_payment_type) && 'promote' == $mds_payment_type) {
             $transaction_number = 'bank-' . generate_transaction_number();
             $this->session->set_userdata('mds_promote_bank_transaction_number', $transaction_number);
-            redirect(lang_base_url() . 'cart/payment?payment_type=promote');
+            redirect(generate_url('cart', 'payment') . '?payment_type=promote');
         } else {
-            redirect(lang_base_url() . 'cart/payment');
+            redirect(generate_url('cart', 'payment'));
         }
     }
 
@@ -213,19 +213,19 @@ class Cart_controller extends Home_Core_Controller
 
         //check guest checkout
         if (empty($this->auth_check) && 1 != $this->general_settings->guest_checkout) {
-            redirect(lang_base_url() . 'cart');
+            redirect(generate_url('cart'));
             exit();
         }
 
         //check is set cart payment method
         $data['cart_payment_method'] = $this->cart_model->get_sess_cart_payment_method();
         if (empty($data['cart_payment_method'])) {
-            redirect(lang_base_url() . 'cart/payment-method');
+            redirect(generate_url('cart', 'payment_method'));
         }
 
         $payment_type = $this->input->get('payment_type', true);
         if (!empty($payment_type) && 'promote' == $payment_type) {
-            if (1 != $this->promoted_products_enabled) {
+            if (1 != $this->general_settings->promoted_products) {
                 redirect(lang_base_url());
             }
             $data['mds_payment_type'] = 'promote';
@@ -241,7 +241,7 @@ class Cart_controller extends Home_Core_Controller
         } else {
             $data['cart_items'] = $this->cart_model->get_sess_cart_items();
             if (null == $data['cart_items']) {
-                redirect(lang_base_url() . 'cart');
+                redirect(generate_url('cart'));
             }
             $data['cart_total'] = $this->cart_model->get_sess_cart_total();
             $data['shipping_address'] = $this->cart_model->get_sess_cart_shipping_address();
@@ -292,7 +292,7 @@ class Cart_controller extends Home_Core_Controller
             $this->session->set_flashdata('error', trans('msg_error'));
             $data = [
                 'status' => 0,
-                'redirect' => lang_base_url() . 'cart/payment/',
+                'redirect' => generate_url('cart', 'payment'),
             ];
             echo json_encode($data);
         }
@@ -332,7 +332,7 @@ class Cart_controller extends Home_Core_Controller
                 'payment_method' => 'Stripe',
                 'payment_id' => $token,
                 'currency' => $currency,
-                'payment_amount' => price_format_decimal($payment_amount),
+                'payment_amount' => get_price($payment_amount, 'decimal'),
                 'payment_status' => $this->input->post('payment_status', true),
             ];
 
@@ -345,17 +345,17 @@ class Cart_controller extends Home_Core_Controller
                 $this->execute_promote_payment($data_transaction, 'json_encode');
             }
         } catch (\Stripe\Error\Base $e) {
-            $this->session->set_flashdata('error', $e);
+            $this->session->set_flashdata('error', $e->getMessage());
             $data = [
                 'status' => 0,
-                'redirect' => lang_base_url() . 'cart/payment/',
+                'redirect' => generate_url('cart', 'payment'),
             ];
             echo json_encode($data);
         } catch (Exception $e) {
-            $this->session->set_flashdata('error', $e);
+            $this->session->set_flashdata('error', $e->getMessage());
             $data = [
                 'status' => 0,
-                'redirect' => lang_base_url() . 'cart/payment/',
+                'redirect' => generate_url('cart', 'payment'),
             ];
             echo json_encode($data);
         }
@@ -372,7 +372,7 @@ class Cart_controller extends Home_Core_Controller
             'payment_method' => 'PayStack',
             'payment_id' => $this->input->post('payment_id', true),
             'currency' => $this->input->post('currency', true),
-            'payment_amount' => price_format_decimal($this->input->post('payment_amount', true)),
+            'payment_amount' => get_price($this->input->post('payment_amount', true), 'decimal'),
             'payment_status' => $this->input->post('payment_status', true),
         ];
 
@@ -380,7 +380,7 @@ class Cart_controller extends Home_Core_Controller
             $this->session->set_flashdata('error', 'Invalid transaction code!');
             $data = [
                 'status' => 0,
-                'redirect' => lang_base_url() . 'cart/payment/',
+                'redirect' => generate_url('cart', 'payment'),
             ];
             echo json_encode($data);
             exit();
@@ -409,7 +409,7 @@ class Cart_controller extends Home_Core_Controller
             'razorpay_order_id' => $this->input->post('razorpay_order_id', true),
             'razorpay_signature' => $this->input->post('razorpay_signature', true),
             'currency' => $this->input->post('currency', true),
-            'payment_amount' => price_format_decimal($this->input->post('payment_amount', true)),
+            'payment_amount' => get_price($this->input->post('payment_amount', true), 'decimal'),
             'payment_status' => 'succeeded',
         ];
 
@@ -417,7 +417,7 @@ class Cart_controller extends Home_Core_Controller
             $this->session->set_flashdata('error', 'Invalid signature passed!');
             $data = [
                 'status' => 0,
-                'redirect' => lang_base_url() . 'cart/payment/',
+                'redirect' => generate_url('cart', 'payment'),
             ];
             echo json_encode($data);
             exit();
@@ -439,12 +439,17 @@ class Cart_controller extends Home_Core_Controller
     public function iyzico_payment_post()
     {
         $token = $this->input->post('token', true);
-        $lang_base_url = $this->input->get('lang_base_url', true);
+        $conversation_id = $this->input->get('conversation_id', true);
+        $lang = $this->input->get('lang', true);
+        $lang_base_url = lang_base_url();
+        if ($lang != $this->general_settings->site_lang) {
+            $lang_base_url = base_url() . $lang . '/';
+        }
 
-        $options = $this->initialize_iyzico();
+        $options = initialize_iyzico();
         $request = new \Iyzipay\Request\RetrieveCheckoutFormRequest();
         $request->setLocale(\Iyzipay\Model\Locale::TR);
-        $request->setConversationId('123456');
+        $request->setConversationId($conversation_id);
         $request->setToken($token);
 
         $checkoutForm = \Iyzipay\Model\CheckoutForm::retrieve($request, $options);
@@ -452,7 +457,7 @@ class Cart_controller extends Home_Core_Controller
         if ('SUCCESS' == $checkoutForm->getPaymentStatus()) {
             $data_transaction = [
                 'payment_method' => 'Iyzico',
-                'payment_id' => $token,
+                'payment_id' => $checkoutForm->getPaymentId(),
                 'currency' => $checkoutForm->getCurrency(),
                 'payment_amount' => $checkoutForm->getPrice(),
                 'payment_status' => 'succeeded',
@@ -467,9 +472,8 @@ class Cart_controller extends Home_Core_Controller
                 $this->execute_promote_payment($data_transaction, 'direct');
             }
         } else {
-            echo 'sdsd';
             $this->session->set_flashdata('error', trans('msg_error'));
-            redirect($lang_base_url . '/cart/payment');
+            redirect($lang_base_url . get_route('cart', true) . get_route('payment'));
         }
     }
 
@@ -552,17 +556,17 @@ class Cart_controller extends Home_Core_Controller
                     $type = 'new';
                 }
                 $transaction_number = $this->session->userdata('mds_promote_bank_transaction_number');
-                redirect(lang_base_url() . 'promote-payment-completed?method=bank_transfer&transaction_number=' . $transaction_number . '&product_id=' . $promoted_plan->product_id);
+                redirect(generate_url('promote_payment_completed') . '?method=bank_transfer&transaction_number=' . $transaction_number . '&product_id=' . $promoted_plan->product_id);
             }
             $this->session->set_flashdata('error', trans('msg_error'));
-            redirect(lang_base_url() . '/cart/payment');
+            redirect(generate_url('cart', 'payment'));
         } else {
             //add order
             $order_id = $this->order_model->add_order_offline_payment('Bank Transfer');
             $order = $this->order_model->get_order($order_id);
             if (!empty($order)) {
                 //decrease product quantity after sale
-                $this->order_model->decrease_product_quantity_after_sale($order);
+                $this->order_model->decrease_product_stock_after_sale($order->id);
                 //send email
                 if (1 == $this->general_settings->send_email_buyer_purchase) {
                     $email_data = [
@@ -574,15 +578,15 @@ class Cart_controller extends Home_Core_Controller
 
                 if (0 == $order->buyer_id) {
                     $this->session->set_userdata('mds_show_order_completed_page', 1);
-                    redirect(lang_base_url() . 'order-completed/' . $order->order_number);
+                    redirect(generate_url('order_completed') . '/' . $order->order_number);
                 } else {
                     $this->session->set_flashdata('success', trans('msg_order_completed'));
-                    redirect(lang_base_url() . 'order/' . $order->order_number);
+                    redirect(generate_url('order_details') . '/' . $order->order_number);
                 }
             }
 
             $this->session->set_flashdata('error', trans('msg_error'));
-            redirect(lang_base_url() . '/cart/payment');
+            redirect(generate_url('cart', 'payment'));
         }
     }
 
@@ -596,7 +600,7 @@ class Cart_controller extends Home_Core_Controller
         $order = $this->order_model->get_order($order_id);
         if (!empty($order)) {
             //decrease product quantity after sale
-            $this->order_model->decrease_product_quantity_after_sale($order);
+            $this->order_model->decrease_product_stock_after_sale($order->id);
             //send email
             if (1 == $this->general_settings->send_email_buyer_purchase) {
                 $email_data = [
@@ -608,15 +612,15 @@ class Cart_controller extends Home_Core_Controller
 
             if (0 == $order->buyer_id) {
                 $this->session->set_userdata('mds_show_order_completed_page', 1);
-                redirect(lang_base_url() . 'order-completed/' . $order->order_number);
+                redirect(generate_url('order_completed') . '/' . $order->order_number);
             } else {
                 $this->session->set_flashdata('success', trans('msg_order_completed'));
-                redirect(lang_base_url() . 'order/' . $order->order_number);
+                redirect(generate_url('order_details') . '/' . $order->order_number);
             }
         }
 
         $this->session->set_flashdata('error', trans('msg_error'));
-        redirect(lang_base_url() . '/cart/payment');
+        redirect(generate_url('cart', 'payment'));
     }
 
     /**
@@ -629,7 +633,7 @@ class Cart_controller extends Home_Core_Controller
         $order = $this->order_model->get_order($order_id);
         if (!empty($order)) {
             //decrease product quantity after sale
-            $this->order_model->decrease_product_quantity_after_sale($order);
+            $this->order_model->decrease_product_stock_after_sale($order->id);
             //send email
             if (1 == $this->general_settings->send_email_buyer_purchase) {
                 $email_data = [
@@ -642,11 +646,11 @@ class Cart_controller extends Home_Core_Controller
             if ('json_encode' == $redirect_type) {
                 $data = [
                     'result' => 1,
-                    'redirect' => lang_base_url() . 'order/' . $order->order_number,
+                    'redirect' => generate_url('order_details') . '/' . $order->order_number,
                 ];
                 if (0 == $order->buyer_id) {
                     $this->session->set_userdata('mds_show_order_completed_page', 1);
-                    $data['redirect'] = lang_base_url() . 'order-completed/' . $order->order_number;
+                    $data['redirect'] = generate_url('order_completed') . '/' . $order->order_number;
                 } else {
                     $this->session->set_flashdata('success', trans('msg_order_completed'));
                 }
@@ -655,10 +659,10 @@ class Cart_controller extends Home_Core_Controller
                 //return direct
                 if (0 == $order->buyer_id) {
                     $this->session->set_userdata('mds_show_order_completed_page', 1);
-                    redirect($lang_base_url . 'order-completed/' . $order->order_number);
+                    redirect($lang_base_url . get_route('order_completed', true) . $order->order_number);
                 } else {
                     $this->session->set_flashdata('success', trans('msg_order_completed'));
-                    redirect($lang_base_url . 'order/' . $order->order_number);
+                    redirect($lang_base_url . get_route('order_details', true) . $order->order_number);
                 }
             }
         } else {
@@ -667,12 +671,12 @@ class Cart_controller extends Home_Core_Controller
             if ('json_encode' == $redirect_type) {
                 $data = [
                     'status' => 0,
-                    'redirect' => lang_base_url() . 'cart/payment/',
+                    'redirect' => generate_url('cart', 'payment'),
                 ];
                 echo json_encode($data);
             } else {
                 //return direct
-                redirect($lang_base_url . '/cart/payment');
+                redirect($lang_base_url . get_route('cart', true) . get_route('payment'));
             }
         }
     }
@@ -691,17 +695,17 @@ class Cart_controller extends Home_Core_Controller
 
             //reset cache
             reset_cache_data_on_change();
-            reset_user_cache_data(user()->id);
+            reset_user_cache_data($this->auth_user->id);
 
             //return json encode response
             if ('json_encode' == $redirect_type) {
                 $data = [
                     'result' => 1,
-                    'redirect' => lang_base_url() . 'promote-payment-completed?method=gtw&product_id=' . $promoted_plan->product_id,
+                    'redirect' => generate_url('promote_payment_completed') . '?method=gtw&product_id=' . $promoted_plan->product_id,
                 ];
                 echo json_encode($data);
             } else {
-                redirect($lang_base_url . 'promote-payment-completed?method=gtw&product_id=' . $promoted_plan->product_id);
+                redirect($lang_base_url . get_route('promote_payment_completed') . '?method=gtw&product_id=' . $promoted_plan->product_id);
             }
         } else {
             $this->session->set_flashdata('error', trans('msg_payment_database_error'));
@@ -709,12 +713,12 @@ class Cart_controller extends Home_Core_Controller
             if ('json_encode' == $redirect_type) {
                 $data = [
                     'status' => 0,
-                    'redirect' => lang_base_url() . '/cart/payment?payment_type=promote',
+                    'redirect' => generate_url('cart', 'payment') . '?payment_type=promote',
                 ];
                 echo json_encode($data);
             } else {
                 $this->session->set_flashdata('error', trans('msg_error'));
-                redirect($lang_base_url . '/cart/payment?payment_type=promote');
+                redirect($lang_base_url . get_route('cart', true) . get_route('payment') . '?payment_type=promote');
             }
         }
     }

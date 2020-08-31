@@ -85,6 +85,11 @@ defined('EXIT_DATABASE') or define('EXIT_DATABASE', 8); // database error
 defined('EXIT__AUTO_MIN') or define('EXIT__AUTO_MIN', 9); // lowest automatically-assigned error code
 defined('EXIT__AUTO_MAX') or define('EXIT__AUTO_MAX', 125); // highest automatically-assigned error code
 
+defined('IMG_BASE64_1x1') or define('IMG_BASE64_1x1', 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==');
+defined('IMG_BG_PRODUCT_SMALL') or define('IMG_BG_PRODUCT_SMALL', 'assets/img/img_bg_product_small.jpg');
+defined('IMG_BG_BLOG_SMALL') or define('IMG_BG_BLOG_SMALL', 'assets/img/img_bg_blog_small.jpg');
+defined('IMG_BG_PRODUCT_SLIDER') or define('IMG_BG_PRODUCT_SLIDER', 'assets/img/slider_bg.png');
+
 $root = (isset($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'];
 $root .= str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']);
 @require APPPATH . 'third_party/domain-parser/autoload.php';

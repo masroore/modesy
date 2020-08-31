@@ -1,5 +1,8 @@
 <?php
+
+defined('BASEPATH') or exit('No direct script access allowed');
 // Custom Helpers
+
 if (false !== strpos($_SERVER['REQUEST_URI'], '/index.php')) {
     $ci = &get_instance();
     $ci->load->helper('url');
@@ -55,10 +58,14 @@ if (!function_exists('auth_check')) {
 if (!function_exists('is_admin')) {
     function is_admin()
     {
-        // Get a reference to the controller object
         $ci = &get_instance();
+        if ($ci->auth_check) {
+            if ('admin' == $ci->auth_user->role) {
+                return true;
+            }
+        }
 
-        return $ci->auth_model->is_admin();
+        return false;
     }
 }
 
@@ -212,8 +219,11 @@ if (!function_exists('trans')) {
     function trans($string)
     {
         $ci = &get_instance();
+        if (!empty($ci->language_translations[$string])) {
+            return $ci->language_translations[$string];
+        }
 
-        return $ci->lang->line($string);
+        return '';
     }
 }
 
@@ -228,53 +238,41 @@ if (!function_exists('old')) {
     }
 }
 
+//count item
+if (!function_exists('item_count')) {
+    function item_count($items)
+    {
+        if (!empty($items)) {
+            return count($items);
+        }
+
+        return 0;
+    }
+}
+
 //admin url
 if (!function_exists('admin_url')) {
     function admin_url()
     {
-        require APPPATH . 'config/route_slugs.php';
-
-        return base_url() . $custom_slug_array['admin'] . '/';
-    }
-}
-
-//get category
-if (!function_exists('get_category')) {
-    function get_category($id)
-    {
         $ci = &get_instance();
 
-        return $ci->category_model->get_category($id);
+        return base_url() . $ci->routes->admin . '/';
     }
 }
-
-//get category joined
-if (!function_exists('get_category_joined')) {
-    function get_category_joined($id)
+//get route
+if (!function_exists('get_route')) {
+    function get_route($key, $slash = false)
     {
         $ci = &get_instance();
+        $route = $key;
+        if (!empty($ci->routes->$key)) {
+            $route = $ci->routes->$key;
+            if (true == $slash) {
+                $route .= '/';
+            }
+        }
 
-        return $ci->category_model->get_category_joined($id);
-    }
-}
-
-//get subcategories
-if (!function_exists('get_subcategories_by_parent_id')) {
-    function get_subcategories_by_parent_id($parent_id)
-    {
-        $ci = &get_instance();
-
-        return $ci->category_model->get_subcategories_by_parent_id($parent_id);
-    }
-}
-
-//get featured category
-if (!function_exists('get_featured_category')) {
-    function get_featured_category($order)
-    {
-        $ci = &get_instance();
-
-        return $ci->category_model->get_featured_category($order);
+        return $route;
     }
 }
 
@@ -295,6 +293,16 @@ if (!function_exists('get_parent_categories_array')) {
         $ci = &get_instance();
 
         return $ci->category_model->get_parent_categories_array_by_category_id($category_id);
+    }
+}
+
+//get mobile menu categories
+if (!function_exists('get_mobile_menu_categories')) {
+    function get_mobile_menu_categories()
+    {
+        $ci = &get_instance();
+
+        return $ci->category_model->get_mobile_menu_categories();
     }
 }
 
@@ -342,22 +350,54 @@ if (!function_exists('generate_product_url')) {
     }
 }
 
+//generate product url by slug
+if (!function_exists('generate_product_url_by_slug')) {
+    function generate_product_url_by_slug($slug)
+    {
+        if (!empty($slug)) {
+            return lang_base_url() . $slug;
+        }
+    }
+}
+
 //generate blog url
 if (!function_exists('generate_post_url')) {
     function generate_post_url($post)
     {
         if (!empty($post)) {
-            return lang_base_url() . 'blog' . '/' . $post->category_slug . '/' . $post->slug;
+            return lang_base_url() . get_route('blog', true) . $post->category_slug . '/' . $post->slug;
         }
     }
 }
 
 //generate profile url
 if (!function_exists('generate_profile_url')) {
-    function generate_profile_url($user)
+    function generate_profile_url($slug)
     {
-        if (!empty($user)) {
-            return lang_base_url() . 'profile' . '/' . $user->slug;
+        if (!empty($slug)) {
+            return lang_base_url() . get_route('profile', true) . $slug;
+        }
+    }
+}
+
+//generate static url
+if (!function_exists('generate_url')) {
+    function generate_url($route_1, $route_2 = null)
+    {
+        if (!empty($route_2)) {
+            return lang_base_url() . get_route($route_1, true) . get_route($route_2);
+        }
+
+        return lang_base_url() . get_route($route_1);
+    }
+}
+
+//generate menu item url
+if (!function_exists('generate_menu_item_url')) {
+    function generate_menu_item_url($item)
+    {
+        if (!empty($item)) {
+            return lang_base_url() . $item->slug;
         }
     }
 }
@@ -414,23 +454,39 @@ if (!function_exists('get_user_avatar_by_id')) {
     }
 }
 
-//get user review count
-if (!function_exists('get_user_review_count')) {
-    function get_user_review_count($user_id)
+//get user avatar by image url
+if (!function_exists('get_user_avatar_by_image_url')) {
+    function get_user_avatar_by_image_url($image_url, $user_type)
     {
-        $ci = &get_instance();
+        if (!empty($image_url)) {
+            if ('registered' != $user_type) {
+                return $image_url;
+            }
 
-        return $ci->user_review_model->get_review_count($user_id);
+            return base_url() . $image_url;
+        }
+
+        return base_url() . 'assets/img/user.png';
     }
 }
 
-//get user rating
-if (!function_exists('get_user_rating')) {
-    function get_user_rating($user_id)
+//get review
+if (!function_exists('get_review')) {
+    function get_review($product_id, $user_id)
     {
         $ci = &get_instance();
 
-        return $ci->user_review_model->get_user_rating($user_id);
+        return $ci->review_model->get_review($product_id, $user_id);
+    }
+}
+
+//calculate user rating
+if (!function_exists('calculate_user_rating')) {
+    function calculate_user_rating($user_id)
+    {
+        $ci = &get_instance();
+
+        return $ci->review_model->calculate_user_rating($user_id);
     }
 }
 
@@ -438,20 +494,20 @@ if (!function_exists('get_user_rating')) {
 if (!function_exists('helper_date_format')) {
     function helper_date_format($datetime)
     {
-        $date = date('M Y', strtotime($datetime));
-        $date = str_replace('Jan', trans('January'), $date);
-        $date = str_replace('Feb', trans('February'), $date);
-        $date = str_replace('Mar', trans('March'), $date);
-        $date = str_replace('Apr', trans('April'), $date);
-        $date = str_replace('May', trans('May'), $date);
-        $date = str_replace('Jun', trans('June'), $date);
-        $date = str_replace('Jul', trans('July'), $date);
-        $date = str_replace('Aug', trans('August'), $date);
-        $date = str_replace('Sep', trans('September'), $date);
-        $date = str_replace('Oct', trans('October'), $date);
-        $date = str_replace('Nov', trans('November'), $date);
+        $date = date('j M Y', strtotime($datetime));
+        $date = str_replace('Jan', trans('january'), $date);
+        $date = str_replace('Feb', trans('february'), $date);
+        $date = str_replace('Mar', trans('march'), $date);
+        $date = str_replace('Apr', trans('april'), $date);
+        $date = str_replace('May', trans('may'), $date);
+        $date = str_replace('Jun', trans('june'), $date);
+        $date = str_replace('Jul', trans('july'), $date);
+        $date = str_replace('Aug', trans('august'), $date);
+        $date = str_replace('Sep', trans('september'), $date);
+        $date = str_replace('Oct', trans('october'), $date);
+        $date = str_replace('Nov', trans('november'), $date);
 
-        return str_replace('Dec', trans('December'), $date);
+        return str_replace('Dec', trans('december'), $date);
     }
 }
 
@@ -533,6 +589,16 @@ if (!function_exists('get_page_keywords')) {
     }
 }
 
+//get page by default name
+if (!function_exists('get_page_by_default_name')) {
+    function get_page_by_default_name($default_name, $lang_id)
+    {
+        $ci = &get_instance();
+
+        return $ci->page_model->get_page_by_default_name($default_name, $lang_id);
+    }
+}
+
 //get settings
 if (!function_exists('get_settings')) {
     function get_settings()
@@ -606,30 +672,6 @@ if (!function_exists('get_digital_sale_by_order_id')) {
     }
 }
 
-//check is product available for sale
-if (!function_exists('check_product_available_for_sale')) {
-    function check_product_available_for_sale($product)
-    {
-        if (empty($product)) {
-            return false;
-        }
-        if (0 == $product->status) {
-            return false;
-        }
-        if (0 == $product->visibility) {
-            return false;
-        }
-        if (1 == $product->is_sold) {
-            return false;
-        }
-        if (1 == $product->is_deleted) {
-            return false;
-        }
-
-        return true;
-    }
-}
-
 //get product image
 if (!function_exists('get_product_image')) {
     function get_product_image($product_id, $size_name)
@@ -686,6 +728,57 @@ if (!function_exists('get_file_manager_image')) {
         }
 
         return $path;
+    }
+}
+
+//get variation main option image url
+if (!function_exists('get_variation_main_option_image_url')) {
+    function get_variation_main_option_image_url($option, $product_images = null)
+    {
+        $ci = &get_instance();
+        $image_name = '';
+        $storage = '';
+        if (!empty($option)) {
+            if (1 == $option->is_default && !empty($product_images)) {
+                foreach ($product_images as $product_image) {
+                    if (1 == $product_image->is_main) {
+                        $image_name = $product_image->image_small;
+                        $storage = $product_image->storage;
+                    }
+                }
+                if (empty($product_main_image)) {
+                    foreach ($product_images as $product_image) {
+                        $image_name = $product_image->image_small;
+                        $storage = $product_image->storage;
+                        break;
+                    }
+                }
+            } else {
+                $option_image = $ci->variation_model->get_variation_option_main_image($option->id);
+                if (!empty($option_image)) {
+                    $image_name = $option_image->image_small;
+                    $storage = $option_image->storage;
+                }
+            }
+        }
+        if ('aws_s3' == $storage) {
+            return $ci->aws_base_url . 'uploads/images/' . $image_name;
+        }
+
+        return base_url() . 'uploads/images/' . $image_name;
+    }
+}
+
+//get variation option image url
+if (!function_exists('get_variation_option_image_url')) {
+    function get_variation_option_image_url($option_image)
+    {
+        $ci = &get_instance();
+        if ('aws_s3' == $option_image->storage) {
+            return $ci->aws_base_url . 'uploads/images/' . $option_image->image_small;
+        }
+
+        return base_url() . 'uploads/images/' . $option_image->image_small;
     }
 }
 
@@ -760,16 +853,6 @@ if (!function_exists('get_products_count_by_subcategory')) {
         $ci = &get_instance();
 
         return $ci->product_model->get_products_count_by_subcategory($category_id);
-    }
-}
-
-//get category name by lang
-if (!function_exists('get_category_name_by_lang')) {
-    function get_category_name_by_lang($category_id, $lang_id)
-    {
-        $ci = &get_instance();
-
-        return $ci->category_model->get_category_name_by_lang($category_id, $lang_id);
     }
 }
 
@@ -870,33 +953,33 @@ if (!function_exists('get_custom_field_value')) {
     }
 }
 
-//check product in favorites
-if (!function_exists('is_product_in_favorites')) {
-    function is_product_in_favorites($product_id)
+//check product in wishlist
+if (!function_exists('is_product_in_wishlist')) {
+    function is_product_in_wishlist($product_id)
     {
         $ci = &get_instance();
 
-        return $ci->product_model->is_product_in_favorites($product_id);
+        return $ci->product_model->is_product_in_wishlist($product_id);
     }
 }
 
-//get product favorited count
-if (!function_exists('get_product_favorited_count')) {
-    function get_product_favorited_count($product_id)
+//get product wishlist count
+if (!function_exists('get_product_wishlist_count')) {
+    function get_product_wishlist_count($product_id)
     {
         $ci = &get_instance();
 
-        return $ci->product_model->get_product_favorited_count($product_id);
+        return $ci->product_model->get_product_wishlist_count($product_id);
     }
 }
 
-//get product favorited count
-if (!function_exists('get_user_favorited_products_count')) {
-    function get_user_favorited_products_count($user_id)
+//get product wishlist count
+if (!function_exists('get_user_wishlist_products_count')) {
+    function get_user_wishlist_products_count($user_id)
     {
         $ci = &get_instance();
 
-        return $ci->product_model->get_user_favorited_products_count($user_id);
+        return $ci->product_model->get_user_wishlist_products_count($user_id);
     }
 }
 
@@ -922,11 +1005,11 @@ if (!function_exists('get_following_users_count')) {
 
 //get user products count
 if (!function_exists('get_user_products_count')) {
-    function get_user_products_count($user_slug)
+    function get_user_products_count($user_id)
     {
         $ci = &get_instance();
 
-        return $ci->product_model->get_user_products_count($user_slug);
+        return $ci->product_model->get_user_products_count($user_id);
     }
 }
 
@@ -979,13 +1062,13 @@ if (!function_exists('get_product_comment_count')) {
     }
 }
 
-//get product product variation options
+//get product variation options
 if (!function_exists('get_product_variation_options')) {
-    function get_product_variation_options($variation_common_id, $lang_id)
+    function get_product_variation_options($variation_id)
     {
         $ci = &get_instance();
 
-        return $ci->variation_model->get_variation_options($variation_common_id, $lang_id);
+        return $ci->variation_model->get_variation_options($variation_id);
     }
 }
 
@@ -1093,20 +1176,6 @@ if (!function_exists('get_blog_image_url')) {
     }
 }
 
-//get category image url
-if (!function_exists('get_category_image_url')) {
-    function get_category_image_url($category, $size_name)
-    {
-        if ('aws_s3' == $category->storage) {
-            $ci = &get_instance();
-
-            return $ci->aws_base_url . $category->$size_name;
-        }
-
-        return base_url() . $category->$size_name;
-    }
-}
-
 //get blog categories
 if (!function_exists('get_blog_categories')) {
     function get_blog_categories()
@@ -1124,16 +1193,6 @@ if (!function_exists('get_blog_post_count_by_category')) {
         $ci = &get_instance();
 
         return $ci->blog_model->get_post_count_by_category($category_id);
-    }
-}
-
-//get post comment count
-if (!function_exists('get_post_comment_count')) {
-    function get_post_comment_count($post_id)
-    {
-        $ci = &get_instance();
-
-        return $ci->comment_model->get_post_comment_count($post_id);
     }
 }
 
@@ -1310,144 +1369,6 @@ if (!function_exists('get_location_input')) {
         }
 
         return '';
-    }
-}
-
-//get currencies
-if (!function_exists('get_currencies')) {
-    function get_currencies()
-    {
-        $ci = &get_instance();
-        $ci->config->load('currencies');
-
-        return $ci->config->item('currencies_array');
-    }
-}
-
-//get currency
-if (!function_exists('get_currency')) {
-    function get_currency($currency_key)
-    {
-        $ci = &get_instance();
-        $ci->config->load('currencies');
-        $currencies = $ci->config->item('currencies_array');
-        if (!empty($currencies)) {
-            if (isset($currencies[$currency_key])) {
-                return $currencies[$currency_key]['hex'];
-            }
-        }
-
-        return '';
-    }
-}
-
-//price database format
-if (!function_exists('price_database_format')) {
-    function price_database_format($price)
-    {
-        $price = str_replace(',', '.', $price);
-        $price = (float) $price;
-
-        return number_format($price, 2, '.', '') * 100;
-    }
-}
-
-//price format
-if (!function_exists('price_format')) {
-    function price_format($price)
-    {
-        $ci = &get_instance();
-        $price = $price / 100;
-        $dec_point = '.';
-        $thousands_sep = ',';
-
-        if ('.' != $ci->thousands_separator) {
-            $dec_point = ',';
-            $thousands_sep = '.';
-        }
-
-        return number_format($price, 2, $dec_point, $thousands_sep);
-    }
-}
-
-//price format decimal
-if (!function_exists('price_format_decimal')) {
-    function price_format_decimal($price)
-    {
-        $price = $price / 100;
-
-        return number_format($price, 2, '.', '');
-    }
-}
-
-//price format input
-if (!function_exists('price_format_input')) {
-    function price_format_input($price)
-    {
-        $ci = &get_instance();
-        $new_price = 0;
-        $price = $price / 100;
-        if (is_int($price)) {
-            $new_price = number_format($price, 0, '.', '');
-        } else {
-            $new_price = number_format($price, 2, '.', '');
-        }
-        if (',' == $ci->thousands_separator) {
-            $new_price = str_replace('.', ',', $new_price);
-        }
-
-        return $new_price;
-    }
-}
-
-//print price
-if (!function_exists('print_price')) {
-    function print_price($price, $currency)
-    {
-        $ci = &get_instance();
-        $price = $price / 100;
-        $dec_point = '.';
-        $thousands_sep = ',';
-
-        if ('.' != $ci->thousands_separator) {
-            $dec_point = ',';
-            $thousands_sep = '.';
-        }
-        if (is_int($price)) {
-            $price = number_format($price, 0, $dec_point, $thousands_sep);
-        } else {
-            $price = number_format($price, 2, $dec_point, $thousands_sep);
-        }
-        $currency = get_currency($currency);
-        if ('left' == $ci->payment_settings->currency_symbol_format) {
-            echo '<span>' . $currency . '</span>' . $price;
-        } else {
-            echo $price . '<span>' . $currency . '</span>';
-        }
-    }
-}
-
-//print preformatted price
-if (!function_exists('print_preformatted_price')) {
-    function print_preformatted_price($price, $currency)
-    {
-        $ci = &get_instance();
-        $currency = get_currency($currency);
-        if ('left' == $ci->payment_settings->currency_symbol_format) {
-            echo '<span>' . $currency . '</span>' . $price;
-        } else {
-            echo $price . '<span>' . $currency . '</span>';
-        }
-    }
-}
-
-//generate slug
-if (!function_exists('str_slug')) {
-    function str_slug($str)
-    {
-        $str = trim($str);
-
-        return url_title(convert_accented_characters($str), '-', true);
     }
 }
 
@@ -1761,7 +1682,7 @@ if (!function_exists('remove_filter_from_query_string')) {
     function remove_filter_from_query_string($filter_key)
     {
         $array = get_filters_query_string_array();
-        $filter_key = decode_slug($filter_key);
+        $filter_key = clean_slug($filter_key);
         $url = base_url() . uri_string();
         $i = 0;
         if (!empty($array)) {
@@ -1879,14 +1800,24 @@ if (!function_exists('generate_purchase_code')) {
     }
 }
 
-//decode slug
-if (!function_exists('decode_slug')) {
-    function decode_slug($slug)
+//generate slug
+if (!function_exists('str_slug')) {
+    function str_slug($str)
+    {
+        $str = trim($str);
+
+        return url_title(convert_accented_characters($str), '-', true);
+    }
+}
+
+//clean slug
+if (!function_exists('clean_slug')) {
+    function clean_slug($slug)
     {
         $ci = &get_instance();
         $slug = urldecode($slug);
         $slug = $ci->security->xss_clean($slug);
-        $slug = remove_special_characters($slug);
+        $slug = remove_special_characters($slug, true);
 
         return $slug;
     }
@@ -1897,27 +1828,37 @@ if (!function_exists('clean_number')) {
     function clean_number($num)
     {
         $ci = &get_instance();
+        $num = trim($num);
         $num = $ci->security->xss_clean($num);
-        $num = str_slug($num);
         $num = (int) $num;
-        $num = mysqli_real_escape_string($ci->db->conn_id, $num);
 
         return $num;
     }
 }
 
-//remove special characters
-if (!function_exists('remove_special_characters')) {
-    function remove_special_characters($str)
+//clean string
+if (!function_exists('clean_str')) {
+    function clean_str($str)
     {
         $ci = &get_instance();
+        $str = $ci->security->xss_clean($str);
+        $str = remove_special_characters($str, false);
+
+        return $str;
+    }
+}
+
+//remove special characters
+if (!function_exists('remove_special_characters')) {
+    function remove_special_characters($str, $is_slug = false)
+    {
+        $str = trim($str);
         $str = str_replace('#', '', $str);
         $str = str_replace(';', '', $str);
         $str = str_replace('!', '', $str);
         $str = str_replace('"', '', $str);
         $str = str_replace('$', '', $str);
         $str = str_replace('%', '', $str);
-        $str = str_replace("'", '', $str);
         $str = str_replace('(', '', $str);
         $str = str_replace(')', '', $str);
         $str = str_replace('*', '', $str);
@@ -1937,9 +1878,40 @@ if (!function_exists('remove_special_characters')) {
         $str = str_replace('}', '', $str);
         $str = str_replace('|', '', $str);
         $str = str_replace('~', '', $str);
-        $str = mysqli_real_escape_string($ci->db->conn_id, $str);
+        if (true == $is_slug) {
+            $str = str_replace(' ', '-', $str);
+            $str = str_replace("'", '', $str);
+        }
 
         return $str;
+    }
+}
+
+//remove forbidden characters
+if (!function_exists('remove_forbidden_characters')) {
+    function remove_forbidden_characters($str)
+    {
+        $str = str_replace(';', '', $str);
+        $str = str_replace('"', '', $str);
+        $str = str_replace('$', '', $str);
+        $str = str_replace('%', '', $str);
+        $str = str_replace('*', '', $str);
+        $str = str_replace('/', '', $str);
+        $str = str_replace('\'', '', $str);
+        $str = str_replace('<', '', $str);
+        $str = str_replace('>', '', $str);
+        $str = str_replace('=', '', $str);
+        $str = str_replace('?', '', $str);
+        $str = str_replace('[', '', $str);
+        $str = str_replace(']', '', $str);
+        $str = str_replace('\\', '', $str);
+        $str = str_replace('^', '', $str);
+        $str = str_replace('`', '', $str);
+        $str = str_replace('{', '', $str);
+        $str = str_replace('}', '', $str);
+        $str = str_replace('|', '', $str);
+
+        return str_replace('~', '', $str);
     }
 }
 
@@ -2008,9 +1980,113 @@ if (!function_exists('is_user_online')) {
     }
 }
 
+//print date
+if (!function_exists('formatted_date')) {
+    function formatted_date($timestamp)
+    {
+        return date('Y-m-d / H:i', strtotime($timestamp));
+    }
+}
+
+//print formatted hour
+if (!function_exists('formatted_hour')) {
+    function formatted_hour($timestamp)
+    {
+        return date('H:i', strtotime($timestamp));
+    }
+}
+
 if (!function_exists('convert_to_xml_character')) {
     function convert_to_xml_character($string)
     {
         return str_replace(['&', '<', '>', '\'', '"'], ['&amp;', '&lt;', '&gt;', '&apos;', '&quot;'], $string);
+    }
+}
+
+//initialize iyzico
+if (!function_exists('initialize_iyzico')) {
+    function initialize_iyzico()
+    {
+        $ci = &get_instance();
+        if (1 == $ci->payment_settings->iyzico_enabled) {
+            require_once APPPATH . 'third_party/iyzipay/vendor/autoload.php';
+            require_once APPPATH . 'third_party/iyzipay/vendor/iyzico/iyzipay-php/IyzipayBootstrap.php';
+            IyzipayBootstrap::init();
+            $options = new \Iyzipay\Options();
+            $options->setApiKey($ci->payment_settings->iyzico_api_key);
+            $options->setSecretKey($ci->payment_settings->iyzico_secret_key);
+            if ('sandbox' == $ci->payment_settings->iyzico_mode) {
+                $options->setBaseUrl('https://sandbox-api.iyzipay.com');
+            } else {
+                $options->setBaseUrl('https://api.iyzipay.com');
+            }
+
+            return $options;
+        }
+    }
+}
+
+//iyzico create submerchant
+if (!function_exists('iyzico_create_submerchant')) {
+    function iyzico_create_submerchant($iyzico_submerchant)
+    {
+        $ci = &get_instance();
+        $options = initialize_iyzico();
+        $conversation_id = generate_short_unique_id();
+        $data = [
+            'status' => 0,
+            'merchant_key' => '',
+            'error' => '',
+        ];
+
+        // retrieve
+        $request = new \Iyzipay\Request\RetrieveSubMerchantRequest();
+        $request->setLocale(\Iyzipay\Model\Locale::TR);
+        $request->setConversationId($conversation_id);
+        $request->setSubMerchantExternalId($iyzico_submerchant['submerchant_id']);
+        $subMerchant = \Iyzipay\Model\SubMerchant::retrieve($request, $options);
+        if ('success' == $subMerchant->getStatus()) {
+            $data['status'] = 1;
+            $data['merchant_key'] = $subMerchant->getSubMerchantKey();
+
+            return $data;
+        }
+
+        $request = new \Iyzipay\Request\CreateSubMerchantRequest();
+        $request->setLocale(\Iyzipay\Model\Locale::TR);
+        $request->setConversationId($conversation_id);
+        $request->setSubMerchantExternalId($iyzico_submerchant['submerchant_id']);
+        $request->setAddress($iyzico_submerchant['address']);
+        $request->setContactName($iyzico_submerchant['first_name']);
+        $request->setContactSurname($iyzico_submerchant['last_name']);
+        $request->setEmail($iyzico_submerchant['email']);
+        $request->setGsmNumber($iyzico_submerchant['phone_number']);
+        $request->setName($iyzico_submerchant['submerchant_name']);
+        $request->setIban($iyzico_submerchant['iban']);
+        $request->setCurrency(\Iyzipay\Model\Currency::TL);
+
+        if ('PRIVATE_COMPANY' == $iyzico_submerchant['submerchant_type']) {
+            $request->setSubMerchantType(\Iyzipay\Model\SubMerchantType::PRIVATE_COMPANY);
+            $request->setTaxOffice($iyzico_submerchant['tax_office']);
+            $request->setLegalCompanyTitle($iyzico_submerchant['company_title']);
+        } elseif ('LIMITED_OR_JOINT_STOCK_COMPANY' == $iyzico_submerchant['submerchant_type']) {
+            $request->setSubMerchantType(\Iyzipay\Model\SubMerchantType::LIMITED_OR_JOINT_STOCK_COMPANY);
+            $request->setTaxOffice($iyzico_submerchant['tax_office']);
+            $request->setTaxNumber($iyzico_submerchant['tax_number']);
+            $request->setLegalCompanyTitle($iyzico_submerchant['company_title']);
+        } else {
+            $request->setIdentityNumber($iyzico_submerchant['identity_number']);
+            $request->setSubMerchantType(\Iyzipay\Model\SubMerchantType::PERSONAL);
+        }
+        $subMerchant = \Iyzipay\Model\SubMerchant::create($request, $options);
+
+        if ('failure' == $subMerchant->getStatus()) {
+            $data['error'] = $subMerchant->getErrorMessage();
+        } else {
+            $data['status'] = 1;
+            $data['merchant_key'] = $subMerchant->getsubMerchantKey();
+        }
+
+        return $data;
     }
 }

@@ -16,7 +16,7 @@
                 <?php $this->load->view('admin/includes/_messages'); ?>
                 <div class="form-group">
                     <label><?php echo trans('subject'); ?></label>
-                    <input type="text" name="subject" class="form-control" placeholder="<?php echo trans('subject'); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?> required>
+                    <input type="text" name="subject" class="form-control" placeholder="<?php echo trans('subject'); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?> required>
                 </div>
                 <div class="form-group">
                     <label><?php echo trans('content'); ?></label>

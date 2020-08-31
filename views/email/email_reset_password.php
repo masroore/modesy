@@ -14,7 +14,7 @@
                                     <?php echo trans("email_reset_password"); ?><br>
                                 </p>
                                 <p style='text-align: center;margin-top: 30px;'>
-                                    <a href="<?php echo lang_base_url(); ?>reset-password?token=<?php echo $token; ?>" style='font-size: 14px;text-decoration: none;padding: 14px 40px;background-color: #09b1ba;color: #ffffff !important; border-radius: 3px;'>
+                                    <a href="<?php echo generate_url("reset_password"); ?>?token=<?php echo $token; ?>" style='font-size: 14px;text-decoration: none;padding: 14px 40px;background-color: #09b1ba;color: #ffffff !important; border-radius: 3px;'>
                                         <?php echo trans("reset_password"); ?>
                                     </a>
                                 </p>

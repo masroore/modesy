@@ -101,9 +101,9 @@
 <div class="maintenance">
     <div class="maintenance-inner">
         <div class="content">
-            <h1 class="site-title"><?php echo $general_settings->application_name; ?></h1>
-            <h2 class="title"><?php echo $general_settings->maintenance_mode_title; ?></h2>
-            <p class="description"><?php echo $general_settings->maintenance_mode_description; ?></p>
+            <h1 class="site-title"><?php echo $this->general_settings->application_name; ?></h1>
+            <h2 class="title"><?php echo $this->general_settings->maintenance_mode_title; ?></h2>
+            <p class="description"><?php echo $this->general_settings->maintenance_mode_description; ?></p>
         </div>
     </div>
 </div>

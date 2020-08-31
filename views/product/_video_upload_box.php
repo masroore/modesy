@@ -17,14 +17,17 @@
 
 <script>
     $('#drag-and-drop-zone-video').dmUploader({
-        url: '<?php echo base_url(); ?>file_controller/upload_video',
+        url: '<?php echo base_url(); ?>upload-video-post',
         maxFileSize: <?php echo $this->general_settings->max_file_size_video; ?>,
         queue: true,
         extFilter: ["mp4", "webm"],
         multiple: false,
-        extraData: {
-            "product_id":<?php echo $product->id; ?>
-        },
+		extraData: function (id) {
+			return {
+				"product_id": <?php echo $product->id; ?>,
+				"<?php echo $this->security->get_csrf_token_name(); ?>": $.cookie(csfr_cookie_name)
+			};
+		},
         onDragEnter: function () {
             this.addClass('active');
         },
@@ -53,10 +56,10 @@
         onFallbackMode: function () {
         },
         onFileSizeError: function (file) {
-            $(".error-message-img-upload").show();
-            $(".error-message-img-upload p").html("<?php echo trans('file_too_large') . ' ' . formatSizeUnits($this->general_settings->max_file_size_video); ?>");
+            $("#drag-and-drop-zone-video .error-message-file-upload").show();
+            $("#drag-and-drop-zone-video .error-message-file-upload p").html("<?php echo trans('file_too_large') . ' ' . formatSizeUnits($this->general_settings->max_file_size_video); ?>");
             setTimeout(function () {
-                $(".error-message-img-upload").fadeOut("slow");
+                $("#drag-and-drop-zone-video .error-message-file-upload").fadeOut("slow");
             }, 4000)
         },
         onFileTypeError: function (file) {
@@ -66,14 +69,17 @@
     });
     $(document).ajaxStop(function () {
         $('#drag-and-drop-zone-video').dmUploader({
-            url: '<?php echo base_url(); ?>file_controller/upload_video',
+            url: '<?php echo base_url(); ?>upload-video-post',
             maxFileSize: <?php echo $this->general_settings->max_file_size_video; ?>,
             queue: true,
             extFilter: ["mp4", "webm"],
             multiple: false,
-            extraData: {
-                "product_id":<?php echo $product->id; ?>
-            },
+			extraData: function (id) {
+				return {
+					"product_id": <?php echo $product->id; ?>,
+					"<?php echo $this->security->get_csrf_token_name(); ?>": $.cookie(csfr_cookie_name)
+				};
+			},
             onDragEnter: function () {
                 this.addClass('active');
             },
@@ -102,10 +108,10 @@
             onFallbackMode: function () {
             },
             onFileSizeError: function (file) {
-                $(".error-message-img-upload").show();
-                $(".error-message-img-upload p").html("<?php echo trans('file_too_large') . ' ' . formatSizeUnits($this->general_settings->max_file_size_video); ?>");
+                $("#drag-and-drop-zone-video .error-message-file-upload").show();
+                $("#drag-and-drop-zone-video .error-message-file-upload p").html("<?php echo trans('file_too_large') . ' ' . formatSizeUnits($this->general_settings->max_file_size_video); ?>");
                 setTimeout(function () {
-                    $(".error-message-img-upload").fadeOut("slow");
+                    $("#drag-and-drop-zone-video .error-message-file-upload").fadeOut("slow");
                 }, 4000)
             },
             onFileTypeError: function (file) {
@@ -117,12 +123,13 @@
 
     function load_video_preview(product_id) {
         var data = {
-            "product_id": product_id
+            "product_id": product_id,
+            "sys_lang_id": sys_lang_id
         };
         data[csfr_token_name] = $.cookie(csfr_cookie_name);
         $.ajax({
             type: "POST",
-            url: base_url + "file_controller/load_video_preview",
+            url: base_url + "load-video-preview-post",
             data: data,
             success: function (response) {
                 setTimeout(function () {

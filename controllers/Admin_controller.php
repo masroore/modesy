@@ -64,25 +64,15 @@ class Admin_controller extends Admin_Core_Controller
         }
     }
 
-    // Slider Items
-    public function slider_items()
+    // Slider
+    public function slider()
     {
         $data['title'] = trans('slider_items');
         $data['slider_items'] = $this->slider_model->get_slider_items_all();
         $data['lang_search_column'] = 3;
 
         $this->load->view('admin/includes/_header', $data);
-        $this->load->view('admin/slider/slider_items', $data);
-        $this->load->view('admin/includes/_footer');
-    }
-
-    // Add Slider Item
-    public function add_slider_item()
-    {
-        $data['title'] = trans('add_slider_item');
-
-        $this->load->view('admin/includes/_header', $data);
-        $this->load->view('admin/slider/add_item', $data);
+        $this->load->view('admin/slider/slider', $data);
         $this->load->view('admin/includes/_footer');
     }
 
@@ -92,10 +82,10 @@ class Admin_controller extends Admin_Core_Controller
     public function add_slider_item_post()
     {
         if ($this->slider_model->add_item()) {
-            $this->session->set_flashdata('success', trans('msg_slider_added'));
+            $this->session->set_flashdata('success_form', trans('msg_slider_added'));
             redirect($this->agent->referrer());
         } else {
-            $this->session->set_flashdata('error', trans('msg_error'));
+            $this->session->set_flashdata('error_form', trans('msg_error'));
             redirect($this->agent->referrer());
         }
     }
@@ -106,7 +96,6 @@ class Admin_controller extends Admin_Core_Controller
     public function update_slider_item($id)
     {
         $data['title'] = trans('update_slider_item');
-
         //get item
         $data['item'] = $this->slider_model->get_slider_item($id);
 
@@ -114,7 +103,7 @@ class Admin_controller extends Admin_Core_Controller
             redirect($this->agent->referrer());
         }
         $this->load->view('admin/includes/_header', $data);
-        $this->load->view('admin/slider/update_item', $data);
+        $this->load->view('admin/slider/update_slider', $data);
         $this->load->view('admin/includes/_footer');
     }
 
@@ -127,11 +116,26 @@ class Admin_controller extends Admin_Core_Controller
         $id = $this->input->post('id', true);
         if ($this->slider_model->update_item($id)) {
             $this->session->set_flashdata('success', trans('msg_updated'));
-            redirect(admin_url() . 'slider-items');
+            redirect(admin_url() . 'slider');
         } else {
             $this->session->set_flashdata('error', trans('msg_error'));
             redirect($this->agent->referrer());
         }
+    }
+
+    /**
+     * Update Slider Settings Post.
+     */
+    public function update_slider_settings_post()
+    {
+        if ($this->slider_model->update_slider_settings()) {
+            $this->session->set_flashdata('success_form', trans('msg_updated'));
+            $this->session->set_flashdata('msg_settings', 1);
+        } else {
+            $this->session->set_flashdata('error_form', trans('msg_error'));
+            $this->session->set_flashdata('msg_settings', 1);
+        }
+        redirect($this->agent->referrer());
     }
 
     /**
@@ -161,7 +165,6 @@ class Admin_controller extends Admin_Core_Controller
         $this->load->model('bidding_model');
         $data['title'] = trans('quote_requests');
         $data['form_action'] = admin_url() . 'quote-requests';
-
         //get paginated requests
         $pagination = $this->paginate(admin_url() . 'quote-requests', $this->bidding_model->get_admin_quote_requests_count());
         $data['quote_requests'] = $this->bidding_model->get_admin_paginated_quote_requests($pagination['per_page'], $pagination['offset']);
@@ -332,7 +335,7 @@ class Admin_controller extends Admin_Core_Controller
             'products' => trans('products_ad_space'),
             'products_sidebar' => trans('products_sidebar_ad_space'),
             'product' => trans('product_ad_space'),
-            'product_sidebar' => trans('product_sidebar_ad_space'),
+            'product_bottom' => trans('product_bottom_ad_space'),
             'blog_1' => trans('blog_ad_space_1'),
             'blog_2' => trans('blog_ad_space_2'),
             'blog_post_details' => trans('blog_post_details_ad_space'),
@@ -380,7 +383,6 @@ class Admin_controller extends Admin_Core_Controller
     public function seo_tools()
     {
         $data['title'] = trans('seo_tools');
-
         $data['current_lang_id'] = $this->input->get('lang', true);
 
         if (empty($data['current_lang_id'])) {
@@ -589,8 +591,6 @@ class Admin_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('visual_settings');
 
-        $data['visual_settings'] = $this->settings_model->get_general_settings();
-
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/settings/visual_settings', $data);
         $this->load->view('admin/includes/_footer');
@@ -718,6 +718,22 @@ class Admin_controller extends Admin_Core_Controller
     }
 
     /**
+     * Google Login Post.
+     */
+    public function social_login_vk_post()
+    {
+        if ($this->settings_model->update_vk_login()) {
+            $this->session->set_flashdata('success', trans('msg_updated'));
+            $this->session->set_flashdata('mes_social_vk', 1);
+            redirect($this->agent->referrer());
+        } else {
+            $this->session->set_flashdata('error', trans('msg_error'));
+            $this->session->set_flashdata('mes_social_vk', 1);
+            redirect($this->agent->referrer());
+        }
+    }
+
+    /**
      * Members.
      */
     public function members()
@@ -809,6 +825,72 @@ class Admin_controller extends Admin_Core_Controller
             }
 
             redirect($this->agent->referrer());
+        }
+    }
+
+    /**
+     * Edit User.
+     */
+    public function edit_user($id)
+    {
+        $data['title'] = trans('edit_user');
+        $data['user'] = $this->auth_model->get_user($id);
+        if (empty($data['user'])) {
+            redirect(admin_url() . 'members');
+        }
+        $data['countries'] = $this->location_model->get_countries();
+        $data['states'] = $this->location_model->get_states_by_country($data['user']->country_id);
+        $data['cities'] = $this->location_model->get_cities_by_state($data['user']->state_id);
+
+        $this->load->view('admin/includes/_header', $data);
+        $this->load->view('admin/users/edit_user');
+        $this->load->view('admin/includes/_footer');
+    }
+
+    /**
+     * Edit User Post.
+     */
+    public function edit_user_post()
+    {
+        //validate inputs
+        $this->form_validation->set_rules('username', trans('username'), 'required|xss_clean|max_length[255]');
+        $this->form_validation->set_rules('email', trans('email'), 'required|xss_clean');
+        if (false === $this->form_validation->run()) {
+            $this->session->set_flashdata('errors', validation_errors());
+            redirect($this->agent->referrer());
+        } else {
+            $data = [
+                'id' => $this->input->post('id', true),
+                'username' => $this->input->post('username', true),
+                'slug' => $this->input->post('slug', true),
+                'email' => $this->input->post('email', true),
+            ];
+            //is email unique
+            if (!$this->auth_model->is_unique_email($data['email'], $data['id'])) {
+                $this->session->set_flashdata('error', trans('msg_email_unique_error'));
+                redirect($this->agent->referrer());
+                exit();
+            }
+            //is username unique
+            if (!$this->auth_model->is_unique_username($data['username'], $data['id'])) {
+                $this->session->set_flashdata('error', trans('msg_username_unique_error'));
+                redirect($this->agent->referrer());
+                exit();
+            }
+            //is slug unique
+            if ($this->auth_model->check_is_slug_unique($data['slug'], $data['id'])) {
+                $this->session->set_flashdata('error', trans('msg_slug_unique_error'));
+                redirect($this->agent->referrer());
+                exit();
+            }
+
+            if ($this->profile_model->edit_user($data['id'])) {
+                $this->session->set_flashdata('success', trans('msg_updated'));
+                redirect($this->agent->referrer());
+            } else {
+                $this->session->set_flashdata('error', trans('msg_error'));
+                redirect($this->agent->referrer());
+            }
         }
     }
 
@@ -921,6 +1003,7 @@ class Admin_controller extends Admin_Core_Controller
     public function storage()
     {
         $data['title'] = trans('storage');
+
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/storage', $data);
         $this->load->view('admin/includes/_footer');
@@ -988,7 +1071,6 @@ class Admin_controller extends Admin_Core_Controller
     public function preferences()
     {
         $data['title'] = trans('preferences');
-
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/preferences', $data);
         $this->load->view('admin/includes/_footer');
@@ -1002,12 +1084,6 @@ class Admin_controller extends Admin_Core_Controller
         $form = $this->input->post('submit', true);
         $this->session->set_flashdata('mes_' . $form, 1);
         if ($this->settings_model->update_preferences($form)) {
-            if ('general' == $form) {
-                $admin_panel_link = $this->input->post('admin_panel_link', true);
-                $this->settings_model->update_admin_panel_link($admin_panel_link);
-                sleep(1);
-            }
-
             $this->session->set_flashdata('success', trans('msg_updated'));
             //reset cache
             redirect(admin_url() . 'preferences');
@@ -1086,41 +1162,6 @@ class Admin_controller extends Admin_Core_Controller
         }
     }
 
-    /**
-     * User Reviews.
-     */
-    public function user_reviews()
-    {
-        $data['title'] = trans('user_reviews');
-        $data['reviews'] = $this->user_review_model->get_all_reviews();
-
-        $this->load->view('admin/includes/_header', $data);
-        $this->load->view('admin/review/user_reviews', $data);
-        $this->load->view('admin/includes/_footer');
-    }
-
-    /**
-     * Delete User Review.
-     */
-    public function delete_user_review()
-    {
-        $id = $this->input->post('id', true);
-        if ($this->user_review_model->delete_review($id)) {
-            $this->session->set_flashdata('success', trans('msg_review_deleted'));
-        } else {
-            $this->session->set_flashdata('error', trans('msg_error'));
-        }
-    }
-
-    /**
-     * Delete Selected User Reviews.
-     */
-    public function delete_selected_user_reviews()
-    {
-        $review_ids = $this->input->post('review_ids', true);
-        $this->user_review_model->delete_multi_reviews($review_ids);
-    }
-
     /*
     *-------------------------------------------------------------------------------------------------
     * LOCATION
@@ -1128,39 +1169,11 @@ class Admin_controller extends Admin_Core_Controller
     */
 
     /**
-     * Location Settings.
-     */
-    public function location_settings()
-    {
-        $data['title'] = trans('location_settings');
-        $data['countries'] = $this->location_model->get_countries();
-
-        $this->load->view('admin/includes/_header', $data);
-        $this->load->view('admin/location/location_settings', $data);
-        $this->load->view('admin/includes/_footer');
-    }
-
-    /**
-     * Location Settings Post.
-     */
-    public function location_settings_post()
-    {
-        if ($this->location_model->set_location_settings()) {
-            $this->session->set_flashdata('success', trans('msg_updated'));
-            redirect($this->agent->referrer());
-        } else {
-            $this->session->set_flashdata('error', trans('msg_error'));
-            redirect($this->agent->referrer());
-        }
-    }
-
-    /**
      * Countries.
      */
     public function countries()
     {
         $data['title'] = trans('countries');
-
         //get paginated products
         $pagination = $this->paginate(admin_url() . 'countries', $this->location_model->get_paginated_countries_count());
         $data['countries'] = $this->location_model->get_paginated_countries($pagination['per_page'], $pagination['offset']);
@@ -1266,7 +1279,6 @@ class Admin_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('states');
         $data['countries'] = $this->location_model->get_countries();
-
         //get paginated states
         $pagination = $this->paginate(admin_url() . 'states', $this->location_model->get_paginated_states_count());
         $data['states'] = $this->location_model->get_paginated_states($pagination['per_page'], $pagination['offset']);
@@ -1380,7 +1392,6 @@ class Admin_controller extends Admin_Core_Controller
         $data['title'] = trans('cities');
         $data['countries'] = $this->location_model->get_countries();
         $data['states'] = $this->location_model->get_states();
-
         //get paginated cities
         $pagination = $this->paginate(admin_url() . 'cities', $this->location_model->get_paginated_cities_count());
         $data['cities'] = $this->location_model->get_paginated_cities($pagination['per_page'], $pagination['offset']);
@@ -1499,5 +1510,12 @@ class Admin_controller extends Admin_Core_Controller
                 echo "<option value='" . $state->id . "'>" . html_escape($state->name) . '</option>';
             }
         }
+    }
+
+    //activate inactivate countries
+    public function activate_inactivate_countries()
+    {
+        $action = $this->input->post('action', true);
+        $this->location_model->activate_inactivate_countries($action);
     }
 }

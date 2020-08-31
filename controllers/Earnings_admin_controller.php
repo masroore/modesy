@@ -50,7 +50,6 @@ class Earnings_admin_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('seller_balances');
         $data['form_action'] = admin_url() . 'seller-balances';
-
         //get paginated earnings
         $pagination = $this->paginate(admin_url() . 'seller-balances', $this->earnings_admin_model->get_users_count());
         $data['balances'] = $this->earnings_admin_model->get_paginated_users($pagination['per_page'], $pagination['offset']);
@@ -97,7 +96,6 @@ class Earnings_admin_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('completed_payouts');
         $data['form_action'] = admin_url() . 'completed-payouts';
-
         //get paginated earnings
         $pagination = $this->paginate(admin_url() . 'completed-payouts', $this->earnings_admin_model->get_completed_payouts_count());
         $data['payouts'] = $this->earnings_admin_model->get_paginated_completed_payouts($pagination['per_page'], $pagination['offset']);
@@ -130,7 +128,6 @@ class Earnings_admin_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('add_payout');
         $data['form_action'] = admin_url() . 'add_payout';
-
         $data['users'] = $this->auth_model->get_users();
         $data['currencies'] = $this->currency_model->get_currencies();
 
@@ -146,7 +143,7 @@ class Earnings_admin_controller extends Admin_Core_Controller
     {
         $user_id = $this->input->post('user_id', true);
         $amount = $this->input->post('amount', true);
-        $amount = price_database_format($amount);
+        $amount = get_price($amount, 'database');
 
         //check user balance
         if (!$this->earnings_admin_model->check_user_balance($user_id, $amount)) {

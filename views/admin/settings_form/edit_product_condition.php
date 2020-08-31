@@ -14,7 +14,7 @@
             <div class="box-body">
                 <!-- include message block -->
                 <?php $this->load->view('admin/includes/_messages_form'); ?>
-                <?php foreach ($languages as $language):
+                <?php foreach ($this->languages as $language):
                     $option = $this->settings_model->get_shipping_option_by_lang($main_option->common_id, $language->id); ?>
                     <div class="form-group">
                         <label><?php echo trans("option_label"); ?> (<?php echo $language->name; ?>)</label>

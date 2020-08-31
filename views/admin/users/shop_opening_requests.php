@@ -25,8 +25,10 @@
 							<th><?php echo trans('image'); ?></th>
 							<th><?php echo trans('username'); ?></th>
 							<th><?php echo trans('email'); ?></th>
+							<th><?php echo trans('phone_number'); ?></th>
 							<th><?php echo trans('shop_name'); ?></th>
 							<th><?php echo trans('shop_description'); ?></th>
+                            <th><?php echo str_replace(":", "", trans('last_seen')); ?></th>
 							<th class="max-width-120"><?php echo trans('options'); ?></th>
 						</tr>
 						</thead>
@@ -35,10 +37,14 @@
 						<?php foreach ($requests as $user): ?>
 							<tr>
 								<td><?php echo html_escape($user->id); ?></td>
-								<td>
-									<img src="<?php echo get_user_avatar($user); ?>" alt="user" class="img-responsive" style="height: 50px;">
-								</td>
-								<td><?php echo html_escape($user->username); ?></td>
+                                <td>
+                                    <a href="<?php echo generate_profile_url($user->slug); ?>" target="_blank" class="table-link">
+                                        <img src="<?php echo get_user_avatar($user); ?>" alt="user" class="img-responsive" style="height: 50px;">
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="<?php echo generate_profile_url($user->slug); ?>" target="_blank" class="table-link"><?php echo html_escape($user->username); ?></a>
+                                </td>
 								<td>
 									<?php echo html_escape($user->email);
 									if ($user->email_status == 1): ?>
@@ -47,8 +53,10 @@
 										<small class="text-danger">(<?php echo trans("unconfirmed"); ?>)</small>
 									<?php endif; ?>
 								</td>
+								<td><?php echo html_escape($user->phone_number); ?></td>
 								<td><?php echo html_escape($user->shop_name); ?></td>
 								<td><?php echo html_escape($user->about_me); ?></td>
+                                <td><?php echo time_ago($user->last_seen); ?></td>
 								<td>
 									<?php echo form_open('admin_controller/approve_shop_opening_request'); ?>
 									<input type="hidden" name="id" value="<?php echo $user->id; ?>">
@@ -91,8 +99,6 @@
             var data = JSON.parse(<?php echo json_encode($this->session->userdata("mds_send_email_data"));?>);
             if (data) {
                 data[csfr_token_name] = $.cookie(csfr_cookie_name);
-                data['form_lang_base_url'] = '<?php echo lang_base_url(); ?>';
-                console.log(data);
                 $.ajax({
                     type: "POST",
                     url: base_url + "ajax_controller/send_email",

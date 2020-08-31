@@ -10,7 +10,7 @@
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="<?php echo lang_base_url(); ?>"><?php echo trans("home"); ?></a></li>
                             <?php if (!empty($category)): ?>
-                                <li class="breadcrumb-item"><a href="<?php echo lang_base_url(); ?>blog"><?php echo trans("blog"); ?></a></li>
+                                <li class="breadcrumb-item"><a href="<?php echo generate_url("blog"); ?>"><?php echo trans("blog"); ?></a></li>
                                 <li class="breadcrumb-item active" aria-current="page"><?php echo html_escape($category->name); ?></li>
                             <?php else: ?>
                                 <li class="breadcrumb-item active" aria-current="page"><?php echo trans('blog'); ?></li>
@@ -24,13 +24,13 @@
                         <div class="col-12">
                             <ul class="blog-categories">
                                 <li class="<?php echo ($active_category == "all") ? 'active' : ''; ?>">
-                                    <a href="<?php echo lang_base_url(); ?>blog"><?php echo trans('all'); ?></a>
+                                    <a href="<?php echo generate_url("blog"); ?>"><?php echo trans('all'); ?></a>
                                 </li>
                                 <?php
                                 $blog_categories = get_blog_categories();
                                 foreach ($blog_categories as $category): ?>
                                     <li class="<?php echo ($active_category == $category->slug) ? 'active' : ''; ?>">
-                                        <a href="<?php echo lang_base_url(); ?>blog/<?php echo html_escape($category->slug); ?>"><?php echo html_escape($category->name); ?></a>
+                                        <a href="<?php echo generate_url("blog") . "/" . html_escape($category->slug); ?>"><?php echo html_escape($category->name); ?></a>
                                     </li>
                                 <?php endforeach; ?>
                             </ul>
@@ -48,7 +48,7 @@
                         <!--print blog posts-->
                         <?php foreach ($posts as $item): ?>
                             <div class="col-xs-12 col-sm-6 col-lg-4">
-                                <?php $this->load->view('blog/_blog_item', ['item' => $item, "class" => "lazyload"]); ?>
+                                <?php $this->load->view('blog/_blog_item', ['item' => $item, 'blog_slider' => false]); ?>
                             </div>
                         <?php endforeach; ?>
                     </div>

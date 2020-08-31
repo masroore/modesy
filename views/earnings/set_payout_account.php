@@ -34,17 +34,17 @@
                 ?>
                 <!-- Nav pills -->
                 <ul class="nav nav-pills nav-payout-accounts justify-content-center">
-                    <?php if ($payment_settings->payout_paypal_enabled): $show_all_tabs = true; ?>
+                    <?php if ($this->payment_settings->payout_paypal_enabled): $show_all_tabs = true; ?>
                         <li class="nav-item">
                             <a class="nav-link nav-link-paypal <?php echo ($active_tab == 'paypal') ? 'active' : ''; ?>" data-toggle="pill" href="#tab_paypal"><?php echo trans("paypal"); ?></a>
                         </li>
                     <?php endif; ?>
-                    <?php if ($payment_settings->payout_iban_enabled): $show_all_tabs = true; ?>
+                    <?php if ($this->payment_settings->payout_iban_enabled): $show_all_tabs = true; ?>
                         <li class="nav-item">
                             <a class="nav-link nav-link-bank <?php echo ($active_tab == 'iban') ? 'active' : ''; ?>" data-toggle="pill" href="#tab_iban"><?php echo trans("iban"); ?></a>
                         </li>
                     <?php endif; ?>
-                    <?php if ($payment_settings->payout_swift_enabled): $show_all_tabs = true; ?>
+                    <?php if ($this->payment_settings->payout_swift_enabled): $show_all_tabs = true; ?>
                         <li class="nav-item">
                             <a class="nav-link nav-link-swift <?php echo ($active_tab == 'swift') ? 'active' : ''; ?>" data-toggle="pill" href="#tab_swift"><?php echo trans("swift"); ?></a>
                         </li>
@@ -60,7 +60,7 @@
                                 $this->load->view('partials/_messages');
                             endif; ?>
 
-                            <?php echo form_open('earnings_controller/set_paypal_payout_account_post', ['id' => 'form_validate_payout_1']); ?>
+                            <?php echo form_open('set-paypal-payout-account-post', ['id' => 'form_validate_payout_1']); ?>
                             <div class="form-group">
                                 <label><?php echo trans("paypal_email_address"); ?>*</label>
                                 <input type="email" name="payout_paypal_email" class="form-control form-input" value="<?php echo html_escape($user_payout->payout_paypal_email); ?>" required>
@@ -76,7 +76,7 @@
                                 $this->load->view('partials/_messages');
                             endif; ?>
 
-                            <?php echo form_open('earnings_controller/set_iban_payout_account_post', ['id' => 'form_validate_payout_2']); ?>
+                            <?php echo form_open('set-iban-payout-account-post', ['id' => 'form_validate_payout_2']); ?>
                             <div class="form-group">
                                 <label><?php echo trans("full_name"); ?>*</label>
                                 <input type="text" name="iban_full_name" class="form-control form-input" value="<?php echo html_escape($user_payout->iban_full_name); ?>" required>
@@ -88,7 +88,7 @@
                                         <div class="selectdiv">
                                             <select name="iban_country_id" class="form-control" required>
                                                 <option value="" selected><?php echo trans("select_country"); ?></option>
-                                                <?php foreach ($countries as $item): ?>
+                                                <?php foreach ($this->countries as $item): ?>
                                                     <option value="<?php echo $item->id; ?>" <?php echo ($user_payout->iban_country_id == $item->id) ? 'selected' : ''; ?>><?php echo html_escape($item->name); ?></option>
                                                 <?php endforeach; ?>
                                             </select>
@@ -115,7 +115,7 @@
                                 $this->load->view('partials/_messages');
                             endif; ?>
 
-                            <?php echo form_open('earnings_controller/set_swift_payout_account_post', ['id' => 'form_validate_payout_3']); ?>
+                            <?php echo form_open('set-swift-payout-account-post', ['id' => 'form_validate_payout_3']); ?>
                             <div class="form-group">
                                 <label><?php echo trans("full_name"); ?>*</label>
                                 <input type="text" name="swift_full_name" class="form-control form-input" value="<?php echo html_escape($user_payout->swift_full_name); ?>" required>
@@ -127,7 +127,7 @@
                                         <div class="selectdiv">
                                             <select name="swift_country_id" class="form-control" required>
                                                 <option value="" selected><?php echo trans("select_country"); ?></option>
-                                                <?php foreach ($countries as $item): ?>
+                                                <?php foreach ($this->countries as $item): ?>
                                                     <option value="<?php echo $item->id; ?>" <?php echo ($user_payout->swift_country_id == $item->id) ? 'selected' : ''; ?>><?php echo html_escape($item->name); ?></option>
                                                 <?php endforeach; ?>
                                             </select>
@@ -174,7 +174,7 @@
                                         <div class="selectdiv">
                                             <select name="swift_bank_branch_country_id" class="form-control" required>
                                                 <option value="" selected><?php echo trans("select_country"); ?></option>
-                                                <?php foreach ($countries as $item): ?>
+                                                <?php foreach ($this->countries as $item): ?>
                                                     <option value="<?php echo $item->id; ?>" <?php echo ($user_payout->swift_bank_branch_country_id == $item->id) ? 'selected' : ''; ?>><?php echo html_escape($item->name); ?></option>
                                                 <?php endforeach; ?>
                                             </select>

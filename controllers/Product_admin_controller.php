@@ -65,23 +65,6 @@ class Product_admin_controller extends Admin_Core_Controller
     }
 
     /**
-     * Sold Products.
-     */
-    public function sold_products()
-    {
-        $data['title'] = trans('sold_products');
-        $data['form_action'] = admin_url() . 'sold-products';
-        $data['list_type'] = 'sold_products';
-        //get paginated products
-        $pagination = $this->paginate(admin_url() . 'sold-products', $this->product_admin_model->get_sold_products_count('sold_products'));
-        $data['products'] = $this->product_admin_model->get_paginated_sold_products($pagination['per_page'], $pagination['offset'], 'sold_products');
-
-        $this->load->view('admin/includes/_header', $data);
-        $this->load->view('admin/product/products', $data);
-        $this->load->view('admin/includes/_footer');
-    }
-
-    /**
      * Draft.
      */
     public function drafts()
@@ -116,38 +99,38 @@ class Product_admin_controller extends Admin_Core_Controller
     }
 
     /**
-     * Promoted Products.
+     * Featured Products.
      */
-    public function promoted_products()
+    public function featured_products()
     {
-        $data['title'] = trans('promoted_products');
-        $data['form_action'] = admin_url() . 'promoted-products';
-        $data['list_type'] = 'promoted_products';
-        //get paginated promoted products
-        $pagination = $this->paginate(admin_url() . 'promoted-products', $this->product_admin_model->get_paginated_promoted_products_count('promoted_products'));
+        $data['title'] = trans('featured_products');
+        $data['form_action'] = admin_url() . 'featured-products';
+        $data['list_type'] = 'featured_products';
+        //get paginated featured products
+        $pagination = $this->paginate(admin_url() . 'featured-products', $this->product_admin_model->get_paginated_promoted_products_count('promoted_products'));
         $data['products'] = $this->product_admin_model->get_paginated_promoted_products($pagination['per_page'], $pagination['offset'], 'promoted_products');
 
         $this->load->view('admin/includes/_header', $data);
-        $this->load->view('admin/promoted/promoted_products', $data);
+        $this->load->view('admin/featured/featured_products', $data);
         $this->load->view('admin/includes/_footer');
     }
 
     /**
-     * Promoted Products Pricing.
+     * Featured Products Pricing.
      */
-    public function promoted_products_pricing()
+    public function featured_products_pricing()
     {
         $data['title'] = trans('pricing');
 
         $this->load->view('admin/includes/_header', $data);
-        $this->load->view('admin/promoted/pricing', $data);
+        $this->load->view('admin/featured/pricing', $data);
         $this->load->view('admin/includes/_footer');
     }
 
     /**
-     * Promoted Products Pricing Post.
+     * Featured Products Pricing Post.
      */
-    public function promoted_products_pricing_post()
+    public function featured_products_pricing_post()
     {
         if ($this->settings_model->update_pricing_settings()) {
             $this->session->set_flashdata('success', trans('msg_updated'));
@@ -159,25 +142,25 @@ class Product_admin_controller extends Admin_Core_Controller
     }
 
     /**
-     * Promoted Products Transactions.
+     * Featured Products Transactions.
      */
-    public function promoted_products_transactions()
+    public function featured_products_transactions()
     {
-        $data['title'] = trans('promoted_products_transactions');
-        $data['form_action'] = admin_url() . 'promoted-products-transactions';
+        $data['title'] = trans('featured_products_transactions');
+        $data['form_action'] = admin_url() . 'featured-products-transactions';
 
-        $pagination = $this->paginate(admin_url() . 'promoted-products-transactions', $this->transaction_model->get_promoted_transactions_count());
+        $pagination = $this->paginate(admin_url() . 'featured-products-transactions', $this->transaction_model->get_promoted_transactions_count());
         $data['transactions'] = $this->transaction_model->get_paginated_promoted_transactions($pagination['per_page'], $pagination['offset']);
 
         $this->load->view('admin/includes/_header', $data);
-        $this->load->view('admin/promoted/transactions', $data);
+        $this->load->view('admin/featured/transactions', $data);
         $this->load->view('admin/includes/_footer');
     }
 
     /**
-     * Delete Promoted Transaction Post.
+     * Delete Featured Transaction Post.
      */
-    public function delete_promoted_transaction_post()
+    public function delete_featured_transaction_post()
     {
         $id = $this->input->post('id', true);
         if ($this->transaction_model->delete_promoted_transaction($id)) {
@@ -297,9 +280,9 @@ class Product_admin_controller extends Admin_Core_Controller
     }
 
     /**
-     * Add Remove Promoted Products.
+     * Add Remove Featured Products.
      */
-    public function add_remove_promoted_products()
+    public function add_remove_featured_products()
     {
         $product_id = $this->input->post('product_id', true);
         $day_count = $this->input->post('day_count', true);
@@ -323,12 +306,54 @@ class Product_admin_controller extends Admin_Core_Controller
      */
     public function comments()
     {
-        $data['title'] = trans('comments');
-        $data['comments'] = $this->comment_model->get_all_comments();
+        $data['title'] = trans('approved_comments');
+        $data['comments'] = $this->comment_model->get_approved_comments();
+        $data['top_button_text'] = trans('pending_comments');
+        $data['top_button_url'] = admin_url() . 'pending-product-comments';
+        $data['show_approve_button'] = false;
 
         $this->load->view('admin/includes/_header', $data);
-        $this->load->view('admin/product/comments', $data);
+        $this->load->view('admin/comment/comments', $data);
         $this->load->view('admin/includes/_footer');
+    }
+
+    /**
+     * Pending Comments.
+     */
+    public function pending_comments()
+    {
+        $data['title'] = trans('pending_comments');
+        $data['comments'] = $this->comment_model->get_pending_comments();
+        $data['top_button_text'] = trans('approved_comments');
+        $data['top_button_url'] = admin_url() . 'product-comments';
+        $data['show_approve_button'] = true;
+
+        $this->load->view('admin/includes/_header', $data);
+        $this->load->view('admin/comment/comments', $data);
+        $this->load->view('admin/includes/_footer');
+    }
+
+    /**
+     * Aprrove Comment Post.
+     */
+    public function approve_comment_post()
+    {
+        $id = $this->input->post('id', true);
+        if ($this->comment_model->approve_comment($id)) {
+            $this->session->set_flashdata('success', trans('msg_comment_approved'));
+        } else {
+            $this->session->set_flashdata('error', trans('msg_error'));
+        }
+        redirect($this->agent->referrer());
+    }
+
+    /**
+     * Approve Selected Comments.
+     */
+    public function approve_selected_comments()
+    {
+        $comment_ids = $this->input->post('comment_ids', true);
+        $this->comment_model->approve_multi_comments($comment_ids);
     }
 
     /**
@@ -356,13 +381,13 @@ class Product_admin_controller extends Admin_Core_Controller
     /**
      * Reviews.
      */
-    public function product_reviews()
+    public function reviews()
     {
         $data['title'] = trans('reviews');
         $data['reviews'] = $this->review_model->get_all_reviews();
 
         $this->load->view('admin/includes/_header', $data);
-        $this->load->view('admin/review/product_reviews', $data);
+        $this->load->view('admin/review/reviews', $data);
         $this->load->view('admin/includes/_footer');
     }
 

@@ -56,7 +56,8 @@
 										<?php else: ?>
 											<strong><?php echo trans("order_processing"); ?></strong>
 										<?php endif; ?>
-									</div>
+                                        <a href="<?php echo base_url(); ?>invoice/<?php echo $order->order_number; ?>" target="_blank" class="btn btn-sm btn-info btn-sale-options btn-view-invoice"><i class="icon-text-o"></i>&nbsp;<?php echo trans('view_invoice'); ?></a>
+                                    </div>
 								</div>
 								<div class="row order-row-item">
 									<div class="col-3">
@@ -86,7 +87,7 @@
 										<?php echo trans("date"); ?>
 									</div>
 									<div class="col-9">
-										<?php echo date("Y-m-d / h:i", strtotime($order->created_at)); ?>
+										<?php echo formatted_date($order->created_at); ?>
 									</div>
 								</div>
 								<div class="row order-row-item">
@@ -273,8 +274,10 @@
 						<?php endif; ?>
 
 						<div class="row table-orders-container">
+                            <div class="col-6 col-table-orders">
+                                <h3 class="block-title"><?php echo trans("products"); ?></h3>
+                            </div>
 							<div class="col-12">
-								<h3 class="block-title"><?php echo trans("products"); ?></h3>
 								<div class="table-responsive">
 									<table class="table table-orders">
 										<thead>
@@ -288,54 +291,61 @@
 										<tbody>
 										<?php
 										$sale_subtotal = 0;
+                                        $sale_vat = 0;
 										$sale_shipping = 0;
 										$sale_total = 0;
 										foreach ($order_products as $item):
-											if ($item->seller_id == user()->id):
+											if ($item->seller_id == $this->auth_user->id):
 												$sale_subtotal += $item->product_unit_price * $item->product_quantity;
+												$sale_vat += $item->product_vat;
 												$sale_shipping += $item->product_shipping_cost;
 												$sale_total += $item->product_total_price; ?>
 												<tr>
-													<td>
+                                                    <td style="width: 50%">
 														<div class="table-item-product">
 															<div class="left">
 																<div class="img-table">
-																	<a href="<?php echo base_url() . $item->product_slug; ?>" target="_blank">
+																	<a href="<?php echo generate_product_url_by_slug($item->product_slug); ?>" target="_blank">
 																		<img src="<?php echo get_product_image($item->product_id, 'image_small'); ?>" data-src="" alt="" class="lazyload img-responsive post-image"/>
 																	</a>
 																</div>
 															</div>
 															<div class="right">
-																<a href="<?php echo base_url() . $item->product_slug; ?>" target="_blank" class="table-product-title">
+																<a href="<?php echo generate_product_url_by_slug($item->product_slug); ?>" target="_blank" class="table-product-title">
 																	<?php echo html_escape($item->product_title); ?>
 																</a>
 																<p>
 																	<span><?php echo trans("seller"); ?>:</span>
 																	<?php $seller = get_user($item->seller_id); ?>
 																	<?php if (!empty($seller)): ?>
-																		<a href="<?php echo base_url(); ?>profile/<?php echo $seller->slug; ?>" target="_blank" class="table-product-title">
+																		<a href="<?php echo generate_profile_url($seller->slug); ?>" target="_blank" class="table-product-title">
 																			<strong class="font-600"><?php echo get_shop_name($seller); ?></strong>
 																		</a>
 																	<?php endif; ?>
 																</p>
-																<p><span class="span-product-dtl-table"><?php echo trans("unit_price"); ?>:</span><?php echo print_price($item->product_unit_price, $item->product_currency); ?></p>
+																<p><span class="span-product-dtl-table"><?php echo trans("unit_price"); ?>:</span><?php echo price_formatted($item->product_unit_price, $item->product_currency); ?></p>
 																<p><span class="span-product-dtl-table"><?php echo trans("quantity"); ?>:</span><?php echo $item->product_quantity; ?></p>
 																<?php if ($item->product_type == 'physical'): ?>
-																	<p><span class="span-product-dtl-table"><?php echo trans("shipping"); ?>:</span><?php echo print_price($item->product_shipping_cost, $item->product_currency); ?></p>
+																	<p><span class="span-product-dtl-table"><?php echo trans("shipping"); ?>:</span><?php echo price_formatted($item->product_shipping_cost, $item->product_currency); ?></p>
 																<?php endif; ?>
-																<p><span class="span-product-dtl-table"><?php echo trans("total"); ?>:</span><?php echo print_price($item->product_total_price, $item->product_currency); ?></p>
+                                                                <?php if (!empty($item->product_vat)): ?>
+                                                                    <p><span class="span-product-dtl-table"><?php echo trans("vat"); ?>&nbsp;(<?php echo $item->product_vat_rate; ?>%):</span><?php echo price_formatted($item->product_vat, $item->product_currency); ?></p>
+                                                                    <p><span class="span-product-dtl-table"><?php echo trans("total"); ?>:</span><?php echo price_formatted($item->product_total_price, $item->product_currency); ?></p>
+                                                                <?php else: ?>
+                                                                    <p><span class="span-product-dtl-table"><?php echo trans("total"); ?>:</span><?php echo price_formatted($item->product_total_price, $item->product_currency); ?></p>
+                                                                <?php endif; ?>
 															</div>
 														</div>
 													</td>
-													<td>
+                                                    <td style="width: 10%">
 														<strong><?php echo trans($item->order_status) ?></strong>
 													</td>
-													<td>
+                                                    <td style="width: 15%">
 														<?php if ($item->product_type == 'physical') {
 															echo time_ago($item->updated_at);
 														} ?>
 													</td>
-													<td>
+                                                    <td style="width: 25%">
 														<?php if ($item->order_status == "completed"): ?>
 															<strong class="font-600"><i class="icon-check"></i>&nbsp;<?php echo trans("approved"); ?></strong>
 														<?php else: ?>
@@ -380,15 +390,25 @@
 											<?php echo trans("subtotal"); ?>
 										</div>
 										<div class="col-6 col-right">
-											<strong class="font-600"><?php echo print_price($sale_subtotal, $order->price_currency); ?></strong>
+											<strong class="font-600"><?php echo price_formatted($sale_subtotal, $order->price_currency); ?></strong>
 										</div>
 									</div>
+                                    <?php if (!empty($sale_vat)): ?>
+                                        <div class="row">
+                                            <div class="col-6 col-left">
+                                                <?php echo trans("vat"); ?>
+                                            </div>
+                                            <div class="col-6 col-right">
+                                                <strong class="font-600"><?php echo price_formatted($sale_vat, $order->price_currency); ?></strong>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
 									<div class="row">
 										<div class="col-6 col-left">
 											<?php echo trans("shipping"); ?>
 										</div>
 										<div class="col-6 col-right">
-											<strong class="font-600"><?php echo print_price($sale_shipping, $order->price_currency); ?></strong>
+											<strong class="font-600"><?php echo price_formatted($sale_shipping, $order->price_currency); ?></strong>
 										</div>
 									</div>
 									<div class="row">
@@ -401,7 +421,7 @@
 											<?php echo trans("total"); ?>
 										</div>
 										<div class="col-6 col-right">
-											<strong class="font-600"><?php echo print_price($sale_total, $order->price_currency); ?></strong>
+											<strong class="font-600"><?php echo price_formatted($sale_total, $order->price_currency); ?></strong>
 										</div>
 									</div>
 								</div>
@@ -416,12 +436,12 @@
 
 <!-- Wrapper End-->
 <?php foreach ($order_products as $item):
-	if ($item->seller_id == user()->id):?>
+	if ($item->seller_id == $this->auth_user->id):?>
 		<div class="modal fade" id="updateStatusModal_<?php echo $item->id; ?>" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog modal-dialog-centered" role="document">
 				<div class="modal-content modal-custom">
 					<!-- form start -->
-					<?php echo form_open_multipart('order_controller/update_order_product_status_post'); ?>
+					<?php echo form_open_multipart('update-order-product-status-post'); ?>
 					<input type="hidden" name="id" value="<?php echo $item->id; ?>">
 					<div class="modal-header">
 						<h5 class="modal-title"><?php echo trans("update_order_status"); ?></h5>
@@ -467,7 +487,7 @@
 			<div class="modal-dialog modal-dialog-centered" role="document">
 				<div class="modal-content modal-custom">
 					<!-- form start -->
-					<?php echo form_open_multipart('order_controller/add_shipping_tracking_number_post'); ?>
+					<?php echo form_open_multipart('add-shipping-tracking-number-post'); ?>
 					<input type="hidden" name="id" value="<?php echo $item->id; ?>">
 					<div class="modal-header">
 						<h5 class="modal-title"><?php echo trans("add_shipping_tracking_number"); ?></h5>

@@ -7,6 +7,9 @@ class File_controller extends Home_Core_Controller
     public function __construct()
     {
         parent::__construct();
+        if (!$this->auth_check) {
+            exit();
+        }
     }
 
     /**
@@ -175,13 +178,13 @@ class File_controller extends Home_Core_Controller
     //download digital file
     public function download_digital_file()
     {
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect($this->agent->referrer());
         }
         $id = $this->input->post('file_id', true);
         $file = $this->file_model->get_digital_file($id);
         if (!empty($file)) {
-            if (($file->user_id == user()->id) || ('admin' == user()->role)) {
+            if (($file->user_id == $this->auth_user->id) || ('admin' == $this->auth_user->role)) {
                 $this->load->helper('download');
                 force_download(FCPATH . 'uploads/digital-files/' . $file->file_name, null);
             }
@@ -193,13 +196,13 @@ class File_controller extends Home_Core_Controller
     public function download_purchased_digital_file()
     {
         post_method();
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect($this->agent->referrer());
         }
         $sale_id = $this->input->post('sale_id', true);
         $sale = $this->product_model->get_digital_sale($sale_id);
         if (!empty($sale)) {
-            if ($sale->buyer_id == user()->id) {
+            if ($sale->buyer_id == $this->auth_user->id) {
                 $submit = $this->input->post('submit', true);
                 if ('license_certificate' == $submit) {
                     //download license certificate
@@ -217,7 +220,7 @@ class File_controller extends Home_Core_Controller
     //download free digital file
     public function download_free_digital_file()
     {
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect($this->agent->referrer());
         }
         $product_id = $this->input->post('product_id', true);

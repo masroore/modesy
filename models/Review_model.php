@@ -5,20 +5,46 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class Review_model extends CI_Model
 {
     //add review
-    public function add_review()
+    public function add_review($rating, $product_id, $review_text)
     {
         $data = [
-            'product_id' => $this->input->post('product_id', true),
-            'user_id' => user()->id,
-            'rating' => $this->input->post('rating', true),
-            'review' => $this->input->post('review', true),
+            'product_id' => $product_id,
+            'user_id' => $this->auth_user->id,
+            'rating' => $rating,
+            'review' => $review_text,
+            'ip_address' => 0,
             'created_at' => date('Y-m-d H:i:s'),
         ];
-
+        $ip = $this->input->ip_address();
+        if (!empty($ip)) {
+            $data['ip_address'] = $ip;
+        }
         if (!empty($data['product_id']) && !empty($data['user_id']) && !empty($data['rating'])) {
             $this->db->insert('reviews', $data);
             //update product rating
-            $this->update_product_rating($data['product_id']);
+            $this->update_product_rating($product_id);
+        }
+    }
+
+    //update review
+    public function update_review($review_id, $rating, $product_id, $review_text)
+    {
+        $data = [
+            'rating' => $rating,
+            'review' => $review_text,
+            'ip_address' => 0,
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
+        $ip = $this->input->ip_address();
+        if (!empty($ip)) {
+            $data['ip_address'] = $ip;
+        }
+        if (!empty($data['rating']) && !empty($data['review'])) {
+            $this->db->where('product_id', $product_id);
+            $this->db->where('user_id', $this->auth_user->id);
+            $this->db->update('reviews', $data);
+            //update product rating
+            $this->update_product_rating($product_id);
         }
     }
 
@@ -91,6 +117,7 @@ class Review_model extends CI_Model
         $product_id = clean_number($product_id);
         $user_id = clean_number($user_id);
         $this->db->join('users', 'users.id = reviews.user_id');
+        $this->db->select('reviews.*, users.username as user_username, users.slug as user_slug');
         $this->db->where('reviews.product_id', $product_id);
         $this->db->where('users.id', $user_id);
         $query = $this->db->get('reviews');
@@ -116,6 +143,57 @@ class Review_model extends CI_Model
         }
         $this->db->where('id', $product_id);
         $this->db->update('products', $data);
+    }
+
+    //get user reviews count
+    public function get_user_reviews_count($user_id)
+    {
+        $this->db->join('users', 'users.id = reviews.user_id');
+        $this->db->join('products', 'products.id = reviews.product_id');
+        $this->db->select('reviews.*, users.username as user_username, users.slug as user_slug');
+        $this->db->where('products.user_id', clean_number($user_id));
+        $query = $this->db->get('reviews');
+
+        return $query->num_rows();
+    }
+
+    //get paginated user reviews
+    public function get_user_reviews_orders($user_id, $offset, $per_page)
+    {
+        $this->db->join('users', 'users.id = reviews.user_id');
+        $this->db->join('products', 'products.id = reviews.product_id');
+        $this->db->select('reviews.*, users.username as user_username, users.slug as user_slug');
+        $this->db->where('products.user_id', clean_number($user_id));
+        $this->db->order_by('reviews.created_at', 'DESC');
+        $this->db->limit($per_page, $offset);
+        $query = $this->db->get('reviews');
+
+        return $query->result();
+    }
+
+    //calculate user rating
+    public function calculate_user_rating($user_id)
+    {
+        $std = new stdClass();
+        $std->count = 0;
+        $std->rating = 0;
+
+        $this->db->join('users', 'users.id = reviews.user_id');
+        $this->db->join('products', 'products.id = reviews.product_id');
+        $this->db->select('COUNT(reviews.id) AS count, SUM(reviews.rating) AS total');
+        $this->db->where('products.user_id', clean_number($user_id));
+        $query = $this->db->get('reviews');
+        if (!empty($query->row())) {
+            $total = $query->row()->total;
+            $count = $query->row()->count;
+            if (!empty($total) and !empty($count)) {
+                $avg = round($total / $count);
+                $std->count = $count;
+                $std->rating = $avg;
+            }
+        }
+
+        return $std;
     }
 
     //delete review

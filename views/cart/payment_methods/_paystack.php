@@ -38,13 +38,12 @@
                         'payment_amount': '<?php echo $total_amount; ?>',
                         'payment_status': response.status,
                         'mds_payment_type': '<?php echo $mds_payment_type; ?>',
-                        'lang_folder': lang_folder,
-                        'form_lang_base_url': '<?php echo lang_base_url(); ?>'
+                        'sys_lang_id': sys_lang_id
                     };
                     data[csfr_token_name] = $.cookie(csfr_cookie_name);
                     $.ajax({
                         type: "POST",
-                        url: base_url + "cart_controller/paystack_payment_post",
+                        url: base_url + "paystack-payment-post",
                         data: data,
                         success: function (response) {
                             var obj = JSON.parse(response);

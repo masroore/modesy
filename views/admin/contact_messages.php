@@ -36,7 +36,7 @@
                                 <td><?php echo html_escape($item->name); ?></td>
                                 <td><?php echo html_escape($item->email); ?></td>
                                 <td class="break-word"><?php echo html_escape($item->message); ?></td>
-                                <td><?php echo $item->created_at; ?></td>
+                                <td><?php echo formatted_date($item->created_at); ?></td>
                                 <td>
                                     <div class="dropdown">
                                         <button class="btn bg-purple dropdown-toggle btn-select-option"

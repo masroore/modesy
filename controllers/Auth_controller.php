@@ -15,7 +15,7 @@ class Auth_controller extends Home_Core_Controller
     public function login_post()
     {
         //check auth
-        if (auth_check()) {
+        if ($this->auth_check) {
             $data = [
                 'result' => 1,
             ];
@@ -163,11 +163,80 @@ class Auth_controller extends Home_Core_Controller
     }
 
     /**
+     * Connect with VK.
+     */
+    public function connect_with_vk()
+    {
+        require_once APPPATH . 'third_party/vkontakte/vendor/autoload.php';
+        $provider = new J4k\OAuth2\Client\Provider\Vkontakte([
+            'clientId' => $this->general_settings->vk_app_id,
+            'clientSecret' => $this->general_settings->vk_secure_key,
+            'redirectUri' => base_url() . 'connect-with-vk',
+            'scopes' => ['email'],
+        ]);
+        // Authorize if needed
+        if (PHP_SESSION_NONE === session_status()) {
+            session_start();
+        }
+        $isSessionActive = PHP_SESSION_ACTIVE === session_status();
+        $code = !empty($_GET['code']) ? $_GET['code'] : null;
+        $state = !empty($_GET['state']) ? $_GET['state'] : null;
+        $sessionState = 'oauth2state';
+
+        // No code – get some
+        if (!$code) {
+            $authUrl = $provider->getAuthorizationUrl();
+            if ($isSessionActive) {
+                $_SESSION[$sessionState] = $provider->getState();
+            }
+            $this->session->set_userdata('vk_login_referrer', $this->agent->referrer());
+            header("Location: $authUrl");
+            die();
+        } // Anti-CSRF
+        if ($isSessionActive && (empty($state) || ($state !== $_SESSION[$sessionState]))) {
+            unset($_SESSION[$sessionState]);
+            throw new \RuntimeException('Invalid state');
+        } // Exchange code to access_token
+
+        try {
+            $providerAccessToken = $provider->getAccessToken('authorization_code', ['code' => $code]);
+
+            $user = $providerAccessToken->getValues();
+            //get user details with cURL
+            $url = 'http://api.vk.com/method/users.get?uids=' . $providerAccessToken->getValues()['user_id'] . '&access_token=' . $providerAccessToken->getToken() . '&v=5.95&fields=photo_200,status';
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            $response = curl_exec($ch);
+            curl_close($ch);
+            $user_details = json_decode($response);
+
+            $vk_user = new stdClass();
+            $vk_user->id = $providerAccessToken->getValues()['user_id'];
+            $vk_user->email = $providerAccessToken->getValues()['email'];
+            $vk_user->name = @$user_details->response['0']->first_name . ' ' . @$user_details->response['0']->last_name;
+            $vk_user->avatar = @$user_details->response['0']->photo_200;
+
+            $this->auth_model->login_with_vk($vk_user);
+
+            if (!empty($this->session->userdata('vk_login_referrer'))) {
+                redirect($this->session->userdata('vk_login_referrer'));
+            } else {
+                redirect(base_url());
+            }
+        } catch (IdentityProviderException $e) {
+            // Log error
+            error_log($e->getMessage());
+        }
+    }
+
+    /**
      * Admin Login.
      */
     public function admin_login()
     {
-        if (auth_check()) {
+        if ($this->auth_check) {
             redirect(lang_base_url());
         }
         $data['title'] = trans('login');
@@ -207,7 +276,7 @@ class Auth_controller extends Home_Core_Controller
     public function register()
     {
         //check if logged in
-        if (auth_check()) {
+        if ($this->auth_check) {
             redirect(lang_base_url());
         }
 
@@ -226,7 +295,7 @@ class Auth_controller extends Home_Core_Controller
     public function register_post()
     {
         //check if logged in
-        if (auth_check()) {
+        if ($this->auth_check) {
             redirect(lang_base_url());
         }
 
@@ -275,15 +344,15 @@ class Auth_controller extends Home_Core_Controller
                     if (1 != $this->general_settings->email_verification) {
                         $this->auth_model->login_direct($user);
                         $this->session->set_flashdata('success', trans('msg_register_success'));
-                        redirect(lang_base_url() . 'settings/update-profile');
+                        redirect(generate_url('settings', 'update_profile'));
                     }
                 }
-                redirect(lang_base_url() . 'register');
+                redirect(generate_url('register'));
             } else {
                 //error
                 $this->session->set_flashdata('form_data', $this->auth_model->input_values());
                 $this->session->set_flashdata('error', trans('msg_error'));
-                redirect(lang_base_url() . 'register');
+                redirect(generate_url('register'));
             }
         }
     }
@@ -332,7 +401,7 @@ class Auth_controller extends Home_Core_Controller
     public function forgot_password()
     {
         //check if logged in
-        if (auth_check()) {
+        if ($this->auth_check) {
             redirect(lang_base_url());
         }
 
@@ -351,7 +420,7 @@ class Auth_controller extends Home_Core_Controller
     public function forgot_password_post()
     {
         //check auth
-        if (auth_check()) {
+        if ($this->auth_check) {
             redirect(lang_base_url());
         }
 
@@ -377,14 +446,13 @@ class Auth_controller extends Home_Core_Controller
     public function reset_password()
     {
         //check if logged in
-        if (auth_check()) {
+        if ($this->auth_check) {
             redirect(lang_base_url());
         }
 
         $data['title'] = trans('reset_password');
         $data['description'] = trans('reset_password') . ' - ' . $this->app_name;
         $data['keywords'] = trans('reset_password') . ',' . $this->app_name;
-
         $token = $this->input->get('token', true);
         //get user
         $data['user'] = $this->auth_model->get_user_by_token($token);

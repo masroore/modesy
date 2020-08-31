@@ -7,13 +7,13 @@ class Bidding_model extends CI_Model
     //request quote
     public function request_quote($product)
     {
-        $appended_variations = $this->cart_model->append_selected_variations($product->id);
+        $appended_variations = $this->cart_model->get_selected_variations($product->id)->str;
         $data = [
             'product_id' => $product->id,
             'product_title' => $product->title . ' ' . $appended_variations,
             'product_quantity' => $this->input->post('product_quantity', true),
             'seller_id' => $product->user_id,
-            'buyer_id' => user()->id,
+            'buyer_id' => $this->auth_user->id,
             'status' => 'new_quote_request',
             'price_offered' => 0,
             'price_currency' => '',
@@ -39,11 +39,11 @@ class Bidding_model extends CI_Model
                 'status' => 'pending_quote',
                 'updated_at' => date('Y-m-d H:i:s'),
             ];
-            $data['price_offered'] = price_database_format($data['price_offered']);
+            $data['price_offered'] = get_price($data['price_offered'], 'database');
             if (empty($data['price_offered'])) {
                 $data['price_offered'] = 0;
             }
-            $data['shipping_cost'] = price_database_format($data['shipping_cost']);
+            $data['shipping_cost'] = get_price($data['shipping_cost'], 'database');
             if (empty($data['shipping_cost'])) {
                 $data['shipping_cost'] = 0;
             }

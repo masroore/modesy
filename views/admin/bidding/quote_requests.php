@@ -53,7 +53,7 @@
 									<?php $user = get_user($item->seller_id);
 									if (!empty($user)):?>
 										<div class="table-orders-user">
-											<a href="<?php echo base_url(); ?>profile/<?php echo $user->slug; ?>" target="_blank">
+											<a href="<?php echo generate_profile_url($user->slug); ?>" target="_blank">
 												<img src="<?php echo get_user_avatar($user); ?>" alt="buyer" class="img-responsive" style="height: 50px;">
 												<?php echo html_escape($user->username); ?>
 											</a>
@@ -64,7 +64,7 @@
 									<?php $user = get_user($item->buyer_id);
 									if (!empty($user)):?>
 										<div class="table-orders-user">
-											<a href="<?php echo base_url(); ?>profile/<?php echo $user->slug; ?>" target="_blank">
+											<a href="<?php echo generate_profile_url($user->slug); ?>" target="_blank">
 												<img src="<?php echo get_user_avatar($user); ?>" alt="buyer" class="img-responsive" style="height: 50px;">
 												<?php echo html_escape($user->username); ?>
 											</a>
@@ -75,18 +75,18 @@
 								<td>
 									<?php if ($item->status != 'new_quote_request' && $item->price_offered != 0): ?>
 										<div class="table-seller-bid">
-											<p><b><?php echo trans("price"); ?>:&nbsp;</b><strong><?php echo print_price($item->price_offered, $item->price_currency); ?></strong></p>
+											<p><b><?php echo trans("price"); ?>:&nbsp;</b><strong><?php echo price_formatted($item->price_offered, $item->price_currency); ?></strong></p>
 											<?php if (!empty($product) && $product->product_type == 'digital'): ?>
 												<p><b><?php echo trans("shipping"); ?>:&nbsp;</b><strong><?php echo trans("no_shipping"); ?></strong></p>
 											<?php else: ?>
-												<p><b><?php echo trans("shipping"); ?>:&nbsp;</b><strong><?php echo print_price($item->shipping_cost, $item->price_currency); ?></strong></p>
+												<p><b><?php echo trans("shipping"); ?>:&nbsp;</b><strong><?php echo price_formatted($item->shipping_cost, $item->price_currency); ?></strong></p>
 											<?php endif; ?>
-											<p><b><?php echo trans("total"); ?>:&nbsp;</b><strong><?php echo print_price($item->price_offered + $item->shipping_cost, $item->price_currency); ?></strong></p>
+											<p><b><?php echo trans("total"); ?>:&nbsp;</b><strong><?php echo price_formatted($item->price_offered + $item->shipping_cost, $item->price_currency); ?></strong></p>
 										</div>
 									<?php endif; ?>
 								</td>
 								<td><?php echo time_ago($item->updated_at); ?></td>
-								<td><?php echo date("Y-m-d / h:i", strtotime($item->created_at)); ?></td>
+								<td><?php echo formatted_date($item->created_at); ?></td>
 								<td>
 									<div class="dropdown">
 										<button class="btn bg-purple dropdown-toggle btn-select-option"

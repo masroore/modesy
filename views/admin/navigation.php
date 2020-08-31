@@ -16,7 +16,7 @@
                     <label><?php echo trans('menu_limit'); ?>&nbsp;(<?php echo trans("number_of_links_in_menu"); ?>)</label>
                     <input type="number" class="form-control" name="menu_limit"
                            placeholder="<?php echo trans('menu_limit'); ?>"
-                           value="<?php echo $general_settings->menu_limit; ?>" min="1"
+                           value="<?php echo $this->general_settings->menu_limit; ?>" min="1"
                            max="100" style="max-width: 400px;" required>
                 </div>
                 <div class="form-group">
@@ -24,17 +24,17 @@
                 </div>
                 <div class="row nav-template-items">
                     <div class="col-md-6">
-                        <div class="nav-template-item <?php echo ($general_settings->selected_navigation == 1) ? 'active' : ''; ?>" data-nav-id="1">
+                        <div class="nav-template-item <?php echo ($this->general_settings->selected_navigation == 1) ? 'active' : ''; ?>" data-nav-id="1">
                             <img src="<?php echo base_url(); ?>assets/admin/img/nav_1.jpg" alt="" class="img-responsive">
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="nav-template-item <?php echo ($general_settings->selected_navigation == 2) ? 'active' : ''; ?>" data-nav-id="2">
+                        <div class="nav-template-item <?php echo ($this->general_settings->selected_navigation == 2) ? 'active' : ''; ?>" data-nav-id="2">
                             <img src="<?php echo base_url(); ?>assets/admin/img/nav_2.jpg" alt="" class="img-responsive">
                         </div>
                     </div>
                 </div>
-                <input type="hidden" id="input_navigation" name="navigation" value="<?php echo $general_settings->selected_navigation; ?>">
+                <input type="hidden" id="input_navigation" name="navigation" value="<?php echo $this->general_settings->selected_navigation; ?>">
             </div>
             <!-- /.box-body -->
             <div class="box-footer">

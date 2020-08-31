@@ -37,18 +37,26 @@ class Page_model extends CI_Model
     //update page
     public function update($id)
     {
-        //set values
-        $data = $this->page_model->input_values();
+        $page = $this->get_page_by_id($id);
+        if (!empty($page)) {
+            //set values
+            $data = $this->page_model->input_values();
 
-        if ('terms-conditions' != $data['slug']) {
-            if (empty($data['slug'])) {
-                //slug for title
-                $data['slug'] = str_slug($data['title']);
+            //update blog route
+            if ('blog' == $page->page_default_name) {
+                $data_routes = [
+                    'blog' => $data['slug'],
+                ];
+                $this->db->where('id', 1);
+                $this->db->update('routes', $data_routes);
             }
-        }
-        $this->db->where('id', $id);
 
-        return $this->db->update('pages', $data);
+            $this->db->where('id', $id);
+
+            return $this->db->update('pages', $data);
+        }
+
+        return false;
     }
 
     //update slug
@@ -117,30 +125,6 @@ class Page_model extends CI_Model
         return $query->result();
     }
 
-    //get quick links
-    public function get_quick_links()
-    {
-        $this->db->where('location', 'quick_links');
-        $this->db->where('visibility', 1);
-        $this->db->where('pages.lang_id', $this->selected_lang->id);
-        $this->db->order_by('page_order');
-        $query = $this->db->get('pages');
-
-        return $query->result();
-    }
-
-    //get information links
-    public function get_information_links()
-    {
-        $this->db->where('location', 'information');
-        $this->db->where('visibility', 1);
-        $this->db->where('pages.lang_id', $this->selected_lang->id);
-        $this->db->order_by('page_order');
-        $query = $this->db->get('pages');
-
-        return $query->result();
-    }
-
     //get page
     public function get_page($slug)
     {
@@ -153,6 +137,23 @@ class Page_model extends CI_Model
         return $query->row();
     }
 
+    //get page by default name
+    public function get_page_by_default_name($default_name, $lang_id)
+    {
+        $page = new stdClass();
+        $page->title = '';
+        $page->slug = '';
+
+        $sql = 'SELECT * FROM pages WHERE page_default_name =  ? AND lang_id = ?';
+        $query = $this->db->query($sql, [clean_str($default_name), clean_number($lang_id)]);
+        if (!empty($query->row())) {
+            $page->title = $query->row()->title;
+            $page->slug = $query->row()->slug;
+        }
+
+        return $page;
+    }
+
     //get page by id
     public function get_page_by_id($id)
     {
@@ -161,6 +162,15 @@ class Page_model extends CI_Model
         $query = $this->db->get('pages');
 
         return $query->row();
+    }
+
+    //get menu links
+    public function get_menu_links($lang_id)
+    {
+        $sql = 'SELECT id, title, slug, page_order, location FROM pages WHERE lang_id = ? AND visibility = 1 ORDER BY page_order';
+        $query = $this->db->query($sql, [$lang_id]);
+
+        return $query->result();
     }
 
     //delete page

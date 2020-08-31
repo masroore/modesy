@@ -19,7 +19,10 @@ class Category_controller extends Admin_Core_Controller
     public function categories()
     {
         $data['title'] = trans('categories');
-        $data['categories'] = $this->category_model->get_categories_all();
+
+        //get paginated categories
+        $pagination = $this->paginate(admin_url() . 'categories', $this->category_model->get_categories_count());
+        $data['categories'] = $this->category_model->get_paginated_categories($pagination['per_page'], $pagination['offset']);
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/category/categories', $data);
@@ -67,7 +70,6 @@ class Category_controller extends Admin_Core_Controller
     public function update_category($id)
     {
         $data['title'] = trans('update_category');
-
         //get category
         $data['category'] = $this->category_model->get_category($id);
         if (empty($data['category'])) {
@@ -144,6 +146,14 @@ class Category_controller extends Admin_Core_Controller
         }
     }
 
+    //delete category image
+    public function delete_category_image_post()
+    {
+        //category id
+        $category_id = $this->input->post('category_id', true);
+        $this->category_model->delete_category_image($category_id);
+    }
+
     /*
     *-------------------------------------------------------------------------------------------------
     * CUSTOM FIELDS
@@ -156,7 +166,7 @@ class Category_controller extends Admin_Core_Controller
     public function add_custom_field()
     {
         $data['title'] = trans('add_custom_field');
-        $data['categories'] = $this->category_model->get_parent_categories();
+        $data['categories'] = $this->category_model->get_all_parent_categories();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/category/add_custom_field', $data);
@@ -189,11 +199,10 @@ class Category_controller extends Admin_Core_Controller
         $data['title'] = trans('update_custom_field');
         //get field
         $data['field'] = $this->field_model->get_field($id);
-
         if (empty($data['field'])) {
             redirect(admin_url() . 'custom-fields');
         }
-        $data['categories'] = $this->category_model->get_parent_categories();
+        $data['categories'] = $this->category_model->get_all_parent_categories();
         $data['field_categories'] = $this->field_model->get_field_categories($data['field']->id);
 
         $this->load->view('admin/includes/_header', $data);
@@ -273,7 +282,7 @@ class Category_controller extends Admin_Core_Controller
         }
 
         $data['field_name'] = $this->field_model->get_field_name_by_lang($id, $this->selected_lang->id);
-        $data['parent_categories'] = $this->category_model->get_parent_categories();
+        $data['parent_categories'] = $this->category_model->get_all_parent_categories();
         $data['options'] = $this->field_model->get_field_all_options($id);
         $data['field_categories'] = $this->field_model->get_field_categories($id);
 

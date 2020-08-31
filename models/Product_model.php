@@ -7,11 +7,6 @@ class Product_model extends Core_Model
     public function __construct()
     {
         parent::__construct();
-        //default location
-        $this->default_location_id = 0;
-        if (!empty($this->session->userdata('modesy_default_location'))) {
-            $this->default_location_id = $this->session->userdata('modesy_default_location');
-        }
     }
 
     //add product
@@ -21,8 +16,11 @@ class Product_model extends Core_Model
             'title' => $this->input->post('title', true),
             'product_type' => $this->input->post('product_type', true),
             'listing_type' => $this->input->post('listing_type', true),
+            'sku' => $this->input->post('sku', true),
             'price' => 0,
             'currency' => '',
+            'discount_rate' => 0,
+            'vat_rate' => 0,
             'description' => $this->input->post('description', false),
             'product_condition' => '',
             'country_id' => 0,
@@ -30,7 +28,7 @@ class Product_model extends Core_Model
             'city_id' => 0,
             'address' => '',
             'zip_code' => '',
-            'user_id' => user()->id,
+            'user_id' => $this->auth_user->id,
             'status' => 0,
             'is_promoted' => 0,
             'promote_start_date' => date('Y-m-d H:i:s'),
@@ -43,11 +41,11 @@ class Product_model extends Core_Model
             'demo_url' => '',
             'external_link' => '',
             'files_included' => '',
-            'quantity' => 1,
+            'stock' => 1,
             'shipping_time' => '',
             'shipping_cost_type' => '',
             'shipping_cost' => 0,
-            'is_sold' => 0,
+            'shipping_cost_additional' => 0,
             'is_deleted' => 0,
             'is_draft' => 1,
             'is_free_product' => 0,
@@ -74,11 +72,12 @@ class Product_model extends Core_Model
     //edit product details
     public function edit_product_details($id)
     {
-        $id = clean_number($id);
         $product = $this->get_product_by_id($id);
         $data = [
             'price' => $this->input->post('price', true),
             'currency' => $this->input->post('currency', true),
+            'discount_rate' => $this->input->post('discount_rate', true),
+            'vat_rate' => $this->input->post('vat_rate', true),
             'product_condition' => $this->input->post('product_condition', true),
             'country_id' => $this->input->post('country_id', true),
             'state_id' => $this->input->post('state_id', true),
@@ -88,16 +87,22 @@ class Product_model extends Core_Model
             'demo_url' => trim($this->input->post('demo_url', true)),
             'external_link' => trim($this->input->post('external_link', true)),
             'files_included' => trim($this->input->post('files_included', true)),
-            'quantity' => $this->input->post('quantity', true),
+            'stock' => $this->input->post('stock', true),
             'shipping_time' => $this->input->post('shipping_time', true),
             'shipping_cost_type' => $this->input->post('shipping_cost_type', true),
             'is_free_product' => $this->input->post('is_free_product', true),
             'is_draft' => 0,
         ];
 
-        $data['price'] = price_database_format($data['price']);
+        $data['price'] = get_price($data['price'], 'database');
         if (empty($data['price'])) {
             $data['price'] = 0;
+        }
+        if (empty($data['discount_rate'])) {
+            $data['discount_rate'] = 0;
+        }
+        if (empty($data['vat_rate'])) {
+            $data['vat_rate'] = 0;
         }
         if (empty($data['product_condition'])) {
             $data['product_condition'] = '';
@@ -120,8 +125,8 @@ class Product_model extends Core_Model
         if (empty($data['external_link'])) {
             $data['external_link'] = '';
         }
-        if (empty($data['quantity'])) {
-            $data['quantity'] = 1;
+        if (empty($data['stock'])) {
+            $data['stock'] = 0;
         }
         if (!empty($data['is_free_product'])) {
             $data['is_free_product'] = 1;
@@ -136,9 +141,12 @@ class Product_model extends Core_Model
 
         if (1 == $this->settings_model->is_shipping_option_require_cost($data['shipping_cost_type'])) {
             $data['shipping_cost'] = $this->input->post('shipping_cost', true);
-            $data['shipping_cost'] = price_database_format($data['shipping_cost']);
+            $data['shipping_cost'] = get_price($data['shipping_cost'], 'database');
+            $data['shipping_cost_additional'] = $this->input->post('shipping_cost_additional', true);
+            $data['shipping_cost_additional'] = get_price($data['shipping_cost_additional'], 'database');
         } else {
             $data['shipping_cost'] = 0;
+            $data['shipping_cost_additional'] = 0;
         }
 
         if ('save_as_draft' == $this->input->post('submit', true)) {
@@ -149,7 +157,7 @@ class Product_model extends Core_Model
             }
         }
 
-        $this->db->where('id', $id);
+        $this->db->where('id', clean_number($id));
 
         return $this->db->update('products', $data);
     }
@@ -161,6 +169,7 @@ class Product_model extends Core_Model
             'title' => $this->input->post('title', true),
             'product_type' => $this->input->post('product_type', true),
             'listing_type' => $this->input->post('listing_type', true),
+            'sku' => $this->input->post('sku', true),
             'description' => $this->input->post('description', false),
         ];
         $data['slug'] = str_slug($data['title']);
@@ -175,12 +184,6 @@ class Product_model extends Core_Model
         }
 
         if (1 != $product->is_draft) {
-            $is_sold = $this->input->post('status_sold', true);
-            if ('active' == $is_sold) {
-                $data['is_sold'] = 0;
-            } elseif ('sold' == $is_sold) {
-                $data['is_sold'] = 1;
-            }
             if (is_admin()) {
                 $data['visibility'] = $this->input->post('visibility', true);
             }
@@ -194,7 +197,6 @@ class Product_model extends Core_Model
     //update custom fields
     public function update_product_custom_fields($product_id)
     {
-        $product_id = clean_number($product_id);
         $product = $this->get_product_by_id($product_id);
         if (!empty($product)) {
             $custom_fields = $this->field_model->generate_custom_fields_array($product->category_id, null);
@@ -220,7 +222,7 @@ class Product_model extends Core_Model
                         } else {
                             $data = [
                                 'field_id' => $custom_field->id,
-                                'product_id' => $product_id,
+                                'product_id' => clean_number($product_id),
                                 'product_filter_key' => $custom_field->product_filter_key,
                             ];
                             if ('radio_button' == $custom_field->field_type || 'dropdown' == $custom_field->field_type) {
@@ -241,74 +243,85 @@ class Product_model extends Core_Model
     //update slug
     public function update_slug($id)
     {
-        $id = clean_number($id);
         $product = $this->get_product_by_id($id);
-
-        if (empty($product->slug) || '-' == $product->slug) {
-            $data = [
-                'slug' => $product->id,
-            ];
-        } else {
-            if ('id-slug' == $this->general_settings->product_link_structure) {
+        if (!empty($product)) {
+            if (empty($product->slug) || '-' == $product->slug) {
                 $data = [
-                    'slug' => $product->id . '-' . $product->slug,
+                    'slug' => $product->id,
                 ];
             } else {
-                $data = [
-                    'slug' => $product->slug . '-' . $product->id,
-                ];
+                if ('id-slug' == $this->general_settings->product_link_structure) {
+                    $data = [
+                        'slug' => $product->id . '-' . $product->slug,
+                    ];
+                } else {
+                    $data = [
+                        'slug' => $product->slug . '-' . $product->id,
+                    ];
+                }
+            }
+            if (!empty($this->page_model->check_page_slug_for_product($data['slug']))) {
+                $data['slug'] .= uniqid();
+            }
+            $this->db->where('id', $product->id);
+
+            return $this->db->update('products', $data);
+        }
+    }
+
+    //build sql query string
+    public function query_string($type = 'active', $return_count = false, $compile_query = true)
+    {
+        $select = '';
+        if (true == $return_count) {
+            $select = 'COUNT(products.id) AS count';
+        } else {
+            $select = "products.id, products.title, products.slug, products.product_type, products.listing_type, products.category_id,  products.price, products.currency, products.discount_rate, 
+            products.user_id, products.is_promoted, products.rating, products.hit, products.is_free_product, products.promote_end_date, products.description, products.product_condition, products.created_at, 
+            users.username AS user_username, users.shop_name AS shop_name, users.role AS user_role, users.slug AS user_slug,
+            (SELECT CONCAT(storage, '::', image_small) FROM images WHERE products.id = images.product_id ORDER BY is_main DESC LIMIT 1) AS image,
+            (SELECT CONCAT(storage, '::', image_small) FROM images WHERE products.id = images.product_id ORDER BY is_main DESC LIMIT 1, 1) AS image_second,
+            (SELECT COUNT(wishlist.id) FROM wishlist WHERE products.id = wishlist.product_id) AS wishlist_count";
+            if ($this->auth_check) {
+                $select .= ', (SELECT COUNT(wishlist.id) FROM wishlist WHERE products.id = wishlist.product_id AND wishlist.user_id = ' . clean_number($this->auth_user->id) . ') AS is_in_wishlist';
+            } else {
+                $select .= ', 0 AS is_in_wishlist';
             }
         }
 
-        if (!empty($this->page_model->check_page_slug_for_product($data['slug']))) {
-            $data['slug'] .= uniqid();
-        }
+        $status = ('draft' == $type || 'pending' == $type) ? 0 : 1;
+        $visibility = ('hidden' == $type) ? 0 : 1;
+        $is_draft = ('draft' == $type) ? 1 : 0;
 
-        $this->db->where('id', $id);
-
-        return $this->db->update('products', $data);
-    }
-
-    //build query
-    public function build_query()
-    {
+        $this->db->select($select);
+        $this->db->from('products');
         $this->db->join('users', 'products.user_id = users.id');
-        $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
+        if ('wishlist' == $type) {
+            $this->db->join('wishlist', 'products.id = wishlist.product_id');
+        }
         $this->db->where('users.banned', 0);
-        $this->db->where('products.status', 1);
-        $this->db->where('products.visibility', 1);
-        $this->db->where('products.is_draft', 0);
-        $this->db->where('products.is_sold', 0);
+        $this->db->where('products.status', $status);
+        $this->db->where('products.visibility', $visibility);
+        $this->db->where('products.is_draft', $is_draft);
         $this->db->where('products.is_deleted', 0);
-
+        if ('promoted' == $type) {
+            $this->db->where('products.is_promoted', 1);
+        }
         if (1 == $this->general_settings->vendor_verification_system) {
             $this->db->where('users.role !=', 'member');
         }
-
         //default location
         if (0 != $this->default_location_id) {
             $this->db->where('products.country_id', $this->default_location_id);
         }
-    }
 
-    //build query unlocated
-    public function build_query_unlocated()
-    {
-        $this->db->join('users', 'products.user_id = users.id');
-        $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
-        $this->db->where('users.banned', 0);
-        $this->db->where('products.status', 1);
-        $this->db->where('products.visibility', 1);
-        $this->db->where('products.is_draft', 0);
-        $this->db->where('products.is_deleted', 0);
-
-        if (1 == $this->general_settings->vendor_verification_system) {
-            $this->db->where('users.role !=', 'member');
+        if (true == $compile_query) {
+            return $this->db->get_compiled_select() . ' ';
         }
     }
 
     //filter products
-    public function filter_products($category_id)
+    public function sql_filter_products($category_id, $return_count = false)
     {
         $category_id = clean_number($category_id);
         $country = clean_number($this->input->get('country', true));
@@ -350,12 +363,12 @@ class Product_model extends Core_Model
                     $this->db->reset_query();
                 }
             }
-            $this->build_query();
+            $this->query_string('active', $return_count, false);
             foreach ($array_queries as $query) {
                 $this->db->where("products.id IN ($query)", null, false);
             }
         } else {
-            $this->build_query();
+            $this->query_string('active', $return_count, false);
         }
 
         //add protuct filter options
@@ -399,17 +412,16 @@ class Product_model extends Core_Model
         } else {
             $this->db->order_by('products.created_at', 'DESC');
         }
+
+        return $this->db->get_compiled_select();
     }
 
     //search products (AJAX search)
     public function search_products($search)
     {
-        $search = remove_special_characters($search);
-        $this->build_query();
-        $this->db->like('products.title', $search);
-        $this->db->order_by('products.is_promoted', 'DESC');
-        $this->db->limit(8);
-        $query = $this->db->get('products');
+        $like = '%' . remove_forbidden_characters($search) . '%';
+        $sql = $this->query_string() . 'AND products.title LIKE ? ORDER BY products.is_promoted DESC LIMIT 8';
+        $query = $this->db->query($sql, [$like]);
 
         return $query->result();
     }
@@ -417,9 +429,8 @@ class Product_model extends Core_Model
     //get products
     public function get_products()
     {
-        $this->build_query();
-        $this->db->order_by('products.created_at', 'DESC');
-        $query = $this->db->get('products');
+        $sql = $this->query_string() . 'ORDER BY products.created_at';
+        $query = $this->db->query($sql);
 
         return $query->result();
     }
@@ -427,11 +438,8 @@ class Product_model extends Core_Model
     //get limited products
     public function get_products_limited($limit)
     {
-        $limit = clean_number($limit);
-        $this->build_query();
-        $this->db->order_by('products.created_at', 'DESC');
-        $this->db->limit($limit);
-        $query = $this->db->get('products');
+        $sql = $this->query_string() . 'ORDER BY products.created_at DESC LIMIT ?';
+        $query = $this->db->query($sql, [clean_number($limit)]);
 
         return $query->result();
     }
@@ -439,32 +447,17 @@ class Product_model extends Core_Model
     //get promoted products
     public function get_promoted_products()
     {
-        $key = 'promoted_products';
-        if (0 != $this->default_location_id) {
-            $key = 'promoted_products_location_' . $this->default_location_id;
-        }
-        $promoted_products = get_cached_data($key);
-        if (empty($promoted_products)) {
-            $this->build_query();
-            $this->db->where('products.is_promoted', 1);
-            $this->db->order_by('products.created_at', 'DESC');
-            $query = $this->db->get('products');
-            $promoted_products = $query->result();
-            set_cache_data($key, $promoted_products);
-        }
+        $sql = $this->query_string('promoted') . ' ORDER BY products.created_at DESC';
+        $query = $this->db->query($sql);
 
-        return $promoted_products;
+        return $query->result();
     }
 
-    //get promoted products limited
-    public function get_promoted_products_limited($limit)
+    //get promoted products
+    public function get_promoted_products_limited($offset, $per_page)
     {
-        $limit = clean_number($limit);
-        $this->build_query();
-        $this->db->where('products.is_promoted', 1);
-        $this->db->limit($limit);
-        $this->db->order_by('products.created_at', 'DESC');
-        $query = $this->db->get('products');
+        $sql = $this->query_string('promoted') . ' ORDER BY products.created_at DESC LIMIT ?,?';
+        $query = $this->db->query($sql, [clean_number($offset), clean_number($per_page)]);
 
         return $query->result();
     }
@@ -472,18 +465,17 @@ class Product_model extends Core_Model
     //get promoted products count
     public function get_promoted_products_count()
     {
-        $products = $this->get_promoted_products();
-        if (!empty($products)) {
-            return count($products);
-        }
+        $sql = $this->query_string('promoted', true) . ' AND products.is_promoted = 1';
+        $query = $this->db->query($sql);
 
-        return 0;
+        return $query->row()->count;
     }
 
     //check promoted products
     public function check_promoted_products()
     {
-        $products = $this->get_promoted_products();
+        $query = $this->db->query('SELECT * FROM products WHERE products.is_promoted = 1');
+        $products = $query->result();
         if (!empty($products)) {
             foreach ($products as $item) {
                 if (date_difference($item->promote_end_date, date('Y-m-d H:i:s')) < 1) {
@@ -498,11 +490,10 @@ class Product_model extends Core_Model
     }
 
     //get paginated filtered products
-    public function get_paginated_filtered_products($category_id, $per_page, $offset)
+    public function get_paginated_filtered_products($category_id, $offset, $per_page)
     {
-        $this->filter_products($category_id);
-        $this->db->limit($per_page, $offset);
-        $query = $this->db->get('products');
+        $sql = $this->sql_filter_products($category_id, false) . ' ' . 'LIMIT ?,?';
+        $query = $this->db->query($sql, [clean_number($offset), clean_number($per_page)]);
 
         return $query->result();
     }
@@ -510,121 +501,93 @@ class Product_model extends Core_Model
     //get paginated filtered products count
     public function get_paginated_filtered_products_count($category_id)
     {
-        $this->filter_products($category_id);
-        $query = $this->db->get('products');
+        $sql = $this->sql_filter_products($category_id, true);
+        $query = $this->db->query($sql);
 
-        return $query->num_rows();
+        return $query->row()->count;
     }
 
     //get products count by category
     public function get_products_count_by_category($category_id)
     {
-        return clean_number($category_id);
-        $this->db->where('products.category_id', $category_id);
-        $query = $this->db->get('products');
+        $sql = 'SELECT COUNT(id) AS count FROM products WHERE products.category_id = ?';
+        $query = $this->db->query($sql, [clean_number($category_id)]);
 
-        return $query->num_rows();
+        return $query->row()->count;
     }
 
     //get related products
     public function get_related_products($product)
     {
-        $rows_2 = [];
-        $this->build_query();
-        $this->db->where('products.category_id', $product->category_id);
-        $this->db->where('products.id !=', $product->id);
-        $this->db->limit(4);
-        $this->db->order_by('rand()');
-        $query = $this->db->get('products');
+        $sql = $this->query_string() . 'AND products.category_id = ? AND products.id != ? ORDER BY RAND() DESC LIMIT 8';
+        $query = $this->db->query($sql, [clean_number($product->category_id), clean_number($product->id)]);
         $rows = $query->result_array();
-        if (count($rows) < 4) {
-            $category = get_category($product->category_id);
-            if (empty($category)) {
-                return $rows;
-            }
-            if (0 != $category->parent_id) {
-                $category = get_category($category->parent_id);
-            }
-            if (empty($category)) {
-                return $rows;
-            }
-            $category_tree_ids = $this->category_model->get_category_tree_ids_string($category->id);
-            if (!empty($category_tree_ids)) {
-                $this->build_query();
-                $this->db->where('products.category_id IN (' . $category_tree_ids . ')', null, false);
-                $this->db->where('products.id !=', $product->id);
-                $this->db->where('products.category_id !=', $product->category_id);
-                $this->db->limit(4);
-                $this->db->order_by('rand()');
-                $query = $this->db->get('products');
-                $rows_2 = $query->result_array();
-                if (!empty($rows_2)) {
-                    return array_merge($rows, $rows_2);
-                }
-            }
+
+        $rows_2 = [];
+        $category = $this->category_model->get_category($product->category_id);
+        if (empty($category)) {
+            return $rows;
+        }
+        if (0 != $category->parent_id) {
+            $category = $this->category_model->get_category($category->parent_id);
+        }
+        if (empty($category)) {
+            return $rows;
+        }
+        $category_ids_array = $this->category_model->get_category_tree_ids_array($category->parent_id);
+        if (!empty($category_ids_array)) {
+            $sql = $this->query_string() . 'AND products.category_id != ? AND products.id != ? AND products.category_id IN ? ORDER BY RAND() DESC LIMIT 8';
+            $query = $this->db->query($sql, [clean_number($product->category_id), clean_number($product->id), $category_ids_array]);
+            $rows = $query->result_array();
+        }
+        if (!empty($rows_2)) {
+            return array_merge($rows, $rows_2);
         }
 
         return $rows;
     }
 
-    //get user products
-    public function get_user_products($user_slug, $limit, $product_id)
+    //get user other products
+    public function get_user_other_products($user_id, $limit, $product_id)
     {
-        $limit = clean_number($limit);
-        $product_id = clean_number($product_id);
-        $this->build_query_unlocated();
-        $this->db->where('users.slug', $user_slug);
-        $this->db->where('products.id !=', $product_id);
-        $this->db->limit($limit);
-        $this->db->order_by('products.created_at', 'DESC');
-        $query = $this->db->get('products');
+        $sql = $this->query_string() . 'AND users.id = ? AND products.id != ?  ORDER BY products.created_at DESC LIMIT ?';
+        $query = $this->db->query($sql, [clean_number($user_id), clean_number($product_id), clean_number($limit)]);
 
         return $query->result();
     }
 
     //get paginated user products
-    public function get_paginated_user_products($user_slug, $per_page, $offset)
+    public function get_paginated_user_products($user_id, $offset, $per_page)
     {
-        $this->build_query_unlocated();
-        $this->db->where('users.slug', $user_slug);
-        $this->db->limit($per_page, $offset);
-        $this->db->order_by('products.created_at', 'DESC');
-        $query = $this->db->get('products');
+        $sql = $this->query_string() . 'AND users.id = ? ORDER BY products.created_at DESC LIMIT ?,?';
+        $query = $this->db->query($sql, [clean_number($user_id), clean_number($offset), clean_number($per_page)]);
 
         return $query->result();
     }
 
     //get user products count
-    public function get_user_products_count($user_slug)
+    public function get_user_products_count($user_id)
     {
-        $user = $this->auth_model->get_user_by_slug($user_slug);
-        if (empty($user)) {
-            return 0;
-        }
-        $this->build_query_unlocated();
-        $this->db->where('users.slug', $user_slug);
-        $this->db->order_by('products.created_at', 'DESC');
-        $query = $this->db->get('products');
+        $sql = $this->query_string('active', true) . 'AND users.id = ?';
+        $query = $this->db->query($sql, [clean_number($user_id)]);
 
-        return $query->num_rows();
+        return $query->row()->count;
+    }
+
+    //get user products
+    public function get_user_products($user_id, $product_id)
+    {
+        $sql = $this->query_string() . 'AND users.id = ? AND products.id != ? ORDER BY products.created_at DESC';
+        $query = $this->db->query($sql, [clean_number($user_id), clean_number($product_id)]);
+
+        return $query->result();
     }
 
     //get paginated user pending products
-    public function get_paginated_user_pending_products($user_id, $per_page, $offset)
+    public function get_paginated_user_pending_products($user_id, $offset, $per_page)
     {
-        $user_id = clean_number($user_id);
-        $this->db->join('users', 'products.user_id = users.id');
-        $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
-        $this->db->where('products.status', 0);
-        $this->db->where('users.id', $user_id);
-        $this->db->where('products.is_draft', 0);
-        $this->db->where('products.is_deleted', 0);
-        if (1 == $this->general_settings->vendor_verification_system) {
-            $this->db->where('users.role !=', 'member');
-        }
-        $this->db->order_by('products.created_at', 'DESC');
-        $this->db->limit($per_page, $offset);
-        $query = $this->db->get('products');
+        $sql = $this->query_string('pending') . 'AND users.id = ? ORDER BY products.created_at DESC LIMIT ?,?';
+        $query = $this->db->query($sql, [clean_number($user_id), clean_number($offset), clean_number($per_page)]);
 
         return $query->result();
     }
@@ -632,53 +595,35 @@ class Product_model extends Core_Model
     //get user pending products count
     public function get_user_pending_products_count($user_id)
     {
-        $user_id = clean_number($user_id);
-        $this->db->join('users', 'products.user_id = users.id');
-        $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
-        $this->db->where('products.status', 0);
-        $this->db->where('users.id', $user_id);
-        $this->db->where('products.is_draft', 0);
-        $this->db->where('products.is_deleted', 0);
-        if (1 == $this->general_settings->vendor_verification_system) {
-            $this->db->where('users.role !=', 'member');
-        }
-        $query = $this->db->get('products');
+        $sql = $this->query_string('pending', true) . 'AND users.id = ?';
+        $query = $this->db->query($sql, [clean_number($user_id)]);
 
-        return $query->num_rows();
+        return $query->row()->count;
+    }
+
+    //get paginated drafts
+    public function get_paginated_user_drafts($user_id, $offset, $per_page)
+    {
+        $sql = $this->query_string('draft') . 'AND users.id = ? ORDER BY products.created_at DESC LIMIT ?,?';
+        $query = $this->db->query($sql, [clean_number($user_id), clean_number($offset), clean_number($per_page)]);
+
+        return $query->result();
     }
 
     //get user drafts count
     public function get_user_drafts_count($user_id)
     {
-        $user_id = clean_number($user_id);
-        $this->db->join('users', 'products.user_id = users.id');
-        $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
-        $this->db->where('users.id', $user_id);
-        if (1 == $this->general_settings->vendor_verification_system) {
-            $this->db->where('users.role !=', 'member');
-        }
-        $this->db->where('products.is_draft', 1);
-        $this->db->where('products.is_deleted', 0);
-        $query = $this->db->get('products');
+        $sql = $this->query_string('draft', true) . ' AND users.id = ?';
+        $query = $this->db->query($sql, [clean_number($user_id)]);
 
-        return $query->num_rows();
+        return $query->row()->count;
     }
 
-    //get paginated drafts
-    public function get_paginated_user_drafts($user_id, $per_page, $offset)
+    //get paginated user hidden products
+    public function get_paginated_user_hidden_products($user_id, $offset, $per_page)
     {
-        $user_id = clean_number($user_id);
-        $this->db->join('users', 'products.user_id = users.id');
-        $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
-        $this->db->where('users.id', $user_id);
-        $this->db->where('products.is_draft', 1);
-        $this->db->where('products.is_deleted', 0);
-        if (1 == $this->general_settings->vendor_verification_system) {
-            $this->db->where('users.role !=', 'member');
-        }
-        $this->db->order_by('products.created_at', 'DESC');
-        $this->db->limit($per_page, $offset);
-        $query = $this->db->get('products');
+        $sql = $this->query_string('hidden') . 'AND users.id = ? ORDER BY products.created_at DESC LIMIT ?,?';
+        $query = $this->db->query($sql, [clean_number($user_id), clean_number($offset), clean_number($per_page)]);
 
         return $query->result();
     }
@@ -686,88 +631,44 @@ class Product_model extends Core_Model
     //get user hidden products count
     public function get_user_hidden_products_count($user_id)
     {
-        $user_id = clean_number($user_id);
-        $this->db->join('users', 'products.user_id = users.id');
-        $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
-        $this->db->where('products.visibility', 0);
-        $this->db->where('users.id', $user_id);
-        $this->db->where('products.is_draft', 0);
-        $this->db->where('products.is_deleted', 0);
-        if (1 == $this->general_settings->vendor_verification_system) {
-            $this->db->where('users.role !=', 'member');
-        }
-        $this->db->order_by('products.created_at', 'DESC');
-        $query = $this->db->get('products');
+        $sql = $this->query_string('hidden', true) . 'AND users.id = ?';
+        $query = $this->db->query($sql, [clean_number($user_id)]);
 
-        return $query->num_rows();
+        return $query->row()->count;
     }
 
-    //get paginated user hidden products
-    public function get_paginated_user_hidden_products($user_id, $per_page, $offset)
+    //get user wishlist products
+    public function get_paginated_user_wishlist_products($user_id, $offset, $per_page)
     {
-        $user_id = clean_number($user_id);
-        $this->db->join('users', 'products.user_id = users.id');
-        $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
-        $this->db->where('products.visibility', 0);
-        $this->db->where('users.id', $user_id);
-        $this->db->where('products.is_draft', 0);
-        $this->db->where('products.is_deleted', 0);
-        if (1 == $this->general_settings->vendor_verification_system) {
-            $this->db->where('users.role !=', 'member');
-        }
-        $this->db->order_by('products.created_at', 'DESC');
-        $this->db->limit($per_page, $offset);
-        $query = $this->db->get('products');
+        $sql = $this->query_string('wishlist') . 'AND wishlist.user_id = ? ORDER BY products.created_at DESC LIMIT ?,?';
+        $query = $this->db->query($sql, [clean_number($user_id), clean_number($offset), clean_number($per_page)]);
 
         return $query->result();
     }
 
-    //get user favorited products
-    public function get_user_favorited_products($user_id)
+    //get user wishlist products count
+    public function get_user_wishlist_products_count($user_id)
     {
-        $user_id = clean_number($user_id);
-        $this->build_query_unlocated();
-        $this->db->join('favorites', 'products.id = favorites.product_id');
-        $this->db->select('products.*');
-        $this->db->where('favorites.user_id', $user_id);
-        $this->db->order_by('products.created_at', 'DESC');
-        $query = $this->db->get('products');
+        $sql = $this->query_string('wishlist', true) . ' AND wishlist.user_id = ?';
+        $query = $this->db->query($sql, [clean_number($user_id)]);
 
-        return $query->result();
-    }
-
-    //get user favorited products count
-    public function get_user_favorited_products_count($user_id)
-    {
-        $user_id = clean_number($user_id);
-        $this->build_query_unlocated();
-        $this->db->join('favorites', 'products.id = favorites.product_id');
-        $this->db->select('products.*');
-        $this->db->where('favorites.user_id', $user_id);
-        $this->db->order_by('products.created_at', 'DESC');
-        $query = $this->db->get('products');
-
-        return $query->num_rows();
+        return $query->row()->count;
     }
 
     //get user downloads count
     public function get_user_downloads_count($user_id)
     {
-        $user_id = clean_number($user_id);
-        $this->db->where('buyer_id', $user_id);
-        $query = $this->db->get('digital_sales');
+        $sql = 'SELECT COUNT(id) AS count FROM digital_sales WHERE buyer_id = ?';
+        $query = $this->db->query($sql, [clean_number($user_id)]);
 
-        return $query->num_rows();
+        return $query->row()->count;
     }
 
     //get paginated downloads
-    public function get_paginated_user_downloads($user_id, $per_page, $offset)
+    public function get_paginated_user_downloads($user_id, $offset, $per_page)
     {
-        $user_id = clean_number($user_id);
-        $this->db->where('buyer_id', $user_id);
-        $this->db->order_by('purchase_date', 'DESC');
-        $this->db->limit($per_page, $offset);
-        $query = $this->db->get('digital_sales');
+        $sql = 'SELECT * FROM digital_sales WHERE buyer_id = ? ORDER BY purchase_date DESC LIMIT ?,?';
+        $query = $this->db->query($sql, [clean_number($user_id), clean_number($offset), clean_number($per_page)]);
 
         return $query->result();
     }
@@ -775,9 +676,8 @@ class Product_model extends Core_Model
     //get digital sale
     public function get_digital_sale($sale_id)
     {
-        $sale_id = clean_number($sale_id);
-        $this->db->where('id', $sale_id);
-        $query = $this->db->get('digital_sales');
+        $sql = 'SELECT * FROM digital_sales WHERE id = ?';
+        $query = $this->db->query($sql, [clean_number($sale_id)]);
 
         return $query->row();
     }
@@ -785,11 +685,8 @@ class Product_model extends Core_Model
     //get digital sale by buyer id
     public function get_digital_sale_by_buyer_id($buyer_id, $product_id)
     {
-        $buyer_id = clean_number($buyer_id);
-        $product_id = clean_number($product_id);
-        $this->db->where('buyer_id', $buyer_id);
-        $this->db->where('product_id', $product_id);
-        $query = $this->db->get('digital_sales');
+        $sql = 'SELECT * FROM digital_sales WHERE buyer_id = ? AND product_id = ?';
+        $query = $this->db->query($sql, [clean_number($buyer_id), clean_number($product_id)]);
 
         return $query->row();
     }
@@ -797,13 +694,8 @@ class Product_model extends Core_Model
     //get digital sale by order id
     public function get_digital_sale_by_order_id($buyer_id, $product_id, $order_id)
     {
-        $buyer_id = clean_number($buyer_id);
-        $product_id = clean_number($product_id);
-        $order_id = clean_number($order_id);
-        $this->db->where('buyer_id', $buyer_id);
-        $this->db->where('product_id', $product_id);
-        $this->db->where('order_id', $order_id);
-        $query = $this->db->get('digital_sales');
+        $sql = 'SELECT * FROM digital_sales WHERE buyer_id = ? AND product_id = ? AND order_id = ?';
+        $query = $this->db->query($sql, [clean_number($buyer_id), clean_number($product_id), clean_number($order_id)]);
 
         return $query->row();
     }
@@ -811,9 +703,8 @@ class Product_model extends Core_Model
     //get product by id
     public function get_product_by_id($id)
     {
-        $id = clean_number($id);
-        $this->db->where('id', $id);
-        $query = $this->db->get('products');
+        $sql = 'SELECT * FROM products WHERE id = ?';
+        $query = $this->db->query($sql, [clean_number($id)]);
 
         return $query->row();
     }
@@ -821,20 +712,13 @@ class Product_model extends Core_Model
     //get available product
     public function get_available_product($id)
     {
-        $id = clean_number($id);
-        $this->db->join('users', 'products.user_id = users.id');
-        $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
-        $this->db->where('users.banned', 0);
-        $this->db->where('products.status', 1);
-        $this->db->where('products.visibility', 1);
-        $this->db->where('products.is_draft', 0);
-        $this->db->where('products.is_sold', 0);
-        $this->db->where('products.is_deleted', 0);
-        $this->db->where('products.id', $id);
+        $sql = 'SELECT products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug FROM products 
+                INNER JOIN users ON products.user_id = users.id AND users.banned = 0
+                WHERE products.status = 1 AND products.visibility = 1 AND products.is_draft = 0 AND products.stock > 0 AND products.is_deleted = 0 AND products.id = ?';
         if (1 == $this->general_settings->vendor_verification_system) {
-            $this->db->where('users.role !=', 'member');
+            $sql .= " AND users.role != 'member'";
         }
-        $query = $this->db->get('products');
+        $query = $this->db->query($sql, [clean_number($id)]);
 
         return $query->row();
     }
@@ -842,37 +726,31 @@ class Product_model extends Core_Model
     //get product by slug
     public function get_product_by_slug($slug)
     {
-        $this->db->join('users', 'products.user_id = users.id');
-        $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
-        $this->db->where('users.banned', 0);
-        $this->db->where('products.slug', $slug);
-        $this->db->where('products.is_draft', 0);
-        $this->db->where('products.is_deleted', 0);
+        $sql = 'SELECT products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug FROM products 
+                INNER JOIN users ON products.user_id = users.id AND users.banned = 0
+                WHERE products.is_draft = 0 AND products.is_deleted = 0 AND products.slug = ?';
         if (1 == $this->general_settings->vendor_verification_system) {
-            $this->db->where('users.role !=', 'member');
+            $sql .= " AND users.role != 'member'";
         }
-        $this->db->order_by('products.created_at', 'DESC');
-        $query = $this->db->get('products');
+        $query = $this->db->query($sql, [clean_str($slug)]);
 
         return $query->row();
     }
 
-    //is product favorited
-    public function is_product_in_favorites($product_id)
+    //is product in wishlist
+    public function is_product_in_wishlist($product_id)
     {
-        $product_id = clean_number($product_id);
         if ($this->auth_check) {
-            $this->db->where('user_id', $this->auth_user->id);
-            $this->db->where('product_id', $product_id);
-            $query = $this->db->get('favorites');
+            $sql = 'SELECT * FROM wishlist WHERE user_id = ? AND product_id = ?';
+            $query = $this->db->query($sql, [clean_number($this->auth_user->id), clean_number($product_id)]);
             if (!empty($query->row())) {
                 return true;
             }
         } else {
-            $favorites = $this->session->userdata('mds_guest_favorites');
-            if (!empty($favorites)) {
-                foreach ($favorites as $favorite) {
-                    if ($favorite == $product_id) {
+            $wishlist = $this->session->userdata('mds_guest_wishlist');
+            if (!empty($wishlist)) {
+                foreach ($wishlist as $item) {
+                    if ($item == clean_number($product_id)) {
                         return true;
                     }
                 }
@@ -882,54 +760,52 @@ class Product_model extends Core_Model
         return false;
     }
 
-    //get product favorited count
-    public function get_product_favorited_count($product_id)
+    //get product wishlist count
+    public function get_product_wishlist_count($product_id)
     {
-        $product_id = clean_number($product_id);
-        $this->db->where('product_id', $product_id);
-        $query = $this->db->get('favorites');
+        $sql = 'SELECT COUNT(id) AS count FROM wishlist WHERE product_id = ?';
+        $query = $this->db->query($sql, [clean_number($product_id)]);
 
-        return $query->num_rows();
+        return $query->row()->count;
     }
 
-    //add remove favorites
-    public function add_remove_favorites($product_id)
+    //add remove wishlist
+    public function add_remove_wishlist($product_id)
     {
-        $product_id = clean_number($product_id);
         if ($this->auth_check) {
-            if ($this->is_product_in_favorites($product_id)) {
+            if ($this->is_product_in_wishlist($product_id)) {
                 $this->db->where('user_id', $this->auth_user->id);
-                $this->db->where('product_id', $product_id);
-                $this->db->delete('favorites');
+                $this->db->where('product_id', clean_number($product_id));
+                $this->db->delete('wishlist');
             } else {
                 $data = [
                     'user_id' => $this->auth_user->id,
-                    'product_id' => $product_id,
+                    'product_id' => clean_number($product_id),
                 ];
-                $this->db->insert('favorites', $data);
+                $this->db->insert('wishlist', $data);
             }
         } else {
-            if ($this->is_product_in_favorites($product_id)) {
-                $favorites = [];
-                if (!empty($this->session->userdata('mds_guest_favorites'))) {
-                    $favorites = $this->session->userdata('mds_guest_favorites');
+            if ($this->is_product_in_wishlist($product_id)) {
+                $wishlist = [];
+                if (!empty($this->session->userdata('mds_guest_wishlist'))) {
+                    $wishlist = $this->session->userdata('mds_guest_wishlist');
                 }
                 $new = [];
-                if (!empty($favorites)) {
-                    foreach ($favorites as $favorite) {
-                        if ($favorite != $product_id) {
-                            array_push($new, $favorite);
+                if (!empty($wishlist)) {
+                    foreach ($wishlist as $item) {
+                        if ($item != clean_number($product_id)) {
+                            array_push($new, $item);
                         }
                     }
                 }
-                $this->session->set_userdata('mds_guest_favorites', $new);
+                $this->session->set_userdata('mds_guest_wishlist', $new);
             } else {
-                $favorites = [];
-                if (!empty($this->session->userdata('mds_guest_favorites'))) {
-                    $favorites = $this->session->userdata('mds_guest_favorites');
+                $wishlist = [];
+                if (!empty($this->session->userdata('mds_guest_wishlist'))) {
+                    $wishlist = $this->session->userdata('mds_guest_wishlist');
                 }
-                array_push($favorites, $product_id);
-                $this->session->set_userdata('mds_guest_favorites', $favorites);
+                array_push($wishlist, clean_number($product_id));
+                $this->session->set_userdata('mds_guest_wishlist', $wishlist);
             }
         }
     }
@@ -955,25 +831,21 @@ class Product_model extends Core_Model
     //get rss products by category
     public function get_rss_products_by_category($category_id)
     {
-        $category_id = clean_number($category_id);
-        $category_tree_ids = $this->category_model->get_category_tree_ids_string($category_id);
-        if (empty($category_tree_ids)) {
+        $category_ids_array = $this->category_model->get_category_tree_ids_array($category_id);
+        if (empty($category_ids_array)) {
             return [];
         }
-        $this->db->join('users', 'products.user_id = users.id');
-        $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
-        $this->db->where('users.banned', 0);
-        $this->db->where('products.status', 1);
-        $this->db->where('products.visibility', 1);
-        $this->db->where('products.category_id IN (' . $category_tree_ids . ')', null, false);
-        $this->db->where('products.is_draft', 0);
-        $this->db->where('products.is_sold', 0);
-        $this->db->where('products.is_deleted', 0);
+
+        $sql = "SELECT products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug,
+                (SELECT CONCAT(storage, '::', image_small) FROM images WHERE products.id = images.product_id ORDER BY is_main DESC LIMIT 1) AS image
+                FROM products 
+                INNER JOIN users ON products.user_id = users.id AND users.banned = 0
+                WHERE products.status = 1 AND products.visibility = 1 AND products.is_draft = 0 AND products.is_deleted = 0 AND products.category_id IN ?";
         if (1 == $this->general_settings->vendor_verification_system) {
-            $this->db->where('users.role !=', 'member');
+            $sql .= " AND users.role != 'member'";
         }
-        $this->db->order_by('products.created_at', 'DESC');
-        $query = $this->db->get('products');
+        $sql .= ' ORDER BY products.created_at DESC';
+        $query = $this->db->query($sql, [$category_ids_array]);
 
         return $query->result();
     }
@@ -981,60 +853,29 @@ class Product_model extends Core_Model
     //get rss products by user
     public function get_rss_products_by_user($user_id)
     {
-        $user_id = clean_number($user_id);
-        $this->db->join('users', 'products.user_id = users.id');
-        $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
-        $this->db->where('users.banned', 0);
-        $this->db->where('products.status', 1);
-        $this->db->where('products.visibility', 1);
-        $this->db->where('users.id', $user_id);
-        $this->db->where('products.is_draft', 0);
-        $this->db->where('products.is_sold', 0);
-        $this->db->where('products.is_deleted', 0);
+        $sql = "SELECT products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug,
+                (SELECT CONCAT(storage, '::', image_small) FROM images WHERE products.id = images.product_id ORDER BY is_main DESC LIMIT 1) AS image
+                FROM products 
+                INNER JOIN users ON products.user_id = users.id AND users.banned = 0
+                WHERE products.status = 1 AND products.visibility = 1 AND products.is_draft = 0 AND products.is_deleted = 0 AND users.id = ?";
         if (1 == $this->general_settings->vendor_verification_system) {
-            $this->db->where('users.role !=', 'member');
+            $sql .= " AND users.role != 'member'";
         }
-        $this->db->order_by('products.created_at', 'DESC');
-        $query = $this->db->get('products');
+        $sql .= ' ORDER BY products.created_at DESC';
+        $query = $this->db->query($sql, [clean_number($user_id)]);
 
         return $query->result();
-    }
-
-    //set product as sold
-    public function set_product_as_sold($product_id)
-    {
-        $product_id = clean_number($product_id);
-        $product = $this->get_product_by_id($product_id);
-        if (!empty($product)) {
-            if (user()->id == $product->user_id) {
-                if (1 == $product->is_sold) {
-                    $data = [
-                        'is_sold' => 0,
-                    ];
-                } else {
-                    $data = [
-                        'is_sold' => 1,
-                    ];
-                }
-                $this->db->where('id', $product_id);
-
-                return $this->db->update('products', $data);
-            }
-        }
-
-        return false;
     }
 
     //delete product
     public function delete_product($product_id)
     {
-        $product_id = clean_number($product_id);
         $product = $this->get_product_by_id($product_id);
         if (!empty($product)) {
             $data = [
                 'is_deleted' => 1,
             ];
-            $this->db->where('id', $product_id);
+            $this->db->where('id', $product->id);
 
             return $this->db->update('products', $data);
         }
@@ -1086,9 +927,8 @@ class Product_model extends Core_Model
     //get license keys
     public function get_license_keys($product_id)
     {
-        $product_id = clean_number($product_id);
-        $this->db->where('product_id', $product_id);
-        $query = $this->db->get('product_license_keys');
+        $sql = 'SELECT * FROM product_license_keys WHERE product_id = ?';
+        $query = $this->db->query($sql, [clean_number($product_id)]);
 
         return $query->result();
     }
@@ -1096,9 +936,8 @@ class Product_model extends Core_Model
     //get license key
     public function get_license_key($id)
     {
-        $id = clean_number($id);
-        $this->db->where('id', $id);
-        $query = $this->db->get('product_license_keys');
+        $sql = 'SELECT * FROM product_license_keys WHERE id = ?';
+        $query = $this->db->query($sql, [clean_number($id)]);
 
         return $query->row();
     }
@@ -1106,10 +945,8 @@ class Product_model extends Core_Model
     //get unused license key
     public function get_unused_license_key($product_id)
     {
-        $product_id = clean_number($product_id);
-        $this->db->where('product_id', $product_id);
-        $this->db->where('is_used', 0);
-        $query = $this->db->get('product_license_keys');
+        $sql = 'SELECT * FROM product_license_keys WHERE product_id = ? AND is_used = 0 LIMIT 1';
+        $query = $this->db->query($sql, [clean_number($product_id)]);
 
         return $query->row();
     }
@@ -1117,10 +954,8 @@ class Product_model extends Core_Model
     //check license key
     public function check_license_key($product_id, $license_key)
     {
-        $product_id = clean_number($product_id);
-        $this->db->where('license_key', $license_key);
-        $this->db->where('product_id', $product_id);
-        $query = $this->db->get('product_license_keys');
+        $sql = 'SELECT * FROM product_license_keys WHERE product_id = ? AND license_key = ?';
+        $query = $this->db->query($sql, [clean_number($product_id), $license_key]);
 
         return $query->row();
     }
@@ -1128,21 +963,19 @@ class Product_model extends Core_Model
     //set license key used
     public function set_license_key_used($id)
     {
-        $id = clean_number($id);
         $data = [
             'is_used' => 1,
         ];
-        $this->db->where('id', $id);
+        $this->db->where('id', clean_number($id));
         $this->db->update('product_license_keys', $data);
     }
 
     //delete license key
     public function delete_license_key($id)
     {
-        $id = clean_number($id);
         $license_key = $this->get_license_key($id);
         if (!empty($license_key)) {
-            $this->db->where('id', $id);
+            $this->db->where('id', $license_key->id);
 
             return $this->db->delete('product_license_keys');
         }

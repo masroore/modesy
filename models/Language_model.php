@@ -22,15 +22,31 @@ class Language_model extends CI_Model
     public function add_language()
     {
         $data = $this->input_values();
-        $folder_name = str_slug($data['name']);
-        if (empty($folder_name)) {
-            $folder_name = 'lang_' . uniqid();
+
+        $this->load->model('upload_model');
+        $temp_path = $this->upload_model->upload_temp_image('file');
+        if (!empty($temp_path)) {
+            $data['flag_path'] = $this->upload_model->flag_upload($temp_path);
+        } else {
+            $data['flag_path'] = '';
         }
 
-        $data['folder_name'] = $folder_name;
+        if ($this->db->insert('languages', $data)) {
+            $language_id = $this->db->insert_id();
+            //insert translations
+            $translations = $this->get_language_translations(1);
+            if (!empty($translations)) {
+                foreach ($translations as $translation) {
+                    $data_translation = [
+                        'lang_id' => $language_id,
+                        'label' => $translation->label,
+                        'translation' => $translation->translation,
+                    ];
+                    $this->db->insert('language_translations', $data_translation);
+                }
+            }
 
-        if ($this->create_language_folder($folder_name)) {
-            return $this->db->insert('languages', $data);
+            return $language_id;
         }
 
         return false;
@@ -42,6 +58,7 @@ class Language_model extends CI_Model
         //add settings
         $settings = [
             'lang_id' => $lang_id,
+            'site_font' => 19,
             'site_title' => 'Modesy',
             'homepage_title' => 'Index',
             'site_description ' => 'Modesy',
@@ -70,98 +87,156 @@ class Language_model extends CI_Model
     //add language pages
     public function add_language_pages($lang_id)
     {
-        //add terms page
-        $page = [
+        $page_terms = [
             'lang_id' => $lang_id,
             'title' => 'Terms & Conditions',
             'slug' => 'terms-conditions',
-            'description' => 'Page, Terms Conditions',
-            'keywords' => 'Page, Terms Conditions',
+            'description' => 'Terms & Conditions Page',
+            'keywords' => 'Terms, Conditions, Page',
             'page_content' => '',
             'page_order' => 1,
             'visibility' => 1,
             'title_active' => 1,
             'location' => 'information',
+            'is_custom' => 0,
+            'page_default_name' => 'terms_conditions',
             'created_at' => date('Y-m-d H:i:s'),
         ];
+        $this->db->insert('pages', $page_terms);
 
-        $this->db->insert('pages', $page);
-    }
-
-    //add language category names
-    public function add_language_category_names($lang_id)
-    {
-        $categories = $this->category_model->get_categories_all();
-        if (!empty($categories)) {
-            foreach ($categories as $category) {
-                $this->db->where('category_id', $category->id);
-                $query = $this->db->get('categories_lang');
-                $row = $query->row();
-                if (!empty($row)) {
-                    $data = [
-                        'category_id' => $category->id,
-                        'lang_id' => $lang_id,
-                        'name' => $row->name,
-                    ];
-                    $this->db->insert('categories_lang', $data);
-                }
-            }
-        }
-
-        //add terms page
-        $page = [
+        $page_contact = [
             'lang_id' => $lang_id,
-            'title' => 'Terms & Conditions',
-            'slug' => 'terms-conditions',
-            'description' => 'Page, Terms Conditions',
-            'keywords' => 'Page, Terms Conditions',
+            'title' => 'Contact',
+            'slug' => 'contact',
+            'description' => 'Contact Page',
+            'keywords' => 'Contact, Page',
             'page_content' => '',
             'page_order' => 1,
             'visibility' => 1,
             'title_active' => 1,
-            'location' => 'information',
+            'location' => 'top_menu',
+            'is_custom' => 0,
+            'page_default_name' => 'contact',
             'created_at' => date('Y-m-d H:i:s'),
         ];
+        $this->db->insert('pages', $page_contact);
 
-        $this->db->insert('pages', $page);
-    }
-
-    //get language
-    public function get_language($id)
-    {
-        $this->db->where('id', $id);
-        $query = $this->db->get('languages');
-
-        return $query->row();
-    }
-
-    //get languages
-    public function get_languages()
-    {
-        $this->db->order_by('languages.language_order');
-        $query = $this->db->get('languages');
-
-        return $query->result();
-    }
-
-    //get active languages
-    public function get_active_languages()
-    {
-        $this->db->where('status', 1);
-        $this->db->order_by('languages.language_order');
-        $query = $this->db->get('languages');
-
-        return $query->result();
+        $page_blog = [
+            'lang_id' => $lang_id,
+            'title' => 'Blog',
+            'slug' => 'blog',
+            'description' => 'Blog Page',
+            'keywords' => 'Blog, Page',
+            'page_content' => '',
+            'page_order' => 1,
+            'visibility' => 1,
+            'title_active' => 1,
+            'location' => 'quick_links',
+            'is_custom' => 0,
+            'page_default_name' => 'blog',
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
+        $this->db->insert('pages', $page_blog);
     }
 
     //update language
     public function update_language($id)
     {
-        $data = $this->input_values();
+        $language = $this->get_language($id);
+        if (!empty($language)) {
+            $data = $this->input_values();
 
-        $this->db->where('id', $id);
+            $this->load->model('upload_model');
+            $temp_path = $this->upload_model->upload_temp_image('file');
+            if (!empty($temp_path)) {
+                delete_file_from_server($language->flag_path);
+                $data['flag_path'] = $this->upload_model->flag_upload($temp_path);
+            }
 
-        return $this->db->update('languages', $data);
+            $this->db->where('id', clean_number($id));
+
+            return $this->db->update('languages', $data);
+        }
+    }
+
+    //get language
+    public function get_language($id)
+    {
+        $sql = 'SELECT * FROM languages WHERE id = ?';
+        $query = $this->db->query($sql, [clean_number($id)]);
+
+        return $query->row();
+    }
+
+    //get site language
+    public function get_site_language()
+    {
+        $sql = 'SELECT * FROM languages WHERE id = ?';
+        $query = $this->db->query($sql, [clean_number($this->general_settings->site_lang)]);
+        $row = $query->row();
+        if (empty($row)) {
+            $query = $this->db->query('SELECT * FROM languages ORDER BY id LIMIT 1');
+            $row = $query->row();
+        }
+
+        return $row;
+    }
+
+    //get languages
+    public function get_languages()
+    {
+        $query = $this->db->query('SELECT * FROM languages ORDER BY language_order');
+
+        return $query->result();
+    }
+
+    //get language translations
+    public function get_language_translations($lang_id)
+    {
+        $sql = 'SELECT * FROM language_translations WHERE lang_id = ?';
+        $query = $this->db->query($sql, [clean_number($lang_id)]);
+
+        return $query->result();
+    }
+
+    //get paginated translations
+    public function get_paginated_translations($lang_id, $per_page, $offset)
+    {
+        $q = trim($this->input->get('q', true));
+        if (!empty($q)) {
+            $like = '%' . $q . '%';
+            $sql = 'SELECT * FROM language_translations WHERE lang_id = ? AND (label LIKE ? OR translation LIKE ?) ORDER BY id LIMIT ?, ?';
+            $query = $this->db->query($sql, [clean_number($lang_id), $like, $like, clean_number($offset), clean_number($per_page)]);
+        } else {
+            $sql = 'SELECT * FROM language_translations WHERE lang_id = ? ORDER BY id LIMIT ?, ?';
+            $query = $this->db->query($sql, [clean_number($lang_id), clean_number($offset), clean_number($per_page)]);
+        }
+
+        return $query->result();
+    }
+
+    //get translations count
+    public function get_translation_count($lang_id)
+    {
+        $q = trim($this->input->get('q', true));
+        if (!empty($q)) {
+            $like = '%' . $q . '%';
+            $sql = 'SELECT * FROM language_translations WHERE lang_id = ? AND (label LIKE ? OR translation LIKE ?)';
+            $query = $this->db->query($sql, [clean_number($lang_id), $like, $like]);
+        } else {
+            $sql = 'SELECT * FROM language_translations WHERE lang_id = ?';
+            $query = $this->db->query($sql, [clean_number($lang_id)]);
+        }
+
+        return $query->num_rows();
+    }
+
+    //get active languages
+    public function get_active_languages()
+    {
+        $query = $this->db->query('SELECT * FROM languages WHERE status = 1 ORDER BY language_order');
+
+        return $query->result();
     }
 
     //set language
@@ -175,11 +250,8 @@ class Language_model extends CI_Model
 
         if (!empty($lang)) {
             $this->db->where('id', 1);
-            if ($this->db->update('general_settings', $data)) {
-                $this->session->set_userdata('modesy_selected_lang', $data['site_lang']);
 
-                return true;
-            }
+            return $this->db->update('general_settings', $data);
         }
 
         return false;
@@ -190,7 +262,19 @@ class Language_model extends CI_Model
     {
         $language = $this->get_language($id);
         if (!empty($language)) {
-            $this->remove_language_folder($language->folder_name);
+            //delete translations
+            $sql = 'SELECT * FROM language_translations WHERE lang_id = ?';
+            $query = $this->db->query($sql, [clean_number($language->id)]);
+            $translations = $query->result();
+            if (!empty($translations)) {
+                foreach ($translations as $translation) {
+                    $this->db->where('id', $translation->id);
+                    $this->db->delete('language_translations');
+                }
+            }
+            //delete flag
+            delete_file_from_server($language->flag_path);
+            //delete language
             $this->db->where('id', $id);
 
             return $this->db->delete('languages');
@@ -199,142 +283,18 @@ class Language_model extends CI_Model
         return false;
     }
 
-    //create language folder
-    public function create_language_folder($lang_name)
+    //update translation
+    public function update_translation()
     {
-        $root = FCPATH . 'application/language/' . $lang_name;
-        $default = FCPATH . 'application/language/default';
+        $lang_id = $this->input->post('lang_id');
+        $label = $this->input->post('label');
 
-        if (!file_exists($root) && is_writable('application/language')) {
-            mkdir($root, 0777, true);
-            copy($default . '/db_lang.php', $root . '/db_lang.php');
-            copy($default . '/email_lang.php', $root . '/email_lang.php');
-            copy($default . '/form_validation_lang.php', $root . '/form_validation_lang.php');
-            copy($default . '/upload_lang.php', $root . '/upload_lang.php');
-            copy($default . '/site_lang.php', $root . '/site_lang.php');
-            copy($default . '/index.html', $root . '/index.html');
+        $data = [
+            'translation' => $this->input->post('translation'),
+        ];
 
-            return true;
-        }
-
-        return false;
-    }
-
-    //remove language folder
-    public function remove_language_folder($lang_name)
-    {
-        $root = FCPATH . 'application/language/' . $lang_name;
-
-        //delete files
-        $files = glob($root . '/*');
-        if (!empty($files)) {
-            foreach ($files as $file) {
-                if (is_file($file)) {
-                    unlink($file); //delete file
-                }
-            }
-        }
-
-        //delete folder
-        if (is_dir($root)) {
-            rmdir($root);
-        }
-    }
-
-    //get phrases
-    public function get_phrases($lang_name)
-    {
-        $lang = [];
-        $phrases = [];
-        include 'application/language/' . $lang_name . '/site_lang.php';
-
-        foreach ($lang as $key => $value) {
-            $phrases[] = [
-                'phrase' => $key,
-                'label' => $value,
-            ];
-        }
-
-        return $phrases;
-    }
-
-    //search phrases
-    public function search_phrases($lang_name, $q)
-    {
-        $lang = [];
-        $phrases = [];
-        include 'application/language/' . $lang_name . '/site_lang.php';
-
-        foreach ($lang as $key => $value) {
-            if ((false !== strpos($key, $q)) || (false !== strpos($value, $q))) {
-                $phrases[] = [
-                    'phrase' => $key,
-                    'label' => $value,
-                ];
-            }
-        }
-
-        return $phrases;
-    }
-
-    //create language file
-    public function create_language_file($lang_name, $phrases, $labels)
-    {
-        $start = '<?php defined("BASEPATH") OR exit("No direct script access allowed");' . PHP_EOL . PHP_EOL;
-        $keys = '';
-        $end = '?>';
-
-        $i = 0;
-        foreach ($phrases['phrase'] as $item) {
-            if (!empty($item) && !empty($labels['label'][$i])) {
-                //escape
-                if (false !== strpos($labels['label'][$i], '"')) {
-                    $labels['label'][$i] = str_replace('"', '&quot;', $labels['label'][$i]);
-                }
-                $keys .= '$lang["' . $item . '"] = "' . $labels['label'][$i] . '";' . PHP_EOL;
-            }
-
-            $i++;
-        }
-
-        $content = $start . $keys . $end;
-
-        file_put_contents(FCPATH . 'application/language/' . $lang_name . '/site_lang.php', $content);
-    }
-
-    //update language file
-    public function update_language_file($lang_name, $phrases, $labels)
-    {
-        $start = '<?php defined("BASEPATH") OR exit("No direct script access allowed");' . PHP_EOL . PHP_EOL;
-        $keys = '';
-        $end = '?>';
-
-        $old_phrases = $this->get_phrases($lang_name);
-
-        foreach ($old_phrases as $old_item) {
-            $i = 0;
-
-            foreach ($phrases['phrase'] as $item) {
-                if (!empty($item) && !empty($labels['label'][$i])) {
-                    if ($old_item['phrase'] == $item) {
-                        //echo $labels["label"][$i];
-                        $old_item['label'] = $labels['label'][$i];
-                    }
-
-                    //escape
-                    if (false !== strpos($labels['label'][$i], '"')) {
-                        $labels['label'][$i] = str_replace('"', '&quot;', $labels['label'][$i]);
-                    }
-                }
-
-                $i++;
-            }
-
-            $keys .= '$lang["' . $old_item['phrase'] . '"] = "' . $old_item['label'] . '";' . PHP_EOL;
-        }
-
-        $content = $start . $keys . $end;
-
-        file_put_contents(FCPATH . 'application/language/' . $lang_name . '/site_lang.php', $content);
+        $this->db->where('lang_id', clean_number($lang_id));
+        $this->db->where('label', clean_str($label));
+        $this->db->update('language_translations', $data);
     }
 }

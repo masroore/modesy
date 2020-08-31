@@ -1,4 +1,5 @@
 <?php
+error_reporting(0);
 require_once 'functions.php';
 
 if (!function_exists('curl_init')) {
@@ -8,9 +9,10 @@ if (isset($_POST['btn_license_code'])) {
     $license_code = trim($_POST['license_code']);
     $purchase_code = '';
     $response = '';
+
     $current_url = currentUrl($_SERVER);
     $data = verify_license($license_code, $current_url);
-    $data->code = 'success';
+
     if (!empty($data)) {
         if ('error' == $data->code) {
             $error = 'Invalid License Code!';
@@ -108,13 +110,9 @@ if (!isset($license_code)) {
                                         <div class="tab_1">
                                             <h1 class="step-title">Start</h1>
 
-                                            <div class="form-group text-center">
-                                                <a href="#" target="_blank" class="btn btn-success btn-custom">Generate License Code</a>
-                                            </div>
-
                                             <div class="form-group">
                                                 <label for="email">License Code</label>
-                                                <textarea name="license_code" class="form-control form-input" style="resize: vertical; height: 100px;line-height: 24px;padding: 10px;" placeholder="Enter anything!" required><?php echo $license_code; ?></textarea>
+                                                <textarea name="license_code" class="form-control form-input" style="resize: vertical; height: 100px;line-height: 24px;padding: 10px;" placeholder="Enter anything" required><?php echo $license_code; ?></textarea>
                                                 <small style="margin-top: 10px;display: block">*You need to enter your license code to this field (not your purchase code). If you don't have a license code,
                                                     you should generate your license code by clicking "Generate License Code" button.
                                                 </small>

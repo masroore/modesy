@@ -1,8 +1,19 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 
-<div id="digital_files_upload_result">
-    <?php $this->load->view('product/_digital_files_upload_response'); ?>
+<div class="row">
+    <div class="col-12">
+        <label class="control-label font-600"><?php echo trans("digital_files"); ?></label>
+        <?php $exts = str_replace('"', '', $this->form_settings->digital_allowed_file_extensions);
+        $exts = str_replace(',', ", ", $exts);
+        $exts = strtoupper($exts); ?>
+        <small>(<?php echo trans("allowed_file_extensions"); ?>:&nbsp;<?php echo $exts; ?>)</small>
+        <div id="digital_files_upload_result">
+            <?php $this->load->view('product/_digital_files_upload_response'); ?>
+        </div>
+    </div>
 </div>
+
+<div class="error-message error-message-file-upload"></div>
 
 <!-- File item template -->
 <script type="text/html" id="files-template-digital-files">
@@ -17,12 +28,15 @@
 
 <script>
     $('#drag-and-drop-zone-digital-files').dmUploader({
-        url: '<?php echo base_url(); ?>file_controller/upload_digital_files',
+        url: '<?php echo base_url(); ?>upload-digital-files-post',
         queue: true,
-        extFilter: ["zip"],
+        extFilter: [<?php echo $this->form_settings->digital_allowed_file_extensions;?>],
         multiple: false,
-        extraData: {
-            "product_id":<?php echo $product->id; ?>
+        extraData: function (id) {
+            return {
+                "product_id": <?php echo $product->id; ?>,
+                "<?php echo $this->security->get_csrf_token_name(); ?>": $.cookie(csfr_cookie_name)
+            };
         },
         onDragEnter: function () {
             this.addClass('active');
@@ -56,16 +70,23 @@
         onFileTypeError: function (file) {
         },
         onFileExtError: function (file) {
+            $(".error-message-file-upload").html("<?php echo trans('invalid_file_type'); ?>");
+            setTimeout(function () {
+                $(".error-message-file-upload").empty();
+            }, 4000);
         },
     });
     $(document).ajaxStop(function () {
         $('#drag-and-drop-zone-digital-files').dmUploader({
-            url: '<?php echo base_url(); ?>file_controller/upload_digital_files',
+            url: '<?php echo base_url(); ?>upload-digital-files-post',
             queue: true,
-            extFilter: ["zip"],
+            extFilter: [<?php echo $this->form_settings->digital_allowed_file_extensions;?>],
             multiple: false,
-            extraData: {
-                "product_id":<?php echo $product->id; ?>
+            extraData: function (id) {
+                return {
+                    "product_id": <?php echo $product->id; ?>,
+                    "<?php echo $this->security->get_csrf_token_name(); ?>": $.cookie(csfr_cookie_name)
+                };
             },
             onDragEnter: function () {
                 this.addClass('active');
@@ -99,6 +120,10 @@
             onFileTypeError: function (file) {
             },
             onFileExtError: function (file) {
+                $(".error-message-file-upload").html("<?php echo trans('invalid_file_type'); ?>");
+                setTimeout(function () {
+                    $(".error-message-file-upload").empty();
+                }, 4000);
             },
         });
     });

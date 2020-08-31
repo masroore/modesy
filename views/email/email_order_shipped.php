@@ -23,7 +23,7 @@
 										} else {
 											echo $order->payment_method;
 										} ?><br>
-                                        <?php echo trans("date"); ?>:&nbsp;<?php echo date("Y-m-d / h:i", strtotime($order->created_at)); ?><br>
+                                        <?php echo trans("date"); ?>:&nbsp;<?php echo formatted_date($order->created_at); ?><br>
                                     </p>
                                 </div>
 
@@ -39,15 +39,15 @@
                                     <?php if (!empty($order_product)): ?>
                                         <tr>
                                             <td><?php echo $order_product->product_title; ?></td>
-                                            <td><?php echo print_price($order_product->product_unit_price, $order_product->product_currency); ?></td>
+                                            <td><?php echo price_formatted($order_product->product_unit_price, $order_product->product_currency); ?></td>
                                             <td><?php echo $order_product->product_quantity; ?></td>
-                                            <td><?php echo print_price($order_product->product_shipping_cost, $order_product->product_currency); ?></td>
-                                            <td><?php echo print_price($order_product->product_total_price, $order_product->product_currency); ?></td>
+                                            <td><?php echo price_formatted($order_product->product_shipping_cost, $order_product->product_currency); ?></td>
+                                            <td><?php echo price_formatted($order_product->product_total_price, $order_product->product_currency); ?></td>
                                         </tr>
                                     <?php endif; ?>
                                 </table>
                                 <p style='text-align: center;margin-top: 40px;'>
-                                    <a href="<?php echo lang_base_url() . 'order/' . $order->order_number; ?>" style='font-size: 14px;text-decoration: none;padding: 14px 40px;background-color: #09b1ba;color: #ffffff !important; border-radius: 3px;'>
+                                    <a href="<?php echo generate_url("order_details") . '/' . $order->order_number; ?>" style='font-size: 14px;text-decoration: none;padding: 14px 40px;background-color: #09b1ba;color: #ffffff !important; border-radius: 3px;'>
                                         <?php echo trans("see_order_details"); ?>
                                     </a>
                                 </p>

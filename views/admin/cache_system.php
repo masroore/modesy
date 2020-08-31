@@ -19,12 +19,12 @@
                         </div>
                         <div class="col-md-3 col-sm-4 col-xs-12 col-option">
                             <input type="radio" name="cache_system" value="1" id="cache_system_1"
-                                   class="square-purple" <?php echo ($general_settings->cache_system == 1) ? 'checked' : ''; ?>>
+                                   class="square-purple" <?php echo ($this->general_settings->cache_system == 1) ? 'checked' : ''; ?>>
                             <label for="cache_system_1" class="option-label"><?php echo trans('enable'); ?></label>
                         </div>
                         <div class="col-md-4 col-sm-4 col-xs-12 col-option">
                             <input type="radio" name="cache_system" value="0" id="cache_system_2"
-                                   class="square-purple" <?php echo ($general_settings->cache_system != 1) ? 'checked' : ''; ?>>
+                                   class="square-purple" <?php echo ($this->general_settings->cache_system != 1) ? 'checked' : ''; ?>>
                             <label for="cache_system_2" class="option-label"><?php echo trans('disable'); ?></label>
                         </div>
                     </div>
@@ -36,12 +36,12 @@
                         </div>
                         <div class="col-md-3 col-sm-4 col-xs-12 col-option">
                             <input type="radio" name="refresh_cache_database_changes" value="1" id="refresh_cache_database_changes_1"
-                                   class="square-purple" <?php echo ($general_settings->refresh_cache_database_changes == 1) ? 'checked' : ''; ?>>
+                                   class="square-purple" <?php echo ($this->general_settings->refresh_cache_database_changes == 1) ? 'checked' : ''; ?>>
                             <label for="refresh_cache_database_changes_1" class="option-label"><?php echo trans('yes'); ?></label>
                         </div>
                         <div class="col-md-4 col-sm-4 col-xs-12 col-option">
                             <input type="radio" name="refresh_cache_database_changes" value="0" id="refresh_cache_database_changes_2"
-                                   class="square-purple" <?php echo ($general_settings->refresh_cache_database_changes != 1) ? 'checked' : ''; ?>>
+                                   class="square-purple" <?php echo ($this->general_settings->refresh_cache_database_changes != 1) ? 'checked' : ''; ?>>
                             <label for="refresh_cache_database_changes_2" class="option-label"><?php echo trans('no'); ?></label>
                         </div>
                     </div>
@@ -50,7 +50,7 @@
                     <label class="control-label"><?php echo trans('cache_refresh_time'); ?></label>&nbsp;
                     <small>(<?php echo trans("cache_refresh_time_exp"); ?>)</small>
                     <input type="number" class="form-control" name="cache_refresh_time" placeholder="<?php echo trans('cache_refresh_time'); ?>"
-                           value="<?php echo($general_settings->cache_refresh_time / 60); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+                           value="<?php echo($this->general_settings->cache_refresh_time / 60); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
                 </div>
 
                 <!-- /.box-body -->

@@ -9,8 +9,17 @@ class Slider_model extends CI_Model
     {
         $data = [
             'lang_id' => $this->input->post('lang_id', true),
+            'title' => $this->input->post('title', true),
+            'description' => $this->input->post('description', true),
             'link' => $this->input->post('link', true),
             'item_order' => $this->input->post('item_order', true),
+            'button_text' => $this->input->post('button_text', true),
+            'text_color' => $this->input->post('text_color', true),
+            'button_color' => $this->input->post('button_color', true),
+            'button_text_color' => $this->input->post('button_text_color', true),
+            'animation_title' => $this->input->post('animation_title', true),
+            'animation_description' => $this->input->post('animation_description', true),
+            'animation_button' => $this->input->post('animation_button', true),
         ];
 
         $this->load->model('upload_model');
@@ -22,14 +31,6 @@ class Slider_model extends CI_Model
             $data['image'] = '';
         }
 
-        $temp_path = $this->upload_model->upload_temp_image('file_small');
-        if (!empty($temp_path)) {
-            $data['image_small'] = $this->upload_model->slider_small_image_upload($temp_path);
-            $this->upload_model->delete_temp_image($temp_path);
-        } else {
-            $data['image_small'] = '';
-        }
-
         return $this->db->insert('slider', $data);
     }
 
@@ -38,8 +39,17 @@ class Slider_model extends CI_Model
     {
         $data = [
             'lang_id' => $this->input->post('lang_id', true),
+            'title' => $this->input->post('title', true),
+            'description' => $this->input->post('description', true),
             'link' => $this->input->post('link', true),
             'item_order' => $this->input->post('item_order', true),
+            'button_text' => $this->input->post('button_text', true),
+            'text_color' => $this->input->post('text_color', true),
+            'button_color' => $this->input->post('button_color', true),
+            'button_text_color' => $this->input->post('button_text_color', true),
+            'animation_title' => $this->input->post('animation_title', true),
+            'animation_description' => $this->input->post('animation_description', true),
+            'animation_button' => $this->input->post('animation_button', true),
         ];
 
         $item = $this->get_slider_item($id);
@@ -49,12 +59,6 @@ class Slider_model extends CI_Model
             if (!empty($temp_path)) {
                 delete_file_from_server($item->image);
                 $data['image'] = $this->upload_model->slider_image_upload($temp_path);
-                $this->upload_model->delete_temp_image($temp_path);
-            }
-            $temp_path = $this->upload_model->upload_temp_image('file_small');
-            if (!empty($temp_path)) {
-                delete_file_from_server($item->image_small);
-                $data['image_small'] = $this->upload_model->slider_small_image_upload($temp_path);
                 $this->upload_model->delete_temp_image($temp_path);
             }
             $this->db->where('id', $id);
@@ -92,6 +96,20 @@ class Slider_model extends CI_Model
         $query = $this->db->get('slider');
 
         return $query->result();
+    }
+
+    //update slider settings
+    public function update_slider_settings()
+    {
+        $data = [
+            'slider_status' => $this->input->post('slider_status', true),
+            'slider_type' => $this->input->post('slider_type', true),
+            'slider_effect' => $this->input->post('slider_effect', true),
+        ];
+
+        $this->db->where('id', 1);
+
+        return $this->db->update('general_settings', $data);
     }
 
     //delete slider item

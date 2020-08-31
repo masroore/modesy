@@ -103,7 +103,7 @@
                         <?php foreach ($latest_orders as $item): ?>
                             <tr>
                                 <td>#<?php echo $item->order_number; ?></td>
-                                <td><?php echo print_price($item->price_total, $item->price_currency); ?></td>
+                                <td><?php echo price_formatted($item->price_total, $item->price_currency); ?></td>
                                 <td>
                                     <?php if ($item->status == 1):
                                         echo trans("completed");
@@ -169,7 +169,7 @@
                                         echo $order->order_number;
                                     endif; ?>
                                 </td>
-                                <td><?php echo print_preformatted_price($item->payment_amount, $item->currency); ?></td>
+                                <td><?php echo price_currency_format($item->payment_amount, $item->currency); ?></td>
                                 <td>
                                     <?php
                                     if ($item->payment_method == "Bank Transfer") {
@@ -179,7 +179,7 @@
                                     } ?>
                                 </td>
                                 <td><?php echo trans($item->payment_status); ?></td>
-                                <td><?php echo date("Y-m-d / h:i", strtotime($item->created_at)); ?></td>
+                                <td><?php echo formatted_date($item->created_at); ?></td>
                             </tr>
 
                         <?php endforeach; ?>
@@ -309,7 +309,7 @@
     <div class="col-lg-6 col-sm-12 col-xs-12">
         <div class="box box-primary box-sm">
             <div class="box-header with-border">
-                <h3 class="box-title"><?php echo trans("latest_transactions"); ?>&nbsp;<small style="font-size: 13px;">(<?php echo trans("promoted_products"); ?>)</small>
+                <h3 class="box-title"><?php echo trans("latest_transactions"); ?>&nbsp;<small style="font-size: 13px;">(<?php echo trans("featured_products"); ?>)</small>
                 </h3>
                 <div class="box-tools pull-right">
                     <button type="button" class="btn btn-box-tool" data-widget="collapse"><i
@@ -346,9 +346,9 @@
                                         echo $item->payment_method;
                                     } ?>
                                 </td>
-                                <td><?php echo print_preformatted_price($item->payment_amount, $item->currency); ?></td>
+                                <td><?php echo price_currency_format($item->payment_amount, $item->currency); ?></td>
                                 <td><?php echo trans($item->payment_status); ?></td>
-                                <td><?php echo date("Y-m-d / h:i", strtotime($item->created_at)); ?></td>
+                                <td><?php echo formatted_date($item->created_at); ?></td>
                             </tr>
 
                         <?php endforeach; ?>
@@ -360,7 +360,7 @@
             </div>
 
             <div class="box-footer clearfix">
-                <a href="<?php echo admin_url(); ?>promoted-products-transactions"
+                <a href="<?php echo admin_url(); ?>featured-products-transactions"
                    class="btn btn-sm btn-default pull-right"><?php echo trans("view_all"); ?></a>
             </div>
         </div>
@@ -369,7 +369,7 @@
     <div class="col-lg-6 col-sm-12 col-xs-12">
         <div class="box box-primary box-sm">
             <div class="box-header with-border">
-                <h3 class="box-title"><?php echo trans("latest_product_reviews"); ?></h3>
+                <h3 class="box-title"><?php echo trans("latest_reviews"); ?></h3>
                 <div class="box-tools pull-right">
                     <button type="button" class="btn btn-box-tool" data-widget="collapse"><i
                                 class="fa fa-minus"></i>
@@ -386,7 +386,7 @@
                         <thead>
                         <tr>
                             <th><?php echo trans("id"); ?></th>
-                            <th><?php echo trans("name"); ?></th>
+                            <th><?php echo trans("username"); ?></th>
                             <th style="width: 60%"><?php echo trans("review"); ?></th>
                         </tr>
                         </thead>
@@ -499,17 +499,17 @@
                 <!-- /.box-header -->
                 <div class="box-body">
                     <ul class="users-list clearfix">
-
-                        <?php foreach ($latest_members as $item) : ?>
-                            <li>
-                                <a href="<?php echo base_url(); ?>profile/<?php echo $item->slug; ?>">
-                                    <img src="<?php echo get_user_avatar($item); ?>" alt="user" class="img-responsive">
-                                </a>
-                                <a href="<?php echo base_url(); ?>profile/<?php echo $item->slug; ?>" class="users-list-name"><?php echo html_escape($item->username); ?></a>
-                                <span class="users-list-date"><?php echo time_ago($item->created_at); ?></span>
-                            </li>
-
-                        <?php endforeach; ?>
+                        <?php if (!empty($latest_members)):
+                            foreach ($latest_members as $item) : ?>
+                                <li>
+                                    <a href="<?php echo generate_profile_url($item->slug); ?>">
+                                        <img src="<?php echo get_user_avatar($item); ?>" alt="user" class="img-responsive">
+                                    </a>
+                                    <a href="<?php echo generate_profile_url($item->slug); ?>" class="users-list-name"><?php echo html_escape($item->username); ?></a>
+                                    <span class="users-list-date"><?php echo time_ago($item->created_at); ?></span>
+                                </li>
+                            <?php endforeach;
+                        endif; ?>
                     </ul>
                     <!-- /.users-list -->
                 </div>

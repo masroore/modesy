@@ -356,7 +356,7 @@
                         <td style="text-align: center;">
                             <div style="height: 70px;width:100%;text-align: center;margin-bottom: 10px;">
                                 <a href="<?php echo base_url(); ?>">
-                                    <img src="<?php echo get_logo_email($general_settings); ?>" alt="" style="max-width: 180px;max-height: 70px;">
+                                    <img src="<?php echo get_logo_email($this->general_settings); ?>" alt="" style="max-width: 180px;max-height: 70px;">
                                 </a>
                             </div>
                         </td>

@@ -2,10 +2,15 @@
 
 <div class="box">
     <div class="box-header with-border">
-        <h3 class="box-title"><?php echo $title; ?></h3>
-        <a href="<?php echo admin_url(); ?>add-city" class="btn btn-sm btn-success" style="position: absolute;right: 20px;"><i class="fa fa-plus"></i> <?php echo trans("add_city"); ?></a>
-
-    </div><!-- /.box-header -->
+        <div class="left">
+            <h3 class="box-title"><?php echo $title; ?></h3>
+        </div>
+        <div class="right">
+            <a href="<?php echo admin_url(); ?>add-city" class="btn btn-success btn-add-new">
+                <i class="fa fa-plus"></i>&nbsp;&nbsp;<?php echo trans('add_city'); ?>
+            </a>
+        </div>
+    </div>
 
     <div class="box-body">
         <div class="row">
@@ -64,7 +69,7 @@
 
                                 <div class="item-table-filter">
                                     <label><?php echo trans("search"); ?></label>
-                                    <input name="q" class="form-control" placeholder="<?php echo trans("search"); ?>" type="search" value="<?php echo html_escape($this->input->get('q', true)); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+                                    <input name="q" class="form-control" placeholder="<?php echo trans("search"); ?>" type="search" value="<?php echo html_escape($this->input->get('q', true)); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
                                 </div>
 
                                 <div class="item-table-filter md-top-10" style="width: 65px; min-width: 65px;">

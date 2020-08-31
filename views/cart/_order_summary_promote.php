@@ -11,7 +11,7 @@
 						<div class="item-left">
 							<div class="img-cart-product">
 								<a href="<?php echo generate_product_url($product); ?>">
-									<img src="<?php echo $img_bg_product_small; ?>" data-src="<?php echo get_product_image($product->id, 'image_small'); ?>" alt="<?php echo html_escape($product->title); ?>" class="lazyload img-fluid img-product" onerror="this.src='<?php echo $img_bg_product_small; ?>'">
+									<img src="<?php echo base_url() . IMG_BG_PRODUCT_SMALL; ?>" data-src="<?php echo get_product_image($product->id, 'image_small'); ?>" alt="<?php echo html_escape($product->title); ?>" class="lazyload img-fluid img-product" onerror="this.src='<?php echo base_url() . IMG_BG_PRODUCT_SMALL; ?>'">
 								</a>
 							</div>
 						</div>
@@ -31,17 +31,17 @@
 							</div>
 							<div class="list-item">
 								<label><?php echo trans("price"); ?>:</label>
-								<strong class="lbl-price"><?php echo print_price($promoted_plan->total_amount, $payment_settings->promoted_products_payment_currency); ?></strong>
+								<strong class="lbl-price"><?php echo price_formatted($promoted_plan->total_amount, $this->payment_settings->promoted_products_payment_currency); ?></strong>
 							</div>
 						</div>
 					</div>
 				</div>
 				<p class="m-t-30">
-					<strong><?php echo trans("subtotal"); ?><span class="float-right"><?php echo print_price($promoted_plan->total_amount, $payment_settings->promoted_products_payment_currency); ?></span></strong>
+					<strong><?php echo trans("subtotal"); ?><span class="float-right"><?php echo price_formatted($promoted_plan->total_amount, $this->payment_settings->promoted_products_payment_currency); ?></span></strong>
 				</p>
 				<p class="line-seperator"></p>
 				<p>
-					<strong><?php echo trans("total"); ?><span class="float-right"><?php echo print_price($promoted_plan->total_amount, $payment_settings->promoted_products_payment_currency); ?></span></strong>
+					<strong><?php echo trans("total"); ?><span class="float-right"><?php echo price_formatted($promoted_plan->total_amount, $this->payment_settings->promoted_products_payment_currency); ?></span></strong>
 				</p>
 			<?php endif;
 		endif; ?>

@@ -2,7 +2,7 @@
 <?php if (!empty($custom_fields)):
     foreach ($custom_fields as $custom_field):
         if (!empty($custom_field)):
-            $category = get_category($custom_field->category_id);
+            $category = get_category($this->categories, $custom_field->category_id);
             $field_common_ids_array = $custom_field->field_common_ids; ?>
 
             <?php if ($custom_field->field_type == "text"): ?>

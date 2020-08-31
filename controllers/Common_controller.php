@@ -14,7 +14,7 @@ class Common_controller extends Core_Controller
      */
     public function admin_login()
     {
-        if (auth_check()) {
+        if ($this->auth_check) {
             redirect(lang_base_url());
         }
         $data['title'] = trans('login');
@@ -53,7 +53,7 @@ class Common_controller extends Core_Controller
      */
     public function logout()
     {
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         $this->auth_model->logout();

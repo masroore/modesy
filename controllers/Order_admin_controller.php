@@ -87,16 +87,27 @@ class Order_admin_controller extends Admin_Core_Controller
         $id = $this->input->post('id', true);
         $order_product = $this->order_admin_model->get_order_product($id);
         if (!empty($order_product)) {
-            if ($this->order_admin_model->update_order_product_status($id)) {
-
-                //add digital sale if payment received
+            if ($this->order_admin_model->update_order_product_status($order_product->id)) {
                 $order_status = $this->input->post('order_status', true);
-                if ('completed' == $order_status || 'payment_received' == $order_status) {
-                    $this->order_model->add_digital_sale($order_product->product_id, $order_product->order_id);
-                    //add seller earnings
-                    $this->earnings_model->add_seller_earnings($order_product);
+                if ('digital' == $order_product->product_type) {
+                    if ('completed' == $order_status || 'payment_received' == $order_status) {
+                        $this->order_model->add_digital_sale($order_product->product_id, $order_product->order_id);
+                        //add seller earnings
+                        $this->earnings_model->add_seller_earnings($order_product);
+                    }
+                } else {
+                    if ('completed' == $order_status) {
+                        //add seller earnings
+                        $this->earnings_model->add_seller_earnings($order_product);
+                    } else {
+                        //check if earning added before
+                        $order = $this->order_admin_model->get_order($order_product->order_id);
+                        if (!empty($order) && !empty($this->earnings_model->get_earning_by_user_id($order_product->seller_id, $order->order_number))) {
+                            //remove seller earnings
+                            $this->earnings_model->remove_seller_earnings($order_product);
+                        }
+                    }
                 }
-
                 $this->session->set_flashdata('success', trans('msg_updated'));
             } else {
                 $this->session->set_flashdata('error', trans('msg_error'));
@@ -215,6 +226,22 @@ class Order_admin_controller extends Admin_Core_Controller
         } else {
             $this->session->set_flashdata('error', trans('msg_error'));
         }
+    }
+
+    /**
+     * Invoices.
+     */
+    public function invoices()
+    {
+        $data['title'] = trans('invoices');
+        $data['form_action'] = admin_url() . 'invoices';
+
+        $pagination = $this->paginate(admin_url() . 'invoices', $this->order_admin_model->get_invoices_count());
+        $data['invoices'] = $this->order_admin_model->get_paginated_invoices($pagination['per_page'], $pagination['offset']);
+
+        $this->load->view('admin/includes/_header', $data);
+        $this->load->view('admin/order/invoices', $data);
+        $this->load->view('admin/includes/_footer');
     }
 
     /**

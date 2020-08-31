@@ -60,7 +60,7 @@
                                         $user = get_user($item->user_id);
                                         if (!empty($user)):?>
                                             <div class="table-orders-user">
-                                                <a href="<?php echo base_url(); ?>profile/<?php echo $user->slug; ?>" target="_blank">
+                                                <a href="<?php echo generate_profile_url($user->slug); ?>" target="_blank">
                                                     <?php echo html_escape($user->username); ?>
                                                 </a>
                                             </div>
@@ -72,7 +72,7 @@
                                 <td><?php echo $item->payment_amount; ?></td>
                                 <td><?php echo $item->payment_status; ?></td>
                                 <td><?php echo $item->ip_address; ?></td>
-                                <td><?php echo $item->created_at; ?></td>
+                                <td><?php echo formatted_date($item->created_at); ?></td>
                                 <td>
                                     <div class="dropdown">
                                         <button class="btn bg-purple dropdown-toggle btn-select-option"

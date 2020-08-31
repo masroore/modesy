@@ -29,7 +29,7 @@
 
             <div class="col-sm-12 col-md-9">
                 <div class="profile-tab-content">
-                    <?php if (auth_check() && user()->id == $user->id):
+                    <?php if ($this->auth_check && $this->auth_user->id == $user->id):
                         foreach ($products as $product):
                             $this->load->view('product/_product_item_profile', ['product' => $product, 'promoted_badge' => true]);
                         endforeach;

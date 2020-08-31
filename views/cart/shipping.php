@@ -10,7 +10,7 @@
                             <div class="left">
                                 <h1 class="cart-section-title"><?php echo trans("checkout"); ?></h1>
 
-                                <?php if (!auth_check()): ?>
+                                <?php if (!$this->auth_check): ?>
                                     <div class="row m-b-15">
                                         <div class="col-12 col-md-6">
                                             <p><?php echo trans("checking_out_as_guest"); ?></p>
@@ -22,7 +22,7 @@
                                 <?php endif; ?>
                                 <div class="tab-checkout tab-checkout-open m-t-0">
                                     <h2 class="title">1.&nbsp;&nbsp;<?php echo trans("shipping_information"); ?></h2>
-                                    <?php echo form_open("cart_controller/shipping_post", ['id' => 'form_validate']); ?>
+                                    <?php echo form_open("shipping-post", ['id' => 'form_validate']); ?>
                                     <div class="row">
                                         <div class="col-12 cart-form-shipping-address">
                                             <div class="form-group">
@@ -64,7 +64,7 @@
                                                         <div class="selectdiv">
                                                             <select id="countries" name="shipping_country_id" class="form-control" required>
                                                                 <option value="" selected><?php echo trans("select_country"); ?></option>
-                                                                <?php foreach ($countries as $item): ?>
+                                                                <?php foreach ($this->countries as $item): ?>
                                                                     <option value="<?php echo $item->id; ?>" <?php echo ($shipping_address->shipping_country_id == $item->id) ? 'selected' : ''; ?>><?php echo html_escape($item->name); ?></option>
                                                                 <?php endforeach; ?>
                                                             </select>
@@ -130,7 +130,7 @@
                                                         <div class="selectdiv">
                                                             <select id="countries" name="billing_country_id" class="form-control" required>
                                                                 <option value="" selected><?php echo trans("select_country"); ?></option>
-                                                                <?php foreach ($countries as $item): ?>
+                                                                <?php foreach ($this->countries as $item): ?>
                                                                     <option value="<?php echo $item->id; ?>" <?php echo ($shipping_address->billing_country_id == $item->id) ? 'selected' : ''; ?>><?php echo html_escape($item->name); ?></option>
                                                                 <?php endforeach; ?>
                                                             </select>
@@ -166,7 +166,7 @@
                                     </div>
 
                                     <div class="form-group m-t-15">
-                                        <a href="<?php echo lang_base_url(); ?>cart" class="link-underlined link-return-cart"><&nbsp;<?php echo trans("return_to_cart"); ?></a>
+                                        <a href="<?php echo generate_url("cart"); ?>" class="link-underlined link-return-cart"><&nbsp;<?php echo trans("return_to_cart"); ?></a>
                                         <button type="submit" name="submit" value="update" class="btn btn-lg btn-custom float-right"><?php echo trans("continue_to_payment_method") ?></button>
                                     </div>
                                     <?php echo form_close(); ?>

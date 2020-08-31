@@ -33,13 +33,9 @@
             endif; ?>
         </ul>
 
-        <div class="error-message error-message-img-upload">
-            <p class="m-b-5 text-center">
-            </p>
-        </div>
+        <div class="error-message-img-upload"></div>
 
     </div>
-
 </div>
 
 <p class="images-exp"><i class="icon-exclamation-circle"></i><?php echo trans("product_image_exp"); ?></p>
@@ -60,14 +56,15 @@
 <script>
     $(function () {
         $('#drag-and-drop-zone').dmUploader({
-            url: '<?php echo base_url(); ?>file_controller/upload_image_session',
+            url: '<?php echo base_url(); ?>upload-image-session-post',
             maxFileSize: <?php echo $this->general_settings->max_file_size_image; ?>,
             queue: true,
             allowedTypes: 'image/*',
             extFilter: ["jpg", "jpeg", "png", "gif"],
             extraData: function (id) {
                 return {
-                    "file_id": id
+                    "file_id": id,
+                    "<?php echo $this->security->get_csrf_token_name(); ?>": $.cookie(csfr_cookie_name)
                 };
             },
             onDragEnter: function () {
@@ -103,11 +100,12 @@
             onUploadSuccess: function (id, data) {
                 var data = {
                     "file_id": id,
+                    "sys_lang_id": sys_lang_id
                 };
                 data[csfr_token_name] = $.cookie(csfr_cookie_name);
                 $.ajax({
                     type: "POST",
-                    url: base_url + "file_controller/get_sess_uploaded_image",
+                    url: base_url + "get-sess-uploaded-image-post",
                     data: data,
                     success: function (response) {
                         document.getElementById("uploaderFile" + id).innerHTML = response;
@@ -129,15 +127,18 @@
             onFallbackMode: function () {
             },
             onFileSizeError: function (file) {
-                $(".error-message-img-upload").show();
-                $(".error-message-img-upload p").html("<?php echo trans('file_too_large') . ' ' . formatSizeUnits($this->general_settings->max_file_size_image); ?>");
+                $(".error-message-img-upload").html("<?php echo trans('file_too_large') . ' ' . formatSizeUnits($this->general_settings->max_file_size_image); ?>");
                 setTimeout(function () {
-                    $(".error-message-img-upload").fadeOut("slow");
-                }, 4000)
+                    $(".error-message-img-upload").empty();
+                }, 4000);
             },
             onFileTypeError: function (file) {
             },
             onFileExtError: function (file) {
+                $(".error-message-img-upload").html("<?php echo trans('invalid_file_type'); ?>");
+                setTimeout(function () {
+                    $(".error-message-img-upload").empty();
+                }, 4000);
             },
         });
     });

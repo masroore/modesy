@@ -45,44 +45,25 @@ if (isset($_POST['btn_admin'])) {
         mysqli_query($connection, "INSERT INTO users (username, slug, email, email_status, token, password, role, user_type) VALUES ('" . $admin_username . "', '" . $slug . "', '" . $admin_email . "',1,'" . $token . "','" . $password . "','admin','registered')");
         mysqli_query($connection, "UPDATE general_settings SET mds_key='" . $license_code . "', purchase_code='" . $purchase_code . "', timezone='" . $timezone . "' WHERE id='1'");
 
-        //add cities
-        mysqli_query($connection, $insert_cities_1);
-        mysqli_query($connection, $insert_cities_2);
-        mysqli_query($connection, $insert_cities_3);
-        mysqli_query($connection, $insert_cities_4);
-        mysqli_query($connection, $insert_cities_5);
-        mysqli_query($connection, $insert_cities_6);
-        mysqli_query($connection, $insert_cities_7);
-        mysqli_query($connection, $insert_cities_8);
-        mysqli_query($connection, $insert_cities_9);
-        mysqli_query($connection, $insert_cities_10);
+        for ($i = 1; $i <= 30; $i++) {
+            mysqli_query($connection, $array_cities[$i]);
+        }
         sleep(1);
-        mysqli_query($connection, $insert_cities_11);
-        mysqli_query($connection, $insert_cities_12);
-        mysqli_query($connection, $insert_cities_13);
-        mysqli_query($connection, $insert_cities_14);
-        mysqli_query($connection, $insert_cities_15);
-        mysqli_query($connection, $insert_cities_16);
-        mysqli_query($connection, $insert_cities_17);
-        mysqli_query($connection, $insert_cities_18);
-        mysqli_query($connection, $insert_cities_19);
-        mysqli_query($connection, $insert_cities_20);
+        for ($i = 31; $i <= 60; $i++) {
+            mysqli_query($connection, $array_cities[$i]);
+        }
         sleep(1);
-        mysqli_query($connection, $insert_cities_21);
-        mysqli_query($connection, $insert_cities_22);
-        mysqli_query($connection, $insert_cities_23);
-        mysqli_query($connection, $insert_cities_24);
-        mysqli_query($connection, $insert_cities_25);
-        mysqli_query($connection, $insert_cities_26);
-        mysqli_query($connection, $insert_cities_27);
-        mysqli_query($connection, $insert_cities_28);
-        mysqli_query($connection, $insert_cities_29);
-        mysqli_query($connection, $insert_cities_30);
+        for ($i = 61; $i <= 91; $i++) {
+            mysqli_query($connection, $array_cities[$i]);
+        }
         sleep(1);
-        sleep(1);
-
         // close connection
         mysqli_close($connection);
+
+        setcookie('db_host', '', time() - 3600);
+        setcookie('db_name', '', time() - 3600);
+        setcookie('db_user', '', time() - 3600);
+        setcookie('db_password', '', time() - 3600);
 
         $redir = ((isset($_SERVER['HTTPS']) && 'on' == $_SERVER['HTTPS']) ? 'https' : 'http');
         $redir .= '://' . $_SERVER['HTTP_HOST'];
@@ -199,10 +180,16 @@ if (isset($_POST['btn_admin'])) {
                                         <div class="tab_1">
                                             <h1 class="step-title">System Settings</h1>
                                             <div class="form-group">
-                                                <label for="email">Timezone</label>
-                                                <input type="text" class="form-control form-input" name="timezone" placeholder="Timezone" value="<?php echo (isset($timezone)) ? @$timezone : 'America/New_York'; ?>" required>
-                                                <p class="text-right"><a href="http://php.net/manual/en/timezones.php" target="_blank">See Timeszones</a></p>
-                                            </div>
+                                                <select name="timezone" class="form-control" required>
+                                                    <option value="">Select Your Timezone</option>
+                                                    <?php $timezones = timezone_identifiers_list();
+                                                    if (!empty($timezones)):
+                                                        foreach ($timezones as $timezone):?>
+                                                            <option value="<?php echo $timezone; ?>"><?php echo $timezone; ?></option>
+                                                        <?php endforeach;
+                                                    endif; ?>
+                                                </select>
+                                            </div><br>
                                             <h1 class="step-title">Admin Account</h1>
                                             <div class="form-group">
                                                 <label for="email">Username</label>

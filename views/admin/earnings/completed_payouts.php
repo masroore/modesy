@@ -46,7 +46,7 @@
 									<?php $user = get_user($item->user_id);
 									if (!empty($user)):?>
 										<div class="table-orders-user">
-											<a href="<?php echo base_url(); ?>profile/<?php echo $user->slug; ?>" target="_blank">
+											<a href="<?php echo generate_profile_url($user->slug); ?>" target="_blank">
 												<img src="<?php echo get_user_avatar($user); ?>" alt="buyer" class="img-responsive" style="height: 50px;">
 												<?php echo html_escape($user->username); ?>
 											</a>
@@ -54,7 +54,7 @@
 									<?php endif; ?>
 								</td>
 								<td><?php echo trans($item->payout_method); ?></td>
-								<td><?php echo print_price($item->amount, $item->currency); ?></td>
+								<td><?php echo price_formatted($item->amount, $item->currency); ?></td>
 								<td>
 									<?php if ($item->status == 1) {
 										echo trans("completed");
@@ -62,7 +62,7 @@
 										echo trans("pending");
 									} ?>
 								</td>
-								<td><?php echo $item->created_at; ?></td>
+								<td><?php echo formatted_date($item->created_at); ?></td>
 								<td>
 									<div class="dropdown">
 										<button class="btn bg-purple dropdown-toggle btn-select-option"

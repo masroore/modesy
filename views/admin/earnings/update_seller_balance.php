@@ -24,7 +24,7 @@
                 </div>
                 <div class="form-group">
                     <label class="control-label"><?php echo trans('balance'); ?></label>
-                    <input type="text" name="balance" class="form-control form-input price-input" value="<?php echo price_format_input($seller->balance); ?>" onpaste="return false;" maxlength="32" required>
+                    <input type="text" name="balance" class="form-control form-input price-input" value="<?php echo get_price($seller->balance, 'input'); ?>" onpaste="return false;" maxlength="32" required>
                 </div>
             </div>
             <!-- /.box-body -->

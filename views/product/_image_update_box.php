@@ -33,13 +33,9 @@
             endif; ?>
         </ul>
 
-        <div class="error-message error-message-img-upload">
-            <p class="m-b-5 text-center">
-            </p>
-        </div>
+        <div class="error-message error-message-file-upload"></div>
 
     </div>
-
 </div>
 
 <p class="images-exp"><i class="icon-exclamation-circle"></i><?php echo trans("product_image_exp"); ?></p>
@@ -60,16 +56,17 @@
 
 <script>
     $('#drag-and-drop-zone').dmUploader({
-        url: '<?php echo base_url(); ?>file_controller/upload_image',
+        url: '<?php echo base_url(); ?>upload-image-post',
         maxFileSize: <?php echo $this->general_settings->max_file_size_image; ?>,
         queue: true,
         allowedTypes: 'image/*',
         extFilter: ["jpg", "jpeg", "png", "gif"],
-        extraData: function (id) {
-            return {
-                "product_id": <?php echo $product->id; ?>
-            };
-        },
+		extraData: function (id) {
+			return {
+				"product_id": <?php echo $product->id; ?>,
+				"<?php echo $this->security->get_csrf_token_name(); ?>": $.cookie(csfr_cookie_name)
+			};
+		},
         onDragEnter: function () {
             this.addClass('active');
         },
@@ -104,11 +101,12 @@
             var obj = JSON.parse(data);
             var data = {
                 "image_id": obj.image_id,
+                "sys_lang_id": sys_lang_id
             };
             data[csfr_token_name] = $.cookie(csfr_cookie_name);
             $.ajax({
                 type: "POST",
-                url: base_url + "file_controller/get_uploaded_image",
+                url: base_url + "get-uploaded-image-post",
                 data: data,
                 success: function (response) {
                     document.getElementById("uploaderFile" + id).innerHTML = response;
@@ -137,6 +135,10 @@
         onFileTypeError: function (file) {
         },
         onFileExtError: function (file) {
+            $(".error-message-file-upload").html("<?php echo trans('invalid_file_type'); ?>");
+            setTimeout(function () {
+                $(".error-message-file-upload").empty();
+            }, 4000);
         },
     });
 </script>

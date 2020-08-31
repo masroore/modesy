@@ -29,7 +29,7 @@
                         <!-- include message block -->
                         <?php $this->load->view('partials/_messages'); ?>
 
-                        <?php echo form_open_multipart("profile_controller/shop_settings_post"); ?>
+                        <?php echo form_open_multipart("shop-settings-post"); ?>
                         <div class="form-group">
                             <label class="control-label"><?php echo trans("shop_name"); ?></label>
                             <input type="text" name="shop_name" class="form-control form-input" value="<?php echo html_escape($user->shop_name); ?>" placeholder="<?php echo trans("shop_name"); ?>" maxlength="<?php echo $this->username_maxlength; ?>">

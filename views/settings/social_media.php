@@ -29,49 +29,49 @@
                         <!-- include message block -->
                         <?php $this->load->view('partials/_messages'); ?>
 
-                        <?php echo form_open("profile_controller/social_media_post", ['id' => 'form_validate']); ?>
+                        <?php echo form_open("social-media-post", ['id' => 'form_validate']); ?>
 
                         <div class="form-group">
                             <label class="control-label"><?php echo trans('facebook_url'); ?></label>
                             <input type="text" class="form-control form-input" name="facebook_url"
-                                   placeholder="<?php echo trans('facebook_url'); ?>" value="<?php echo html_escape($user->facebook_url); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+                                   placeholder="<?php echo trans('facebook_url'); ?>" value="<?php echo html_escape($user->facebook_url); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
                         </div>
 
                         <div class="form-group">
                             <label class="control-label"><?php echo trans('twitter_url'); ?></label>
                             <input type="text" class="form-control form-input"
                                    name="twitter_url" placeholder="<?php echo trans('twitter_url'); ?>"
-                                   value="<?php echo html_escape($user->twitter_url); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+                                   value="<?php echo html_escape($user->twitter_url); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
                         </div>
 
                         <div class="form-group">
                             <label class="control-label"><?php echo trans('instagram_url'); ?></label>
                             <input type="text" class="form-control form-input" name="instagram_url" placeholder="<?php echo trans('instagram_url'); ?>"
-                                   value="<?php echo html_escape($user->instagram_url); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+                                   value="<?php echo html_escape($user->instagram_url); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
                         </div>
 
                         <div class="form-group">
                             <label class="control-label"><?php echo trans('pinterest_url'); ?></label>
                             <input type="text" class="form-control form-input" name="pinterest_url" placeholder="<?php echo trans('pinterest_url'); ?>"
-                                   value="<?php echo html_escape($user->pinterest_url); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+                                   value="<?php echo html_escape($user->pinterest_url); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
                         </div>
 
                         <div class="form-group">
                             <label class="control-label"><?php echo trans('linkedin_url'); ?></label>
                             <input type="text" class="form-control form-input" name="linkedin_url" placeholder="<?php echo trans('linkedin_url'); ?>"
-                                   value="<?php echo html_escape($user->linkedin_url); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+                                   value="<?php echo html_escape($user->linkedin_url); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
                         </div>
 
                         <div class="form-group">
                             <label class="control-label"><?php echo trans('vk_url'); ?></label>
                             <input type="text" class="form-control form-input" name="vk_url"
-                                   placeholder="<?php echo trans('vk_url'); ?>" value="<?php echo html_escape($user->vk_url); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+                                   placeholder="<?php echo trans('vk_url'); ?>" value="<?php echo html_escape($user->vk_url); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
                         </div>
 
                         <div class="form-group">
                             <label class="control-label"><?php echo trans('youtube_url'); ?></label>
                             <input type="text" class="form-control form-input" name="youtube_url"
-                                   placeholder="<?php echo trans('youtube_url'); ?>" value="<?php echo html_escape($user->youtube_url); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+                                   placeholder="<?php echo trans('youtube_url'); ?>" value="<?php echo html_escape($user->youtube_url); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
                         </div>
 
                         <button type="submit" class="btn btn-md btn-custom"><?php echo trans("save_changes") ?></button>

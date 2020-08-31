@@ -8,7 +8,7 @@ class Message_model extends CI_Model
     public function add_conversation()
     {
         $data = [
-            'sender_id' => $this->input->post('sender_id', true),
+            'sender_id' => $this->auth_user->id,
             'receiver_id' => $this->input->post('receiver_id', true),
             'subject' => $this->input->post('subject', true),
             'created_at' => date('Y-m-d H:i:s'),
@@ -37,7 +37,7 @@ class Message_model extends CI_Model
         $conversation_id = clean_number($conversation_id);
         $data = [
             'conversation_id' => $conversation_id,
-            'sender_id' => $this->input->post('sender_id', true),
+            'sender_id' => $this->auth_user->id,
             'receiver_id' => $this->input->post('receiver_id', true),
             'message' => $this->input->post('message', true),
             'is_read' => 0,
@@ -85,12 +85,31 @@ class Message_model extends CI_Model
         $user_id = clean_number($user_id);
         $this->db->join('conversation_messages', 'conversation_messages.conversation_id = conversations.id');
         $this->db->select('conversations.*, conversation_messages.is_read as is_read');
+        $this->db->where('deleted_user_id != ', $this->auth_user->id);
+        $this->db->group_start();
         $this->db->where('conversations.sender_id', $user_id);
         $this->db->or_where('conversations.receiver_id', $user_id);
+        $this->db->group_end();
         $this->db->order_by('conversations.created_at', 'DESC');
         $query = $this->db->get('conversations');
 
         return $query->row();
+    }
+
+    //get user conversation
+    public function get_user_conversation($id)
+    {
+        $this->db->where('conversation_id', clean_number($id));
+        $this->db->where('deleted_user_id != ', $this->auth_user->id);
+        $query = $this->db->get('conversation_messages');
+        if ($query->num_rows() > 0) {
+            $this->db->where('id', $id);
+            $query = $this->db->get('conversations');
+
+            return $query->row();
+        }
+
+        return false;
     }
 
     //get conversation
@@ -116,10 +135,9 @@ class Message_model extends CI_Model
     //get unread conversation count
     public function get_unread_conversations_count($receiver_id)
     {
-        $receiver_id = clean_number($receiver_id);
         $this->db->join('conversation_messages', 'conversation_messages.conversation_id = conversations.id');
         $this->db->select('conversations.*, conversation_messages.is_read as is_read');
-        $this->db->where('conversation_messages.receiver_id', $receiver_id);
+        $this->db->where('conversation_messages.receiver_id', clean_number($receiver_id));
         $this->db->where('conversation_messages.is_read', 0);
         $this->db->distinct();
         $query = $this->db->get('conversations');

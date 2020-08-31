@@ -16,7 +16,7 @@
 						<div class="col-sm-12 col-lg-7">
 							<div class="left">
 								<h1 class="cart-section-title"><?php echo trans("checkout"); ?></h1>
-								<?php if (!auth_check()): ?>
+								<?php if (!$this->auth_check): ?>
 									<div class="row m-b-15">
 										<div class="col-12 col-md-6">
 											<p><?php echo trans("checking_out_as_guest"); ?></p>
@@ -28,30 +28,30 @@
 								<?php endif; ?>
 								<?php if (!empty($cart_has_physical_product) && $this->form_settings->shipping == 1 && $mds_payment_type != 'promote'): ?>
 									<div class="tab-checkout tab-checkout-closed">
-										<a href="<?php echo lang_base_url(); ?>cart/shipping"><h2 class=" title">1.&nbsp;&nbsp;<?php echo trans("shipping_information"); ?></h2></a>
-										<a href="<?php echo lang_base_url(); ?>cart/shipping" class="link-underlined"><?php echo trans("edit"); ?></a>
+										<a href="<?php echo generate_url("cart", "shipping"); ?>"><h2 class=" title">1.&nbsp;&nbsp;<?php echo trans("shipping_information"); ?></h2></a>
+										<a href="<?php echo generate_url("cart", "shipping"); ?>" class="link-underlined"><?php echo trans("edit"); ?></a>
 									</div>
 								<?php endif; ?>
 
 								<div class="tab-checkout tab-checkout-closed">
 									<?php if ($mds_payment_type == 'promote'): ?>
-										<a href="<?php echo lang_base_url(); ?>cart/payment-method?payment_type=promote"><h2 class=" title">
+										<a href="<?php echo generate_url("cart", "payment_method"); ?>?payment_type=promote"><h2 class=" title">
 												<?php if (!empty($cart_has_physical_product) && $mds_payment_type != 'promote') {
 													echo '2.';
 												} else {
 													echo '1.';
 												} ?>
 												&nbsp;<?php echo trans("payment_method"); ?></h2></a>
-										<a href="<?php echo lang_base_url(); ?>cart/payment-method?payment_type=promote" class="link-underlined"><?php echo trans("edit"); ?></a>
+										<a href="<?php echo generate_url("cart","payment_method"); ?>?payment_type=promote" class="link-underlined"><?php echo trans("edit"); ?></a>
 									<?php else: ?>
-										<a href="<?php echo lang_base_url(); ?>cart/payment-method"><h2 class=" title">
+										<a href="<?php echo generate_url("cart","payment_method"); ?>"><h2 class=" title">
 												<?php if (!empty($cart_has_physical_product) && $this->form_settings->shipping == 1 && $mds_payment_type != 'promote') {
 													echo '2.';
 												} else {
 													echo '1.';
 												} ?>
 												&nbsp;<?php echo trans("payment_method"); ?></h2></a>
-										<a href="<?php echo lang_base_url(); ?>cart/payment-method" class="link-underlined"><?php echo trans("edit"); ?></a>
+										<a href="<?php echo generate_url("cart","payment_method"); ?>" class="link-underlined"><?php echo trans("edit"); ?></a>
 									<?php endif; ?>
 								</div>
 

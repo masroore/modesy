@@ -154,8 +154,7 @@ class Sitemap_model extends CI_Model
     public function add_product_category_urls($frequency, $last_modification, $priority, $lastmod_time)
     {
         $priority_value = 0.8;
-
-        $categories = $this->category_model->get_sitemap_categories();
+        $categories = $this->category_model->get_categories();
         if (!empty($categories)) {
             foreach ($categories as $category) {
                 $this->sitemap_model->add(generate_category_url($category), $frequency, $last_modification, $priority, $priority_value, $lastmod_time);
@@ -169,7 +168,6 @@ class Sitemap_model extends CI_Model
     public function add_product_urls($frequency, $last_modification, $priority, $lastmod_time)
     {
         $priority_value = 0.8;
-
         $products = $this->product_model->get_products();
         if (!empty($products)) {
             foreach ($products as $product) {
@@ -189,7 +187,7 @@ class Sitemap_model extends CI_Model
         if (!empty($categories)) {
             foreach ($categories as $category) {
                 $base_url = $this->get_base_url($category->lang_id);
-                $this->sitemap_model->add($base_url . 'blog/' . $category->slug, $frequency, $last_modification, $priority, $priority_value, $lastmod_time);
+                $this->sitemap_model->add($base_url . get_route('blog') . '/' . $category->slug, $frequency, $last_modification, $priority, $priority_value, $lastmod_time);
             }
         }
     }
@@ -204,7 +202,7 @@ class Sitemap_model extends CI_Model
         if (!empty($posts)) {
             foreach ($posts as $post) {
                 $base_url = $this->get_base_url($post->lang_id);
-                $this->sitemap_model->add($base_url . 'blog/' . $post->category_slug . '/' . $post->slug, $frequency, $last_modification, $priority, $priority_value, $lastmod_time);
+                $this->sitemap_model->add($base_url . get_route('blog') . '/' . $post->category_slug . '/' . $post->slug, $frequency, $last_modification, $priority, $priority_value, $lastmod_time);
             }
         }
     }
@@ -220,7 +218,7 @@ class Sitemap_model extends CI_Model
             foreach ($tags as $tag) {
                 $tag = $this->tag_model->get_post_tag($tag->tag_slug);
                 $base_url = $this->get_base_url($tag->tag_lang_id);
-                $this->sitemap_model->add($base_url . 'blog/tag/' . $tag->tag_slug, $frequency, $last_modification, $priority, $priority_value, $lastmod_time);
+                $this->sitemap_model->add($base_url . get_route('blog') . '/' . get_route('tag') . '/' . $tag->tag_slug, $frequency, $last_modification, $priority, $priority_value, $lastmod_time);
             }
         }
     }
@@ -279,13 +277,5 @@ class Sitemap_model extends CI_Model
             }
         }
         $xml->saveXML($full_path);
-    }
-
-    //generate blog url
-    public function generate_post_url($post, $base_url)
-    {
-        if (!empty($post)) {
-            return $base_url . 'blog' . '/' . $post->category_slug . '/' . $post->slug;
-        }
     }
 }

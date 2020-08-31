@@ -5,9 +5,9 @@
 <!-- /.content-wrapper -->
 <footer class="main-footer">
     <div class="pull-right hidden-xs">
-        <b style="font-weight: 600;">Version</b> 1.5.3
+        <b style="font-weight: 600;">Version</b> 1.6
     </div>
-    <strong style="font-weight: 600;"><?php echo html_escape($settings->copyright); ?></strong>
+    <strong style="font-weight: 600;"><?php echo html_escape($this->settings->copyright); ?></strong>
 </footer>
 </div>
 <!-- ./wrapper -->
@@ -41,7 +41,7 @@
 
 <script src="<?php echo base_url(); ?>assets/admin/vendor/magnific-popup/jquery.magnific-popup.min.js"></script>
 <!-- Custom js -->
-<script src="<?php echo base_url(); ?>assets/admin/js/script.js"></script>
+<script src="<?php echo base_url(); ?>assets/admin/js/script-1.6.js"></script>
 <!-- Ckeditor -->
 <script>
     var ckEditor = document.getElementById('ckEditor');
@@ -127,7 +127,7 @@
         $select = $('<select class="form-control input-sm"><select/>').appendTo('#table_dropdown');
 
         $('<option/>').val('').text('<?php echo trans("all"); ?>').appendTo($select);
-        <?php foreach ($languages as $lang): ?>
+        <?php foreach ($this->languages as $lang): ?>
         $('<option/>').val('<?php echo $lang->name; ?>').text('<?php echo $lang->name; ?>').appendTo($select);
         <?php endforeach; ?>
 

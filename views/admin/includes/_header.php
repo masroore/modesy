@@ -4,10 +4,10 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title><?php echo html_escape($title); ?> - <?php echo html_escape($general_settings->application_name); ?></title>
+    <title><?php echo html_escape($title); ?> - <?php echo html_escape($this->general_settings->application_name); ?></title>
     <!-- Tell the browser to be responsive to screen width -->
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-    <link rel="shortcut icon" type="image/png" href="<?php echo get_favicon($general_settings); ?>"/>
+    <link rel="shortcut icon" type="image/png" href="<?php echo get_favicon($this->general_settings); ?>"/>
     <!-- Google Font -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
     <!-- Font Awesome -->
@@ -55,7 +55,7 @@
             <!-- mini logo for sidebar mini 50x50 pixels -->
             <span class="logo-mini"></span>
             <!-- logo for regular state and mobile devices -->
-            <span class="logo-lg"><b><?php echo html_escape($general_settings->application_name); ?></b> <?php echo trans("panel"); ?></span>
+            <span class="logo-lg"><b><?php echo html_escape($this->general_settings->application_name); ?></b> <?php echo trans("panel"); ?></span>
         </a>
         <!-- Header Navbar: style can be found in header.less -->
         <nav class="navbar navbar-static-top">
@@ -71,19 +71,19 @@
                     </li>
                     <li class="dropdown user user-menu">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                            <img src="<?php echo get_user_avatar(user()); ?>" class="user-image" alt="">
-                            <span class="hidden-xs"><?php echo user()->username; ?> <i class="fa fa-caret-down"></i> </span>
+                            <img src="<?php echo get_user_avatar($this->auth_user); ?>" class="user-image" alt="">
+                            <span class="hidden-xs"><?php echo $this->auth_user->username; ?> <i class="fa fa-caret-down"></i> </span>
                         </a>
 
                         <ul class="dropdown-menu  pull-right" role="menu" aria-labelledby="user-options">
                             <li>
-                                <a href="<?php echo base_url(); ?>profile/<?php echo user()->slug; ?>"><i class="fa fa-user"></i> <?php echo trans("profile"); ?></a>
+                                <a href="<?php echo generate_profile_url($this->auth_user->slug); ?>"><i class="fa fa-user"></i> <?php echo trans("profile"); ?></a>
                             </li>
                             <li>
-                                <a href="<?php echo base_url(); ?>settings"><i class="fa fa-cog"></i> <?php echo trans("update_profile"); ?></a>
+                                <a href="<?php echo generate_url("settings"); ?>"><i class="fa fa-cog"></i> <?php echo trans("update_profile"); ?></a>
                             </li>
                             <li>
-                                <a href="<?php echo base_url(); ?>settings/change-password"><i class="fa fa-lock"></i> <?php echo trans("change_password"); ?></a>
+                                <a href="<?php echo generate_url("settings", "change_password"); ?>"><i class="fa fa-lock"></i> <?php echo trans("change_password"); ?></a>
                             </li>
                             <li class="divider"></li>
                             <li>
@@ -103,11 +103,11 @@
             <!-- Sidebar user panel -->
             <div class="user-panel">
                 <div class="pull-left image">
-                    <img src="<?php echo get_user_avatar(user()); ?>" class="img-circle" alt="">
+                    <img src="<?php echo get_user_avatar($this->auth_user); ?>" class="img-circle" alt="">
                 </div>
                 <div class="pull-left info">
-                    <p><?php echo user()->username; ?></p>
-                    <a href="#"><i class="fa fa-circle text-success"></i> Online</a>
+                    <p><?php echo $this->auth_user->username; ?></p>
+                    <a href="#"><i class="fa fa-circle text-success"></i> <?php echo trans("online"); ?></a>
                 </div>
             </div>
 
@@ -126,6 +126,12 @@
                         <span><?php echo trans("navigation"); ?></span>
                     </a>
                 </li>
+                <li>
+                    <a href="<?php echo admin_url(); ?>slider">
+                        <i class="fa fa-sliders"></i>
+                        <span><?php echo trans("slider"); ?></span>
+                    </a>
+                </li>
                 <li class="treeview">
                     <a href="#">
                         <i class="fa fa-shopping-cart"></i>
@@ -136,6 +142,7 @@
                         <li><a href="<?php echo admin_url(); ?>orders"> <?php echo trans("orders"); ?></a></li>
                         <li><a href="<?php echo admin_url(); ?>transactions"> <?php echo trans("transactions"); ?></a></li>
                         <li><a href="<?php echo admin_url(); ?>order-bank-transfers"> <?php echo trans("bank_transfer_notifications"); ?></a></li>
+                        <li><a href="<?php echo admin_url(); ?>invoices"> <?php echo trans("invoices"); ?></a></li>
                     </ul>
                 </li>
                 <li>
@@ -151,10 +158,10 @@
                         <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
                     </a>
                     <ul class="treeview-menu">
+                        <li><a href="<?php echo generate_url("sell_now"); ?>" target="_blank"> <?php echo trans("add_product"); ?></a></li>
                         <li><a href="<?php echo admin_url(); ?>products"> <?php echo trans("products"); ?></a></li>
                         <li><a href="<?php echo admin_url(); ?>pending-products"> <?php echo trans("pending_products"); ?></a></li>
                         <li><a href="<?php echo admin_url(); ?>hidden-products"> <?php echo trans("hidden_products"); ?></a></li>
-                        <li><a href="<?php echo admin_url(); ?>sold-products"> <?php echo trans("sold_products"); ?></a></li>
                         <li><a href="<?php echo admin_url(); ?>drafts"> <?php echo trans("drafts"); ?></a></li>
                         <li><a href="<?php echo admin_url(); ?>deleted-products"> <?php echo trans("deleted_products"); ?></a></li>
                     </ul>
@@ -162,30 +169,24 @@
                 <li class="treeview">
                     <a href="#">
                         <i class="fa fa-dollar" aria-hidden="true"></i>
-                        <span><?php echo trans("promoted_products"); ?></span>
+                        <span><?php echo trans("featured_products"); ?></span>
                         <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
                     </a>
                     <ul class="treeview-menu">
-                        <li><a href="<?php echo admin_url(); ?>promoted-products"> <?php echo trans("products"); ?></a></li>
-                        <li><a href="<?php echo admin_url(); ?>promoted-products-pricing"> <?php echo trans("pricing"); ?></a></li>
-                        <li><a href="<?php echo admin_url(); ?>promoted-products-transactions"> <?php echo trans("transactions"); ?></a></li>
+                        <li><a href="<?php echo admin_url(); ?>featured-products"> <?php echo trans("products"); ?></a></li>
+                        <li><a href="<?php echo admin_url(); ?>featured-products-pricing"> <?php echo trans("pricing"); ?></a></li>
+                        <li><a href="<?php echo admin_url(); ?>featured-products-transactions"> <?php echo trans("transactions"); ?></a></li>
                     </ul>
                 </li>
-				<li>
-					<a href="<?php echo admin_url(); ?>quote-requests">
-						<i class="fa fa-tag"></i> <span><?php echo trans("quote_requests"); ?></span>
-					</a>
-				</li>
-                <li class="treeview">
-                    <a href="#">
-                        <i class="fa fa-folder-open"></i>
-                        <span><?php echo trans("categories"); ?></span>
-                        <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                <li>
+                    <a href="<?php echo admin_url(); ?>quote-requests">
+                        <i class="fa fa-tag"></i> <span><?php echo trans("quote_requests"); ?></span>
                     </a>
-                    <ul class="treeview-menu">
-                        <li><a href="<?php echo admin_url(); ?>add-category"> <?php echo trans("add_category"); ?></a></li>
-                        <li><a href="<?php echo admin_url(); ?>categories"> <?php echo trans("categories"); ?></a></li>
-                    </ul>
+                </li>
+                <li>
+                    <a href="<?php echo admin_url(); ?>categories">
+                        <i class="fa fa-folder-open"></i> <span><?php echo trans("categories"); ?></span>
+                    </a>
                 </li>
                 <li class="treeview">
                     <a href="#">
@@ -224,17 +225,6 @@
                 </li>
                 <li class="treeview">
                     <a href="#">
-                        <i class="fa fa-sliders"></i>
-                        <span><?php echo trans("slider"); ?></span>
-                        <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
-                    </a>
-                    <ul class="treeview-menu">
-                        <li><a href="<?php echo admin_url(); ?>add-slider-item"> <?php echo trans("add_slider_item"); ?></a></li>
-                        <li><a href="<?php echo admin_url(); ?>slider-items"> <?php echo trans("slider_items"); ?></a></li>
-                    </ul>
-                </li>
-                <li class="treeview">
-                    <a href="#">
                         <i class="fa fa-file"></i>
                         <span><?php echo trans("pages"); ?></span>
                         <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
@@ -264,7 +254,7 @@
                 </li>
                 <li class="treeview">
                     <a href="#">
-                        <i class="fa fa-envelope"></i> <span><?php echo trans("newsletter"); ?></span><span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
+                        <i class="fa fa-envelope-o"></i> <span><?php echo trans("newsletter"); ?></span><span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
                     </a>
                     <ul class="treeview-menu">
                         <li>
@@ -289,16 +279,11 @@
                         <li><a href="<?php echo admin_url(); ?>shop-opening-requests"> <?php echo trans("shop_opening_requests"); ?></a></li>
                     </ul>
                 </li>
-                <li class="treeview">
-                    <a href="#">
+                <li>
+                    <a href="<?php echo admin_url(); ?>reviews">
                         <i class="fa fa-star"></i>
                         <span><?php echo trans("reviews"); ?></span>
-                        <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
                     </a>
-                    <ul class="treeview-menu">
-                        <li><a href="<?php echo admin_url(); ?>product-reviews"> <?php echo trans("product_reviews"); ?></a></li>
-                        <li><a href="<?php echo admin_url(); ?>user-reviews"> <?php echo trans("user_reviews"); ?></a></li>
-                    </ul>
                 </li>
                 <li class="treeview">
                     <a href="#">
@@ -307,8 +292,13 @@
                         <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
                     </a>
                     <ul class="treeview-menu">
-                        <li><a href="<?php echo admin_url(); ?>product-comments"> <?php echo trans("product_comments"); ?></a></li>
-                        <li><a href="<?php echo admin_url(); ?>blog-comments"> <?php echo trans("blog_comments"); ?></a></li>
+                        <?php if ($this->general_settings->comment_approval_system == 1): ?>
+                            <li><a href="<?php echo admin_url(); ?>pending-product-comments"> <?php echo trans("product_comments"); ?></a></li>
+                            <li><a href="<?php echo admin_url(); ?>pending-blog-comments"> <?php echo trans("blog_comments"); ?></a></li>
+                        <?php else: ?>
+                            <li><a href="<?php echo admin_url(); ?>product-comments"> <?php echo trans("product_comments"); ?></a></li>
+                            <li><a href="<?php echo admin_url(); ?>blog-comments"> <?php echo trans("blog_comments"); ?></a></li>
+                        <?php endif; ?>
                     </ul>
                 </li>
                 <li>
@@ -343,25 +333,19 @@
                         <li><a href="<?php echo admin_url(); ?>countries"> <?php echo trans("countries"); ?></a></li>
                         <li><a href="<?php echo admin_url(); ?>states"> <?php echo trans("states"); ?></a></li>
                         <li><a href="<?php echo admin_url(); ?>cities"> <?php echo trans("cities"); ?></a></li>
-                        <li><a href="<?php echo admin_url(); ?>location-settings"> <?php echo trans("location_settings"); ?></a></li>
                     </ul>
                 </li>
 
                 <li class="header text-uppercase"><?php echo trans("settings"); ?></li>
-				<li>
-					<a href="<?php echo admin_url(); ?>preferences">
-						<i class="fa fa-check-square-o"></i>
-						<span><?php echo trans("preferences"); ?></span>
-					</a>
-				</li>
-				<li>
-					<a href="<?php echo admin_url(); ?>social-login">
-						<i class="fa fa-share-alt"></i> <span><?php echo trans("social_login"); ?></span>
-					</a>
-				</li>
+                <li>
+                    <a href="<?php echo admin_url(); ?>preferences">
+                        <i class="fa fa-check-square-o"></i>
+                        <span><?php echo trans("preferences"); ?></span>
+                    </a>
+                </li>
                 <li class="treeview">
                     <a href="#">
-                        <i class="fa fa-cogs"></i>
+                        <i class="fa fa-circle-o"></i>
                         <span><?php echo trans("form_settings"); ?></span>
                         <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
                     </a>
@@ -381,32 +365,48 @@
                         <i class="fa fa-money"></i> <span><?php echo trans("currency_settings"); ?></span>
                     </a>
                 </li>
-
-                <li>
-                    <a href="<?php echo admin_url(); ?>languages">
-                        <i class="fa fa-language"></i> <span><?php echo trans("language_settings"); ?></span>
-                    </a>
-                </li>
                 <li>
                     <a href="<?php echo admin_url(); ?>email-settings">
-                        <i class="fa fa-cog"></i> <span><?php echo trans("email_settings"); ?></span>
+                        <i class="fa fa-envelope"></i> <span><?php echo trans("email_settings"); ?></span>
                     </a>
                 </li>
-                <li>
-                    <a href="<?php echo admin_url(); ?>visual-settings">
-                        <i class="fa fa-paint-brush"></i> <span><?php echo trans("visual_settings"); ?></span>
+                <li class="treeview">
+                    <a href="#">
+                        <i class="fa fa-paint-brush"></i>
+                        <span><?php echo trans("visual_settings"); ?></span>
+                        <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
                     </a>
+                    <ul class="treeview-menu">
+                        <li><a href="<?php echo admin_url(); ?>visual-settings"> <?php echo trans("visual_settings"); ?></a></li>
+                        <li><a href="<?php echo admin_url(); ?>font-settings"> <?php echo trans("font_settings"); ?></a></li>
+                    </ul>
                 </li>
-                <li>
-                    <a href="<?php echo admin_url(); ?>system-settings">
-                        <i class="fa fa-cogs"></i> <span><?php echo trans("system_settings"); ?></span>
+
+                <li class="treeview">
+                    <a href="#">
+                        <i class="fa fa-cog"></i>
+                        <span><?php echo trans("general_settings"); ?></span>
+                        <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
                     </a>
+                    <ul class="treeview-menu">
+                        <li><a href="<?php echo admin_url(); ?>settings"> <?php echo trans("general_settings"); ?></a></li>
+                        <li><a href="<?php echo admin_url(); ?>languages"> <?php echo trans("language_settings"); ?></a></li>
+                        <li><a href="<?php echo admin_url(); ?>social-login"> <?php echo trans("social_login"); ?></a></li>
+                    </ul>
                 </li>
-                <li>
-                    <a href="<?php echo admin_url(); ?>settings">
-                        <i class="fa fa-cogs"></i> <span><?php echo trans("general_settings"); ?></span>
+
+                <li class="treeview">
+                    <a href="#">
+                        <i class="fa fa-cogs"></i>
+                        <span><?php echo trans("system_settings"); ?></span>
+                        <span class="pull-right-container"><i class="fa fa-angle-left pull-right"></i></span>
                     </a>
+                    <ul class="treeview-menu">
+                        <li><a href="<?php echo admin_url(); ?>system-settings"> <?php echo trans("system_settings"); ?></a></li>
+                        <li><a href="<?php echo admin_url(); ?>route-settings"> <?php echo trans("route_settings"); ?></a></li>
+                    </ul>
                 </li>
+
             </ul>
         </section>
         <!-- /.sidebar -->

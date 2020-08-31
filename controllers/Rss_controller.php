@@ -37,7 +37,7 @@ class Rss_controller extends Home_Core_Controller
     {
         $data['feed_name'] = $this->app_name . ' ' . trans('rss_feeds') . ' - ' . trans('latest_products');
         $data['encoding'] = 'utf-8';
-        $data['feed_url'] = lang_base_url() . 'rss/latest-products';
+        $data['feed_url'] = lang_base_url() . 'rss/' . get_route('latest_products');
         $data['page_description'] = $this->app_name . ' ' . trans('rss_feeds') . ' - ' . trans('latest_products');
         $data['page_language'] = $this->selected_lang->short_form;
         $data['creator_email'] = '';
@@ -48,14 +48,14 @@ class Rss_controller extends Home_Core_Controller
     }
 
     /**
-     * Rss Promoted Products.
+     * Rss Featured Products.
      */
-    public function promoted_products()
+    public function featured_products()
     {
-        $data['feed_name'] = $this->app_name . ' ' . trans('rss_feeds') . ' - ' . trans('promoted_products');
+        $data['feed_name'] = $this->app_name . ' ' . trans('rss_feeds') . ' - ' . trans('featured_products');
         $data['encoding'] = 'utf-8';
-        $data['feed_url'] = lang_base_url() . 'rss/promoted-products';
-        $data['page_description'] = $this->app_name . ' ' . trans('rss_feeds') . ' - ' . trans('promoted_products');
+        $data['feed_url'] = lang_base_url() . 'rss/' . get_route('featured_products');
+        $data['page_description'] = $this->app_name . ' ' . trans('rss_feeds') . ' - ' . trans('featured_products');
         $data['page_language'] = $this->selected_lang->short_form;
         $data['creator_email'] = '';
         $data['products'] = $this->product_model->get_promoted_products();
@@ -69,16 +69,16 @@ class Rss_controller extends Home_Core_Controller
      */
     public function rss_by_category($slug)
     {
-        $slug = decode_slug($slug);
+        $slug = clean_slug($slug);
         $category = $this->category_model->get_category_by_slug($slug);
         if (empty($category)) {
-            redirect(lang_base_url() . 'rss-feeds');
+            redirect(generate_url('rss_feeds'));
         }
         $data['products'] = $this->product_model->get_rss_products_by_category($category->id);
 
         $data['feed_name'] = $this->app_name . ' ' . trans('rss_feeds') . ' - ' . $category->name;
         $data['encoding'] = 'utf-8';
-        $data['feed_url'] = lang_base_url() . 'rss/category/' . $slug;
+        $data['feed_url'] = lang_base_url() . 'rss/' . get_route('category', true) . $slug;
         $data['page_description'] = $this->app_name . ' ' . trans('rss_feeds') . ' - ' . $category->name;
         $data['page_language'] = $this->selected_lang->short_form;
         $data['creator_email'] = '';
@@ -92,19 +92,19 @@ class Rss_controller extends Home_Core_Controller
      */
     public function rss_by_seller($slug)
     {
-        $slug = decode_slug($slug);
+        $slug = clean_slug($slug);
         $user = $this->auth_model->get_user_by_slug($slug);
         if (empty($user)) {
-            redirect(lang_base_url() . 'rss-feeds');
+            redirect(generate_url('rss_feeds'));
         }
         if (1 != $user->show_rss_feeds) {
-            redirect(lang_base_url() . 'profile/' . $slug);
+            redirect(generate_profile_url($slug));
         }
         $data['products'] = $this->product_model->get_rss_products_by_user($user->id);
 
         $data['feed_name'] = $this->app_name . ' ' . trans('rss_feeds') . ' - ' . $user->username;
         $data['encoding'] = 'utf-8';
-        $data['feed_url'] = lang_base_url() . 'rss/seller/' . $slug;
+        $data['feed_url'] = lang_base_url() . 'rss/' . get_route('seller', true) . $slug;
         $data['page_description'] = $this->app_name . ' ' . trans('rss_feeds') . ' - ' . $user->username;
         $data['page_language'] = $this->selected_lang->short_form;
         $data['creator_email'] = '';

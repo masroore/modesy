@@ -4,6 +4,12 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Field_model extends CI_Model
 {
+    /*
+    *-------------------------------------------------------------------------------------------------
+    * CUSTOM FIELDS
+    *-------------------------------------------------------------------------------------------------
+    */
+
     //input values
     public function input_values()
     {

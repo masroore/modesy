@@ -24,7 +24,7 @@
 					<select name="user_id" class="form-control" required>
 						<option value="" selected><?php echo trans("select"); ?></option>
 						<?php foreach ($users as $user): ?>
-							<option value="<?php echo $user->id; ?>"><?php echo $user->id; ?>&nbsp;&nbsp;--&nbsp;<?php echo $user->username; ?>&nbsp;&nbsp;--&nbsp;&nbsp;<?php echo print_price($user->balance, $this->payment_settings->default_product_currency); ?></option>
+							<option value="<?php echo $user->id; ?>"><?php echo $user->id; ?>&nbsp;&nbsp;--&nbsp;<?php echo $user->username; ?>&nbsp;&nbsp;--&nbsp;&nbsp;<?php echo price_formatted($user->balance, $this->payment_settings->default_product_currency); ?></option>
 						<?php endforeach; ?>
 					</select>
 				</div>

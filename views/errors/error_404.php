@@ -1,5 +1,4 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
-
 <!-- Section: main -->
 <section id="main">
     <div class="container">

@@ -4,8 +4,16 @@
     <div class="col-lg-6 col-md-12">
         <div class="box box-primary">
             <div class="box-header with-border">
-                <h3 class="box-title"><?php echo trans("add_city"); ?></h3>
+                <div class="left">
+                    <h3 class="box-title"><?php echo trans("add_city"); ?></h3>
+                </div>
+                <div class="right">
+                    <a href="<?php echo admin_url(); ?>cities" class="btn btn-success btn-add-new">
+                        <i class="fa fa-list-ul"></i>&nbsp;&nbsp;<?php echo trans('cities'); ?>
+                    </a>
+                </div>
             </div>
+
             <!-- /.box-header -->
 
             <!-- form start -->

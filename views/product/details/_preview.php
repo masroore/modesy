@@ -2,106 +2,138 @@
 
 <?php $image_count = 0;
 if (!empty($product_images)) {
-	$image_count = count($product_images);
+    $image_count = item_count($product_images);
 } ?>
 
-<?php if ($image_count == 0):
-
-	if (!empty($video)): ?>
-		<div class="product-video-preview">
-			<video id="player" playsinline controls>
-				<source src="<?php echo get_product_video_url($video); ?>" type="video/mp4">
-			</video>
-		</div>
-	<?php endif;
-
-	if (!empty($audio)):
-		$this->load->view('product/details/_audio_player');
-	endif; ?>
-
-<?php elseif ($image_count == 1): ?>
-
-	<?php if (!empty($video)): ?>
-		<div class="product-video-preview">
-			<video id="player" playsinline controls>
-				<source src="<?php echo get_product_video_url($video); ?>" type="video/mp4">
-			</video>
-		</div>
-
-		<?php if (!empty($audio)):
-			$this->load->view('product/details/_audio_player');
-		endif; ?>
-	<?php else: ?>
-		<?php if (!empty($audio)):
-			$this->load->view('product/details/_audio_player');
-		else: ?>
-			<?php foreach ($product_images as $image): ?>
-				<div class="product-image-preview">
-					<a class="image-popup lightbox" href="<?php echo get_product_image_url($image, 'image_big'); ?>" data-effect="mfp-zoom-out" title="">
-						<img src="<?php echo get_product_image_url($image, 'image_default'); ?>" alt="<?php echo html_escape($product->title); ?>" class="img-fluid">
-					</a>
-				</div>
-				<?php break;
-			endforeach; ?>
-		<?php endif; ?>
-
-	<?php endif; ?>
-
+<?php if ($image_count <= 1 && (!empty($video) || !empty($audio))):
+    if (!empty($video)): ?>
+        <div class="product-video-preview">
+            <video id="player" playsinline controls>
+                <source src="<?php echo get_product_video_url($video); ?>" type="video/mp4">
+            </video>
+        </div>
+    <?php endif;
+    if (!empty($audio)):
+        $this->load->view('product/details/_audio_player');
+    endif; ?>
 <?php else: ?>
+    <div class="product-slider-container">
+        <?php if (item_count($product_images) > 1): ?>
+            <div class="left">
+                <div class="product-slider-content">
+                    <div id="product_thumbnails_slider" class="product-thumbnails-slider">
+                        <?php foreach ($product_images as $image): ?>
+                            <div class="item">
+                                <div class="item-inner">
+                                    <img src="<?php echo IMG_BASE64_1x1; ?>" class="img-bg" alt="slider-bg">
+                                    <img src="<?php echo IMG_BASE64_1x1; ?>" data-lazy="<?php echo get_product_image_url($image, 'image_small'); ?>" class="img-thumbnail" alt="<?php echo html_escape($product->title); ?>">
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php if (item_count($product_images) > 7): ?>
+                        <div id="product-thumbnails-slider-nav" class="product-thumbnails-slider-nav">
+                            <button class="prev"><i class="icon-arrow-up"></i></button>
+                            <button class="next"><i class="icon-arrow-down"></i></button>
+                        </div>
+                    <?php endif; ?>
 
-	<div class="product-slider-container">
-		<div class="left">
-			<div class="slider-custom-scrollbar">
-				<div class="dots-container slider-dots <?php echo (count($product_images) < 2) ? 'hide-dosts-mobile' : ''; ?>">
-					<?php if (!empty($product_images)):
-						foreach ($product_images as $image): ?>
-							<button class="dot dot_slider"><img src="<?php echo get_product_image_url($image, 'image_small'); ?>" alt="dot"></button>
-						<?php endforeach;
-					endif; ?>
-					<?php if (!empty($video)): ?>
-						<button class="dot dot_slider">
-							<img src="<?php echo get_product_image($product->id, 'image_small'); ?>" alt="dot">
-							<img src="<?php echo base_url() . 'assets/img/play-circle.svg'; ?>" class="dot-video-icon" alt="dot">
-						</button>
-					<?php endif; ?>
-				</div>
-			</div>
-		</div>
-		<div class="right">
-			<div id="product-slider" class="owl-carousel product-slider">
-				<?php if (!empty($product_images)):
-					foreach ($product_images as $image): ?>
-						<div class="item">
-							<a class="image-popup lightbox" href="<?php echo get_product_image_url($image, 'image_big'); ?>" data-effect="mfp-zoom-out" title="">
-								<img src="<?php echo base_url(); ?>assets/img/slider_bg.png" class="img-fluid" alt="slider-bg">
-								<img src="<?php echo get_product_image_url($image, 'image_default'); ?>" class="img-product-slider" alt="<?php echo html_escape($product->title); ?>">
-							</a>
-						</div>
-					<?php endforeach;
-				endif; ?>
-				<?php if (!empty($video)): ?>
-					<div class="item">
-						<video id="player" playsinline controls>
-							<source src="<?php echo get_product_video_url($video); ?>" type="video/mp4">
-						</video>
-					</div>
-				<?php endif; ?>
-			</div>
-		</div>
-	</div>
+                </div>
+            </div>
+        <?php endif; ?>
+        <div class="right">
+            <div class="product-slider-content">
+                <div id="product_slider" class="product-slider gallery">
+                    <?php if (!empty($product_images)):
+                        foreach ($product_images as $image): ?>
+                            <div class="item">
+                                <a href="<?php echo get_product_image_url($image, 'image_big'); ?>" title="">
+                                    <img src="<?php echo base_url() . IMG_BG_PRODUCT_SLIDER; ?>" class="img-bg" alt="slider-bg">
+                                    <img src="<?php echo IMG_BASE64_1x1; ?>" data-lazy="<?php echo get_product_image_url($image, 'image_default'); ?>" alt="<?php echo html_escape($product->title); ?>" class="img-product-slider">
+                                </a>
+                            </div>
+                        <?php endforeach;
+                    else: ?>
+                        <div class="item">
+                            <a href="javascript:void(0)" title="">
+                                <img src="<?php echo base_url() . IMG_BG_PRODUCT_SLIDER; ?>" class="img-bg" alt="slider-bg">
+                                <img src="<?php echo IMG_BASE64_1x1; ?>" data-lazy="<?php echo base_url() . 'assets/img/no-image.jpg'; ?>" alt="<?php echo html_escape($product->title); ?>" class="img-product-slider">
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <?php if (item_count($product_images) > 1): ?>
+                    <div id="product-slider-nav" class="product-slider-nav">
+                        <button class="prev"><i class="icon-arrow-left"></i></button>
+                        <button class="next"><i class="icon-arrow-right"></i></button>
+                    </div>
+                <?php endif; ?>
+            </div>
 
-	<?php if (!empty($audio)):
-		$this->load->view('product/details/_audio_player');
-	endif;
-endif; ?>
+            <div class="row-custom text-center">
+                <?php if (!empty($video)): ?>
+                    <button class="btn btn-lg btn-video-preview" data-toggle="modal" data-target="#productVideoModal"><i class="icon-play"></i><?php echo trans("video"); ?></button>
+                <?php endif; ?>
+                <?php if (!empty($audio)): ?>
+                    <button class="btn btn-lg btn-video-preview" data-toggle="modal" data-target="#productAudioModal"><i class="icon-music"></i><?php echo trans("audio"); ?></button>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if ($image_count > 1 && !empty($video)): ?>
+    <div class="modal fade" id="productVideoModal" role="dialog">
+        <div class="modal-dialog modal-dialog-centered modal-product-video" role="document">
+            <div class="modal-content">
+                <button type="button" class="close" data-dismiss="modal"><i class="icon-close"></i></button>
+                <div class="product-video-preview m-0">
+                    <video id="player" playsinline controls>
+                        <source src="<?php echo get_product_video_url($video); ?>" type="video/mp4">
+                    </video>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if ($image_count > 1 && !empty($audio)): ?>
+    <div class="modal fade" id="productAudioModal" role="dialog">
+        <div class="modal-dialog modal-dialog-centered modal-product-video" role="document">
+            <div class="modal-content">
+                <div class="row-custom" style="width: auto !important;">
+                    <button type="button" class="close" data-dismiss="modal"><i class="icon-close"></i></button>
+                    <?php $this->load->view('product/details/_audio_player'); ?>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
 
 <script>
-	$(document).ready(function () {
-		setTimeout(function () {
-			$(".product-video-preview").css("opacity", "1");
-		}, 300);
-		setTimeout(function () {
-			$(".product-audio-preview").css("opacity", "1");
-		}, 300);
-	});
+    $(document).ready(function () {
+        setTimeout(function () {
+            $(".product-video-preview").css("opacity", "1");
+        }, 300);
+        setTimeout(function () {
+            $(".product-audio-preview").css("opacity", "1");
+        }, 300);
+    });
+</script>
+
+<?php if (item_count($product_images) <= 7): ?>
+    <style>
+        .product-thumbnails-slider .slick-track {
+            transform: none !important;
+        }
+    </style>
+<?php endif; ?>
+
+<script>
+    $('#productVideoModal').on('hidden.bs.modal', function (e) {
+        $(this).find('video')[0].pause();
+    });
+    $('#productAudioModal').on('hidden.bs.modal', function (e) {
+        Amplitude.pause();
+    });
 </script>

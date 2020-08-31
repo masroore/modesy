@@ -2,9 +2,16 @@
 
 <div class="box">
     <div class="box-header with-border">
-        <h3 class="box-title"><?php echo $title; ?></h3>
-        <a href="<?php echo admin_url(); ?>add-country" class="btn btn-sm btn-success" style="position: absolute;right: 20px;"><i class="fa fa-plus"></i> <?php echo trans("add_country"); ?></a>
-    </div><!-- /.box-header -->
+        <div class="left">
+            <h3 class="box-title"><?php echo trans("countries"); ?></h3>
+        </div>
+        <div class="right">
+            <a href="<?php echo admin_url(); ?>add-country" class="btn btn-success btn-add-new">
+                <i class="fa fa-plus"></i>&nbsp;&nbsp;<?php echo trans('add_country'); ?>
+            </a>
+        </div>
+    </div>
+
 
     <div class="box-body">
         <div class="row">
@@ -33,7 +40,7 @@
 
                                 <div class="item-table-filter">
                                     <label><?php echo trans("search"); ?></label>
-                                    <input name="q" class="form-control" placeholder="<?php echo trans("search"); ?>" type="search" value="<?php echo html_escape($this->input->get('q', true)); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+                                    <input name="q" class="form-control" placeholder="<?php echo trans("search"); ?>" type="search" value="<?php echo html_escape($this->input->get('q', true)); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
                                 </div>
 
                                 <div class="item-table-filter md-top-10" style="width: 65px; min-width: 65px;">
@@ -47,6 +54,7 @@
                         <tr role="row">
                             <th width="20"><?php echo trans('id'); ?></th>
                             <th><?php echo trans('name'); ?></th>
+                            <th><?php echo trans('status'); ?></th>
                             <th class="max-width-120"><?php echo trans('options'); ?></th>
                         </tr>
                         </thead>
@@ -56,6 +64,13 @@
                             <tr>
                                 <td><?php echo html_escape($item->id); ?></td>
                                 <td><?php echo html_escape($item->name); ?></td>
+                                <td>
+                                    <?php if ($item->status == 1): ?>
+                                        <label class="label label-success"><?php echo trans("active"); ?></label>
+                                    <?php else: ?>
+                                        <label class="label label-danger"><?php echo trans("inactive"); ?></label>
+                                    <?php endif; ?>
+                                </td>
                                 <td width="20%">
                                     <div class="dropdown">
                                         <button class="btn bg-purple dropdown-toggle btn-select-option"
@@ -87,7 +102,10 @@
                     <?php endif; ?>
                     <div class="col-sm-12 table-ft">
                         <div class="row">
-
+                            <div class="pull-left">
+                                <button type="button" class="btn btn-danger" onclick="activate_inactivate_countries('inactivate');"><?php echo trans("inactivate_all"); ?></button>
+                                <button type="button" class="btn btn-success" onclick="activate_inactivate_countries('activate');"><?php echo trans("activate_all"); ?></button>
+                            </div>
                             <div class="pull-right">
                                 <?php echo $this->pagination->create_links(); ?>
                             </div>

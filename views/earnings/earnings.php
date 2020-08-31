@@ -38,7 +38,7 @@
                             <div class="col-12 col-sm-6">
                                 <div class="earnings-box">
                                     <p class="title"><?php echo trans("balance"); ?></p>
-                                    <p class="price"><?php echo print_price($user->balance, $this->payment_settings->default_product_currency); ?></p>
+                                    <p class="price"><?php echo price_formatted($user->balance, $this->payment_settings->default_product_currency); ?></p>
                                     <p class="description"><?php echo trans("balance_exp"); ?></p>
                                 </div>
                             </div>
@@ -62,11 +62,17 @@
                             <?php foreach ($earnings as $earning): ?>
                                 <tr>
                                     <td>#<?php echo $earning->order_number; ?></td>
-                                    <td><?php echo print_price($earning->price, $earning->currency); ?></td>
+                                    <td><?php echo price_formatted($earning->price, $earning->currency); ?></td>
                                     <td><?php echo $earning->commission_rate; ?>%</td>
-                                    <td><?php echo print_price($earning->shipping_cost, $earning->currency); ?></td>
-                                    <td><?php echo print_price($earning->earned_amount, $earning->currency); ?></td>
-                                    <td><?php echo date("Y-m-d / h:i", strtotime($earning->created_at)); ?></td>
+                                    <td><?php echo price_formatted($earning->shipping_cost, $earning->currency); ?></td>
+                                    <td>
+                                        <?php echo price_formatted($earning->earned_amount, $earning->currency);
+                                        $order = get_order_by_order_number($earning->order_number);
+                                        if (!empty($order) && $order->payment_method == "Cash On Delivery"):?>
+                                            <span class="text-danger">(-<?php echo price_formatted($earning->earned_amount, $earning->currency); ?>)</span><br><small class="text-danger"><?php echo trans("cash_on_delivery"); ?></small>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo formatted_date($earning->created_at); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                             </tbody>

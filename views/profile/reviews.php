@@ -31,7 +31,58 @@
                 <div class="profile-tab-content">
 
                     <div id="user-review-result" class="user-reviews">
-                        <?php $this->load->view('profile/_user_reviews'); ?>
+                        <div class="reviews-container">
+                            <div class="col-12">
+                                <div class="review-total">
+                                    <label class="label-review"><?php echo trans("reviews"); ?>&nbsp;(<?php echo $user_rating->count; ?>)</label>
+                                    <?php if (!empty($reviews)):
+                                        $this->load->view('partials/_review_stars', ['review' => $user_rating->rating]);
+                                    endif; ?>
+                                </div>
+                                <?php if (empty($reviews)): ?>
+                                    <p class="no-comments-found"><?php echo trans("no_reviews_found"); ?></p>
+                                <?php else: ?>
+                                    <ul class="list-unstyled list-reviews">
+                                        <?php foreach ($reviews as $review): ?>
+                                            <li class="media">
+                                                <a href="<?php echo generate_profile_url($review->user_slug); ?>">
+                                                    <img src="<?php echo get_user_avatar_by_id($review->user_id); ?>" alt="<?php echo get_shop_name_by_user_id($review->user_id); ?>">
+                                                </a>
+                                                <div class="media-body">
+                                                    <?php $review_product = get_product($review->product_id);
+                                                    if (!empty($review_product)):?>
+                                                        <div class="row-custom m-b-10">
+                                                            <a href="<?php echo generate_product_url_by_slug($review_product->slug); ?>"><strong><?php echo trans("product"); ?>:&nbsp;</strong><?php echo html_escape($review_product->title); ?></a>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    <div class="row-custom">
+                                                        <?php $this->load->view('partials/_review_stars', ['review' => $review->rating]); ?>
+                                                    </div>
+                                                    <div class="row-custom">
+                                                        <a href="<?php echo generate_profile_url($review->user_slug); ?>">
+                                                            <h5 class="username"><?php echo get_shop_name_by_user_id($review->user_id); ?></h5>
+                                                        </a>
+                                                    </div>
+                                                    <div class="row-custom">
+                                                        <div class="review">
+                                                            <?php echo html_escape($review->review); ?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row-custom">
+                                                        <span class="date"><?php echo time_ago($review->created_at); ?></span>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-12 m-t-15">
+                                <div class="float-right">
+                                    <?php echo $this->pagination->create_links(); ?>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row-custom">

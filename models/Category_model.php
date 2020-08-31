@@ -17,7 +17,6 @@ class Category_model extends CI_Model
             'visibility' => $this->input->post('visibility', true),
             'show_on_homepage' => $this->input->post('show_on_homepage', true),
             'show_image_on_navigation' => $this->input->post('show_image_on_navigation', true),
-            'created_at' => date('Y-m-d H:i:s'),
         ];
     }
 
@@ -27,8 +26,9 @@ class Category_model extends CI_Model
         $data = $this->input_values();
         //set slug
         if (empty($data['slug'])) {
-            //slug for title
             $data['slug'] = str_slug($this->input->post('name_lang_' . $this->general_settings->site_lang, true));
+        } else {
+            $data['slug'] = remove_special_characters($data['slug'], true);
         }
 
         //set parent id
@@ -45,29 +45,23 @@ class Category_model extends CI_Model
         $data['storage'] = 'local';
         $this->load->model('upload_model');
         $temp_path = $this->upload_model->upload_temp_image('file');
+        $data['image'] = '';
         if (!empty($temp_path)) {
-            $data['image_1'] = $this->upload_model->category_image_upload($temp_path, 420, 312);
-            $data['image_2'] = $this->upload_model->category_image_upload($temp_path, 440, 541);
+            $data['image'] = $this->upload_model->category_image_upload($temp_path);
             $this->upload_model->delete_temp_image($temp_path);
-        } else {
-            $data['image_1'] = '';
-            $data['image_2'] = '';
         }
         //move to s3
         if ('aws_s3' == $this->storage_settings->storage) {
             $this->load->model('aws_model');
             $data['storage'] = 'aws_s3';
-            //move image 1
-            if ('' != $data['image_1']) {
-                $this->aws_model->put_category_object($data['image_1'], FCPATH . $data['image_1']);
-                delete_file_from_server($data['image_1']);
-            }
-            //move image 2
-            if ('' != $data['image_2']) {
-                $this->aws_model->put_category_object($data['image_2'], FCPATH . $data['image_2']);
-                delete_file_from_server($data['image_2']);
+            //move image
+            if ('' != $data['image']) {
+                $this->aws_model->put_category_object($data['image'], FCPATH . $data['image']);
+                delete_file_from_server($data['image']);
             }
         }
+
+        $data['created_at'] = date('Y-m-d H:i:s');
 
         return $this->db->insert('categories', $data);
     }
@@ -75,12 +69,12 @@ class Category_model extends CI_Model
     //add category name
     public function add_category_name($category_id)
     {
-        $category_id = clean_number($category_id);
-        $data = [];
         foreach ($this->languages as $language) {
-            $data['category_id'] = $category_id;
-            $data['lang_id'] = $language->id;
-            $data['name'] = $this->input->post('name_lang_' . $language->id, true);
+            $data = [
+                'category_id' => clean_number($category_id),
+                'lang_id' => $language->id,
+                'name' => $this->input->post('name_lang_' . $language->id, true),
+            ];
             $this->db->insert('categories_lang', $data);
         }
     }
@@ -88,36 +82,36 @@ class Category_model extends CI_Model
     //update slug
     public function update_slug($id)
     {
-        $id = clean_number($id);
         $category = $this->get_category($id);
-        if (empty($category->slug) || '-' == $category->slug) {
-            $data = [
-                'slug' => $category->id,
-            ];
-            $this->db->where('id', $id);
-
-            return $this->db->update('categories', $data);
-        }
-        if (!empty($this->check_category_slug($category->slug, $id))) {
-            $data = [
-                    'slug' => $category->slug . '-' . $category->id,
+        if (!empty($category)) {
+            if (empty($category->slug) || '-' == $category->slug) {
+                $data = [
+                    'slug' => $category->id,
                 ];
+                $this->db->where('id', $category->id);
 
-            $this->db->where('id', $id);
+                return $this->db->update('categories', $data);
+            }
+            if (!empty($this->check_category_slug($category->slug, $id))) {
+                $data = [
+                        'slug' => $category->slug . '-' . $category->id,
+                    ];
+                $this->db->where('id', $category->id);
 
-            return $this->db->update('categories', $data);
+                return $this->db->update('categories', $data);
+            }
         }
     }
 
     //update category
     public function update_category($id)
     {
-        $id = clean_number($id);
         $data = $this->input_values();
         //set slug
         if (empty($data['slug'])) {
-            //slug for title
             $data['slug'] = str_slug($this->input->post('name_lang_' . $this->general_settings->site_lang, true));
+        } else {
+            $data['slug'] = remove_special_characters($data['slug'], true);
         }
 
         //set parent id
@@ -134,35 +128,28 @@ class Category_model extends CI_Model
         $this->load->model('upload_model');
         $temp_path = $this->upload_model->upload_temp_image('file');
         if (!empty($temp_path)) {
-            $data['image_1'] = $this->upload_model->category_image_upload($temp_path, 420, 312);
-            $data['image_2'] = $this->upload_model->category_image_upload($temp_path, 440, 541);
+            $data['image'] = $this->upload_model->category_image_upload($temp_path);
             $this->upload_model->delete_temp_image($temp_path);
             $category = $this->get_category($id);
             $data['storage'] = 'local';
-
             //move to s3
             if ('aws_s3' == $this->storage_settings->storage) {
                 $this->load->model('aws_model');
                 $data['storage'] = 'aws_s3';
-                //move image 1
-                $this->aws_model->put_category_object($data['image_1'], FCPATH . $data['image_1']);
-                delete_file_from_server($data['image_1']);
-                //move image 2
-                $this->aws_model->put_category_object($data['image_2'], FCPATH . $data['image_2']);
-                delete_file_from_server($data['image_2']);
+                //move image
+                $this->aws_model->put_category_object($data['image'], FCPATH . $data['image']);
+                delete_file_from_server($data['image']);
             }
             //delete old images
             if ('aws_s3' == $category->storage) {
                 $this->load->model('aws_model');
-                $this->aws_model->delete_category_object($category->image_1);
-                $this->aws_model->delete_category_object($category->image_2);
+                $this->aws_model->delete_category_object($category->image);
             } else {
-                delete_file_from_server($category->image_1);
-                delete_file_from_server($category->image_2);
+                delete_file_from_server($category->image);
             }
         }
 
-        $this->db->where('id', $id);
+        $this->db->where('id', clean_number($id));
 
         return $this->db->update('categories', $data);
     }
@@ -170,21 +157,20 @@ class Category_model extends CI_Model
     //update category name
     public function update_category_name($category_id)
     {
-        $category_id = clean_number($category_id);
-        $data = [];
         foreach ($this->languages as $language) {
-            $data['category_id'] = $category_id;
-            $data['lang_id'] = $language->id;
-            $data['name'] = $this->input->post('name_lang_' . $language->id, true);
-
+            $data = [
+                'category_id' => clean_number($category_id),
+                'lang_id' => $language->id,
+                'name' => $this->input->post('name_lang_' . $language->id, true),
+            ];
             //check category name exists
-            $this->db->where('category_id', $category_id);
+            $this->db->where('category_id', clean_number($category_id));
             $this->db->where('lang_id', $language->id);
             $row = $this->db->get('categories_lang')->row();
             if (empty($row)) {
                 $this->db->insert('categories_lang', $data);
             } else {
-                $this->db->where('category_id', $category_id);
+                $this->db->where('category_id', clean_number($category_id));
                 $this->db->where('lang_id', $language->id);
                 $this->db->update('categories_lang', $data);
             }
@@ -194,50 +180,122 @@ class Category_model extends CI_Model
     //check category slug
     public function check_category_slug($slug, $id)
     {
-        $id = clean_number($id);
-        $this->db->where('slug', $slug);
-        $this->db->where('id !=', $id);
-        $query = $this->db->get('categories');
+        $sql = 'SELECT * FROM categories WHERE categories.slug = ? AND categories.id != ?';
+        $query = $this->db->query($sql, [clean_str($slug), clean_number($id)]);
 
         return $query->row();
+    }
+
+    //build category query
+    public function build_query($lang_id = null)
+    {
+        if (empty($lang_id)) {
+            $lang_id = $this->selected_lang->id;
+        }
+        $ci = &get_instance();
+        if (item_count($ci->languages) > 1) {
+            return 'SELECT categories.*, categories.parent_id AS join_parent_id, categories_lang.name AS name,
+                (SELECT slug FROM categories WHERE id = join_parent_id) AS parent_slug,
+                (SELECT name FROM categories_lang WHERE categories_lang.category_id = categories.id AND categories_lang.lang_id != ' . $this->db->escape(clean_number($lang_id)) . '  ORDER BY categories_lang.lang_id LIMIT 1) AS second_name
+                FROM categories
+                LEFT JOIN categories_lang ON categories.id = categories_lang.category_id AND categories_lang.lang_id = ' . $this->db->escape(clean_number($lang_id)) . ' ';
+        }
+
+        return 'SELECT categories.*, categories.parent_id AS join_parent_id, categories_lang.name AS name,
+                (SELECT slug FROM categories WHERE id = join_parent_id) AS parent_slug
+                FROM categories
+                LEFT JOIN categories_lang ON categories.id = categories_lang.category_id AND categories_lang.lang_id = ' . $this->db->escape(clean_number($lang_id)) . ' ';
     }
 
     //get category
     public function get_category($id)
     {
-        $id = clean_number($id);
-        $this->db->where('id', $id);
-        $query = $this->db->get('categories');
+        $sql = $this->build_query() . 'WHERE categories.id = ?';
+        $query = $this->db->query($sql, [clean_number($id)]);
 
         return $query->row();
     }
 
-    //get category joined
-    public function get_category_joined($id)
+    //get category by lang
+    public function get_category_by_lang($id, $lang_id)
     {
-        $id = clean_number($id);
-        $this->db->join('categories_lang', 'categories_lang.category_id = categories.id');
-        $this->db->select('categories.*, categories_lang.lang_id as lang_id, categories_lang.name as name, categories.parent_id as join_parent_id, (SELECT slug From categories WHERE id = join_parent_id) as parent_slug');
-        $this->db->where('categories_lang.lang_id', $this->selected_lang->id);
-        $this->db->where('categories.id', $id);
-        $query = $this->db->get('categories');
-        $row = $query->row();
-        if (empty($row)) {
-            $this->db->join('categories_lang', 'categories_lang.category_id = categories.id');
-            $this->db->select('categories.*, categories_lang.lang_id as lang_id, categories_lang.name as name, categories.parent_id as join_parent_id, (SELECT slug From categories WHERE id = join_parent_id) as parent_slug');
-            $this->db->where('categories.id', $id);
-            $query = $this->db->get('categories');
-            $row = $query->row();
+        $sql = $this->build_query($lang_id) . 'WHERE categories.id = ?';
+        $query = $this->db->query($sql, [clean_number($id)]);
+
+        return $query->row();
+    }
+
+    //get paginated categories
+    public function get_paginated_categories($per_page, $offset)
+    {
+        $q = trim($this->input->get('q', true));
+        if (!empty($q)) {
+            $like = '%' . $q . '%';
+            $sql = $this->build_query() . 'WHERE categories_lang.name LIKE ? ORDER BY categories.created_at DESC LIMIT ?, ?';
+            $query = $this->db->query($sql, [$like, clean_number($offset), clean_number($per_page)]);
+        } else {
+            $sql = $this->build_query() . 'ORDER BY categories.created_at DESC LIMIT ?, ?';
+            $query = $this->db->query($sql, [clean_number($offset), clean_number($per_page)]);
         }
 
-        return $row;
+        return $query->result();
+    }
+
+    //get categories count
+    public function get_categories_count()
+    {
+        $q = trim($this->input->get('q', true));
+        if (!empty($q)) {
+            $like = '%' . $q . '%';
+            $sql = $this->build_query() . 'WHERE categories_lang.name LIKE ?';
+            $query = $this->db->query($sql, [$like]);
+        } else {
+            $sql = $this->build_query();
+            $query = $this->db->query($sql);
+        }
+
+        return $query->num_rows();
+    }
+
+    //get categories
+    public function get_categories()
+    {
+        $sql = $this->build_query() . 'WHERE categories.visibility = 1 ORDER BY category_order';
+        $query = $this->db->query($sql);
+
+        return $query->result();
     }
 
     //get all categories
-    public function get_categories_all()
+    public function get_all_categories()
     {
-        $this->db->order_by('created_at', 'DESC');
-        $query = $this->db->get('categories');
+        $sql = $this->build_query() . 'ORDER BY category_order';
+        $query = $this->db->query($sql);
+
+        return $query->result();
+    }
+
+    //get mobile menu categories
+    public function get_mobile_menu_categories()
+    {
+        $lang_id = $this->selected_lang->id;
+        $ci = &get_instance();
+        if (item_count($ci->languages) > 1) {
+            $sql = 'SELECT categories.*, categories.parent_id AS join_parent_id, categories_lang.name AS name,
+                (SELECT slug FROM categories WHERE id = join_parent_id) AS parent_slug,
+                (SELECT name FROM categories_lang WHERE categories_lang.category_id = categories.id AND categories_lang.lang_id != ' . $this->db->escape(clean_number($lang_id)) . '  ORDER BY categories_lang.lang_id LIMIT 1) AS second_name,
+                (SELECT id FROM categories AS sub_categories WHERE sub_categories.parent_id = categories.id LIMIT 1) AS has_subcategory
+                FROM categories
+                LEFT JOIN categories_lang ON categories.id = categories_lang.category_id AND categories_lang.lang_id = ' . $this->db->escape(clean_number($lang_id)) . ' ';
+        } else {
+            $sql = 'SELECT categories.*, categories.parent_id AS join_parent_id, categories_lang.name AS name,
+                (SELECT slug FROM categories WHERE id = join_parent_id) AS parent_slug,
+                (SELECT id FROM categories AS sub_categories WHERE sub_categories.parent_id = categories.id LIMIT 1) AS has_subcategory
+                FROM categories
+                LEFT JOIN categories_lang ON categories.id = categories_lang.category_id AND categories_lang.lang_id = ' . $this->db->escape(clean_number($lang_id)) . ' ';
+        }
+        $sql = $sql . 'ORDER BY category_order';
+        $query = $this->db->query($sql);
 
         return $query->result();
     }
@@ -245,34 +303,8 @@ class Category_model extends CI_Model
     //get all categories ordered by name
     public function get_categories_ordered_by_name()
     {
-        $this->db->join('categories_lang', 'categories_lang.category_id = categories.id');
-        $this->db->select('categories.*, categories_lang.lang_id as lang_id, categories_lang.name as name, categories.parent_id as join_parent_id, (SELECT slug From categories WHERE id = join_parent_id) as parent_slug');
-        $this->db->where('categories_lang.lang_id', $this->selected_lang->id);
-        $this->db->order_by('categories_lang.name');
-        $query = $this->db->get('categories');
-
-        return $query->result();
-    }
-
-    //get sitemap categories
-    public function get_sitemap_categories()
-    {
-        $this->db->join('categories_lang', 'categories_lang.category_id = categories.id');
-        $this->db->select('categories.*, categories_lang.lang_id as lang_id, categories_lang.name as name, categories.parent_id as join_parent_id, (SELECT slug From categories WHERE id = join_parent_id) as parent_slug');
-        $this->db->where('categories.visibility', 1);
-        $this->db->order_by('category_order');
-        $query = $this->db->get('categories');
-
-        return $query->result();
-    }
-
-    //get parent categories
-    public function get_parent_categories()
-    {
-        $this->db->where('categories.parent_id', 0);
-        $this->db->where('categories.visibility', 1);
-        $this->db->order_by('category_order');
-        $query = $this->db->get('categories');
+        $sql = $this->build_query() . 'WHERE categories.visibility = 1 ORDER BY categories_lang.name';
+        $query = $this->db->query($sql);
 
         return $query->result();
     }
@@ -280,9 +312,8 @@ class Category_model extends CI_Model
     //get all parent categories
     public function get_all_parent_categories()
     {
-        $this->db->where('categories.parent_id', 0);
-        $this->db->order_by('category_order');
-        $query = $this->db->get('categories');
+        $sql = $this->build_query() . 'WHERE categories.parent_id = 0 ORDER BY category_order';
+        $query = $this->db->query($sql);
 
         return $query->result();
     }
@@ -290,14 +321,8 @@ class Category_model extends CI_Model
     //get subcategories by parent id
     public function get_subcategories_by_parent_id($parent_id)
     {
-        $parent_id = clean_number($parent_id);
-        $this->db->join('categories_lang', 'categories_lang.category_id = categories.id');
-        $this->db->select('categories.*, categories_lang.lang_id as lang_id, categories_lang.name as name, categories.parent_id as join_parent_id, (SELECT slug From categories WHERE id = join_parent_id) as parent_slug');
-        $this->db->where('categories_lang.lang_id', $this->selected_lang->id);
-        $this->db->where('parent_id', $parent_id);
-        $this->db->where('categories.visibility', 1);
-        $this->db->order_by('category_order');
-        $query = $this->db->get('categories');
+        $sql = $this->build_query() . 'WHERE categories.parent_id = ? ORDER BY category_order';
+        $query = $this->db->query($sql, [clean_number($parent_id)]);
 
         return $query->result();
     }
@@ -305,16 +330,8 @@ class Category_model extends CI_Model
     //get subcategories by parent id except one
     public function get_subcategories_by_parent_id_except_one($parent_id, $except_id)
     {
-        $parent_id = clean_number($parent_id);
-        $except_id = clean_number($except_id);
-        $this->db->join('categories_lang', 'categories_lang.category_id = categories.id');
-        $this->db->select('categories.*, categories_lang.lang_id as lang_id, categories_lang.name as name, categories.parent_id as join_parent_id, (SELECT slug From categories WHERE id = join_parent_id) as parent_slug');
-        $this->db->where('categories_lang.lang_id', $this->selected_lang->id);
-        $this->db->where('parent_id', $parent_id);
-        $this->db->where('categories.id !=', $except_id);
-        $this->db->where('categories.visibility', 1);
-        $this->db->order_by('category_order');
-        $query = $this->db->get('categories');
+        $sql = $this->build_query() . 'WHERE categories.id != ? AND categories.parent_id = ? AND categories.visibility = 1 ORDER BY category_order';
+        $query = $this->db->query($sql, [clean_number($except_id), clean_number($parent_id)]);
 
         return $query->result();
     }
@@ -322,152 +339,51 @@ class Category_model extends CI_Model
     //get subcategories by parent id by lang
     public function get_subcategories_by_parent_id_by_lang($parent_id, $lang_id)
     {
-        $parent_id = clean_number($parent_id);
-        $lang_id = clean_number($lang_id);
-        $this->db->join('categories_lang', 'categories_lang.category_id = categories.id');
-        $this->db->select('categories.*, categories_lang.lang_id as lang_id, categories_lang.name as name, categories.parent_id as join_parent_id, (SELECT slug From categories WHERE id = join_parent_id) as parent_slug');
-        $this->db->where('categories_lang.lang_id', $lang_id);
-        $this->db->where('parent_id', $parent_id);
-        $this->db->where('categories.visibility', 1);
-        $this->db->order_by('category_order');
-        $query = $this->db->get('categories');
+        $sql = $this->build_query($lang_id) . 'WHERE categories.parent_id = ? AND categories.visibility = 1 ORDER BY category_order';
+        $query = $this->db->query($sql, [clean_number($parent_id)]);
 
         return $query->result();
-    }
-
-    //get category name by lang
-    public function get_category_name_by_lang($category_id, $lang_id)
-    {
-        $category_id = clean_number($category_id);
-        $category_name = '';
-        $this->db->where('categories_lang.category_id', $category_id);
-        $this->db->where('categories_lang.lang_id', $lang_id);
-        $query = $this->db->get('categories_lang');
-        $row = $query->row();
-        if (!empty($row)) {
-            $category_name = $row->name;
-        } else {
-            $this->db->where('categories_lang.category_id', $category_id);
-            $query = $this->db->get('categories_lang');
-            $row = $query->row();
-            if (!empty($row)) {
-                $category_name = $row->name;
-            }
-        }
-
-        return $category_name;
-    }
-
-    //get category name by lang not completed
-    public function get_category_name_by_lang_not_completed($category_id, $lang_id)
-    {
-        $category_id = clean_number($category_id);
-        $category_name = '';
-        $this->db->where('categories_lang.category_id', $category_id);
-        $this->db->where('categories_lang.lang_id', $lang_id);
-        $query = $this->db->get('categories_lang');
-        $row = $query->row();
-        if (!empty($row)) {
-            $category_name = $row->name;
-        }
-
-        return $category_name;
     }
 
     //get category by slug
     public function get_category_by_slug($slug)
     {
-        $slug = remove_special_characters($slug);
-        $this->db->join('categories_lang', 'categories_lang.category_id = categories.id');
-        $this->db->select('categories.*, categories_lang.lang_id as lang_id, categories_lang.name as name, categories.parent_id as join_parent_id, (SELECT slug From categories WHERE id = join_parent_id) as parent_slug');
-        $this->db->where('categories_lang.lang_id', $this->selected_lang->id);
-        $this->db->where('categories.slug', $slug);
-        $this->db->where('categories.visibility', 1);
-        $query = $this->db->get('categories');
-        $row = $query->row();
-        if (empty($row)) {
-            $this->db->join('categories_lang', 'categories_lang.category_id = categories.id');
-            $this->db->select('categories.*, categories_lang.lang_id as lang_id, categories_lang.name as name, categories.parent_id as join_parent_id, (SELECT slug From categories WHERE id = join_parent_id) as parent_slug');
-            $this->db->where('categories.slug', $slug);
-            $this->db->where('categories.visibility', 1);
-            $query = $this->db->get('categories');
-            $row = $query->row();
-        }
+        $sql = $this->build_query() . 'WHERE categories.slug = ? AND categories.visibility = 1 ORDER BY id LIMIT 1';
+        $query = $this->db->query($sql, [clean_str($slug)]);
 
-        return $row;
+        return $query->row();
+    }
+
+    //get parent category by slug
+    public function get_parent_category_by_slug($slug)
+    {
+        $sql = $this->build_query() . 'WHERE categories.slug = ? AND categories.visibility = 1 AND parent_id = 0 ORDER BY id LIMIT 1';
+        $query = $this->db->query($sql, [clean_str($slug)]);
+
+        return $query->row();
     }
 
     //get featured categories
     public function get_featured_categories()
     {
-        $this->db->join('categories_lang', 'categories_lang.category_id = categories.id');
-        $this->db->select('categories.*, categories_lang.lang_id as lang_id, categories_lang.name as name, categories.parent_id as join_parent_id, (SELECT slug From categories WHERE id = join_parent_id) as parent_slug');
-        $this->db->where('categories_lang.lang_id', $this->selected_lang->id);
-        $this->db->where('show_on_homepage', 1);
-        $this->db->where('categories.visibility', 1);
-        $this->db->order_by('homepage_order');
-        $query = $this->db->get('categories');
+        $sql = $this->build_query() . 'WHERE categories.show_on_homepage = 1 AND categories.visibility = 1 ORDER BY homepage_order';
+        $query = $this->db->query($sql);
 
         return $query->result();
-    }
-
-    //get featured categories count
-    public function get_featured_categories_count()
-    {
-        $this->db->join('categories_lang', 'categories_lang.category_id = categories.id');
-        $this->db->select('categories.*, categories_lang.lang_id as lang_id, categories_lang.name as name, categories.parent_id as join_parent_id, (SELECT slug From categories WHERE id = join_parent_id) as parent_slug');
-        $this->db->where('categories_lang.lang_id', $this->selected_lang->id);
-        $this->db->where('show_on_homepage', 1);
-        $this->db->where('categories.visibility', 1);
-        $query = $this->db->get('categories');
-
-        return $query->num_rows();
-    }
-
-    //get featured category
-    public function get_featured_category($count)
-    {
-        $count = clean_number($count);
-        $categories = $this->get_featured_categories();
-        if (!empty($categories)) {
-            $i = 1;
-            foreach ($categories as $category) {
-                if ($i == $count) {
-                    return $category;
-                    break;
-                }
-                $i++;
-            }
-        }
-
-        return false;
     }
 
     //get categories json
     public function get_categories_json($lang_id)
     {
-        $categories = $this->get_categories_all();
+        $categories = $this->get_categories();
         $array = [];
         if (!empty($categories)) {
             foreach ($categories as $category) {
                 $item = [
                     'id' => $category->id,
                     'parent_id' => $category->parent_id,
-                    'name' => '',
+                    'name' => category_name($category),
                 ];
-                $this->db->where('category_id', $category->id);
-                $this->db->where('lang_id', $lang_id);
-                $query = $this->db->get('categories_lang');
-                $row = $query->row();
-                if (empty($row)) {
-                    $this->db->where('category_id', $category->id);
-                    $this->db->where('lang_id', $this->general_settings->site_lang);
-                    $query = $this->db->get('categories_lang');
-                    $row = $query->row();
-                }
-                if (!empty($row)) {
-                    $item['name'] = $row->name;
-                }
                 array_push($array, $item);
             }
         }
@@ -499,44 +415,35 @@ class Category_model extends CI_Model
     //get parent categories ids array by category id
     public function get_parent_categories_ids_array_by_category_id($category_id)
     {
+        $categories_array = $this->get_parent_categories_array_by_category_id($category_id);
         $array_ids = [];
-        $category = $this->get_category($category_id);
-        if (!empty($category)) {
-            array_push($array_ids, $category->id);
-            for ($i = 0; $i < 50; $i++) {
-                $parent = $this->get_category($category->parent_id);
-                if (!empty($parent)) {
-                    array_push($array_ids, $parent->id);
-                    $category = $parent;
-                    if (0 == $category->parent_id) {
-                        break;
-                    }
-                }
+        if (!empty($categories_array)) {
+            foreach ($categories_array as $item) {
+                array_push($array_ids, $item->id);
             }
         }
 
-        return array_reverse($array_ids);
+        return $array_ids;
     }
 
     //get parent category tree ids string (All parent categories will be returned)
     public function get_parent_category_tree_ids_string($category_id)
     {
-        $ids = $this->get_parent_categories_ids_array_by_category_id($category_id);
-        if (!empty($ids)) {
-            return implode(', ', $ids);
-        }
-
-        return false;
+        return generate_ids_string($this->get_parent_categories_ids_array_by_category_id($category_id));
     }
 
     //get category tree ids array (All subcategories will be returned)
     public function get_category_tree_ids_array($parent_id)
     {
-        $parent_id = clean_number($parent_id);
-        $ids = [$parent_id];
-        $query = $this->db->query('SELECT id FROM categories WHERE parent_id = ' . $parent_id);
-        foreach ($query->result() as $row) {
-            $ids = array_merge($ids, $this->get_category_tree_ids_array($row->id));
+        $ids = [];
+        array_push($ids, clean_number($parent_id));
+        $sql = 'SELECT id FROM categories WHERE parent_id = ?';
+        $query = $this->db->query($sql, [clean_number($parent_id)]);
+        $rows = $query->result();
+        if (!empty($rows)) {
+            foreach ($rows as $row) {
+                $ids = array_merge($ids, $this->get_category_tree_ids_array($row->id));
+            }
         }
 
         return $ids;
@@ -545,19 +452,13 @@ class Category_model extends CI_Model
     //get category tree ids string (All subcategories will be returned)
     public function get_category_tree_ids_string($parent_id)
     {
-        $ids = $this->get_category_tree_ids_array($parent_id);
-        if (!empty($ids)) {
-            return implode(', ', $ids);
-        }
-
-        return false;
+        return generate_ids_string($this->get_category_tree_ids_array($parent_id));
     }
 
     //delete category name
     public function delete_category_name($category_id)
     {
-        $category_id = clean_number($category_id);
-        $this->db->where('category_id', $category_id);
+        $this->db->where('category_id', clean_number($category_id));
         $query = $this->db->get('categories_lang');
         $results = $query->result();
         if (!empty($results)) {
@@ -568,29 +469,38 @@ class Category_model extends CI_Model
         }
     }
 
+    //delete category image
+    public function delete_category_image($category_id)
+    {
+        $category = $this->get_category($category_id);
+        if (!empty($category)) {
+            delete_file_from_server($category->image);
+            $data = [
+                'image' => '',
+            ];
+            $this->db->where('id', $category->id);
+
+            return $this->db->update('categories', $data);
+        }
+    }
+
     //delete category
     public function delete_category($id)
     {
-        $id = clean_number($id);
         $category = $this->get_category($id);
-
         if (!empty($category)) {
             //delete from s3
             if ('aws_s3' == $category->storage) {
                 $this->load->model('aws_model');
-                if (!empty($category->image_1)) {
-                    $this->aws_model->delete_category_object($category->image_1);
-                }
-                if (!empty($category->image_2)) {
-                    $this->aws_model->delete_category_object($category->image_2);
+                if (!empty($category->image)) {
+                    $this->aws_model->delete_category_object($category->image);
                 }
             } else {
-                delete_file_from_server($category->image_1);
-                delete_file_from_server($category->image_2);
+                delete_file_from_server($category->image);
             }
             //delete category name
-            $this->delete_category_name($id);
-            $this->db->where('id', $id);
+            $this->delete_category_name($category->id);
+            $this->db->where('id', $category->id);
 
             return $this->db->delete('categories');
         }

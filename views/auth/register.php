@@ -10,13 +10,12 @@
 						<!-- form start -->
 						<?php
 						if ($recaptcha_status) {
-							echo form_open('auth_controller/register_post', ['id' => 'form_validate', 'class' => 'validate_terms',
+							echo form_open('register-post', ['id' => 'form_validate', 'class' => 'validate_terms',
 								'onsubmit' => "var serializedData = $(this).serializeArray();var recaptcha = ''; $.each(serializedData, function (i, field) { if (field.name == 'g-recaptcha-response') {recaptcha = field.value;}});if (recaptcha.length < 5) { $('.g-recaptcha>div').addClass('is-invalid');return false;} else { $('.g-recaptcha>div').removeClass('is-invalid');}"]);
 						} else {
-							echo form_open('auth_controller/register_post', ['id' => 'form_validate', 'class' => 'validate_terms']);
+							echo form_open('register-post', ['id' => 'form_validate', 'class' => 'validate_terms']);
 						}
 						?>
-
 						<div class="social-login-cnt">
 							<?php $this->load->view("partials/_social_login", ['or_text' => trans("register_with_email")]); ?>
 						</div>
@@ -32,6 +31,12 @@
 						<div class="form-group">
 							<input type="text" name="username" class="form-control auth-form-input" placeholder="<?php echo trans("username"); ?>" value="<?php echo old("username"); ?>" maxlength="<?php echo $this->username_maxlength; ?>" required>
 						</div>
+                        <div class="form-group">
+							<input type="text" name="first_name" class="form-control auth-form-input" placeholder="<?php echo trans("first_name"); ?>" value="<?php echo old("first_name"); ?>" maxlength="255" required>
+						</div>
+                        <div class="form-group">
+							<input type="text" name="last_name" class="form-control auth-form-input" placeholder="<?php echo trans("last_name"); ?>" value="<?php echo old("last_name"); ?>" maxlength="255" required>
+						</div>
 						<div class="form-group">
 							<input type="email" name="email" class="form-control auth-form-input" placeholder="<?php echo trans("email_address"); ?>" value="<?php echo old("email"); ?>" required>
 						</div>
@@ -44,7 +49,8 @@
 						<div class="form-group m-t-5 m-b-20">
 							<div class="custom-control custom-checkbox custom-control-validate-input">
 								<input type="checkbox" class="custom-control-input" name="terms" id="checkbox_terms" required>
-								<label for="checkbox_terms" class="custom-control-label"><?php echo trans("terms_conditions_exp"); ?>&nbsp;<a href="<?php echo lang_base_url(); ?>terms-conditions" class="link-terms" target="_blank"><strong><?php echo trans("terms_conditions"); ?></strong></a></label>
+								<?php $page_terms_condition = get_page_by_default_name("terms_conditions", $this->selected_lang->id); ?>
+								<label for="checkbox_terms" class="custom-control-label"><?php echo trans("terms_conditions_exp"); ?>&nbsp;<a href="<?php echo lang_base_url() . $page_terms_condition->slug; ?>" class="link-terms" target="_blank"><strong><?php echo html_escape($page_terms_condition->title); ?></strong></a></label>
 							</div>
 						</div>
 						<?php if ($recaptcha_status): ?>

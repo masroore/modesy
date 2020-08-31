@@ -37,7 +37,7 @@
                                 <td><?php echo html_escape($item->id); ?></td>
                                 <td class="td-product">
                                     <?php if ($item->is_promoted == 1): ?>
-                                        <label class="label label-success"><?php echo trans("promoted"); ?></label>
+                                        <label class="label label-success"><?php echo trans("featured"); ?></label>
                                     <?php endif; ?>
                                     <div class="img-table" style="height: 100px;">
                                         <img src="<?php echo get_product_image($item->id, 'image_small'); ?>" data-src="" alt="" class="lazyload img-responsive post-image"/>
@@ -51,7 +51,7 @@
 									<?php $categories_array = get_parent_categories_array($item->category_id);
 									if (!empty($categories_array)) {
 										foreach ($categories_array as $item_array) {
-											$item_category = get_category_joined($item_array->id);
+											$item_category = get_category_by_id($item_array->id);
 											if (!empty($item_category)) {
 												echo @html_escape($item_category->name) . "<br>";
 											}
@@ -61,12 +61,12 @@
                                 <td>
                                     <?php $user = get_user($item->user_id);
                                     if (!empty($user)): ?>
-                                        <a href="<?php echo base_url(); ?>profile/<?php echo html_escape($user->slug); ?>" target="_blank" class="table-username">
+                                        <a href="<?php echo generate_profile_url($user->slug); ?>" target="_blank" class="table-username">
                                             <?php echo html_escape($user->username); ?>
                                         </a>
                                     <?php endif; ?>
                                 </td>
-                                <td><?php echo $item->created_at; ?></td>
+                                <td><?php echo formatted_date($item->created_at); ?></td>
                                 <td>
                                     <div class="dropdown">
                                         <button class="btn bg-purple dropdown-toggle btn-select-option"

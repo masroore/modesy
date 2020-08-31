@@ -271,12 +271,54 @@ class Blog_controller extends Admin_Core_Controller
      */
     public function comments()
     {
-        $data['title'] = trans('comments');
-        $data['comments'] = $this->comment_model->get_all_blog_comments();
+        $data['title'] = trans('approved_comments');
+        $data['comments'] = $this->comment_model->get_approved_blog_comments();
+        $data['top_button_text'] = trans('pending_comments');
+        $data['top_button_url'] = admin_url() . 'pending-blog-comments';
+        $data['show_approve_button'] = false;
 
         $this->load->view('admin/includes/_header', $data);
-        $this->load->view('admin/blog/comments', $data);
+        $this->load->view('admin/comment/blog_comments', $data);
         $this->load->view('admin/includes/_footer');
+    }
+
+    /**
+     * Pending Comments.
+     */
+    public function pending_comments()
+    {
+        $data['title'] = trans('pending_comments');
+        $data['comments'] = $this->comment_model->get_pending_blog_comments();
+        $data['top_button_text'] = trans('approved_comments');
+        $data['top_button_url'] = admin_url() . 'blog-comments';
+        $data['show_approve_button'] = true;
+
+        $this->load->view('admin/includes/_header', $data);
+        $this->load->view('admin/comment/blog_comments', $data);
+        $this->load->view('admin/includes/_footer');
+    }
+
+    /**
+     * Aprrove Comment Post.
+     */
+    public function approve_comment_post()
+    {
+        $id = $this->input->post('id', true);
+        if ($this->comment_model->approve_blog_comment($id)) {
+            $this->session->set_flashdata('success', trans('msg_comment_approved'));
+        } else {
+            $this->session->set_flashdata('error', trans('msg_error'));
+        }
+        redirect($this->agent->referrer());
+    }
+
+    /**
+     * Approve Selected Comments.
+     */
+    public function approve_selected_comments()
+    {
+        $comment_ids = $this->input->post('comment_ids', true);
+        $this->comment_model->approve_multi_blog_comments($comment_ids);
     }
 
     /**

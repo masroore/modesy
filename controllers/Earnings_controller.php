@@ -7,7 +7,7 @@ class Earnings_controller extends Home_Core_Controller
     public function __construct()
     {
         parent::__construct();
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_user_vendor()) {
@@ -17,7 +17,7 @@ class Earnings_controller extends Home_Core_Controller
             redirect(lang_base_url());
         }
         $this->earnings_per_page = 15;
-        $this->user_id = user()->id;
+        $this->user_id = $this->auth_user->id;
     }
 
     /**
@@ -29,8 +29,9 @@ class Earnings_controller extends Home_Core_Controller
         $data['description'] = trans('earnings') . ' - ' . $this->app_name;
         $data['keywords'] = trans('earnings') . ',' . $this->app_name;
         $data['active_tab'] = 'earnings';
-        $data['user'] = user();
-        $pagination = $this->paginate(lang_base_url() . 'earnings', $this->earnings_model->get_earnings_count($this->user_id), $this->earnings_per_page);
+        $data['user'] = $this->auth_user;
+
+        $pagination = $this->paginate(generate_url('earnings'), $this->earnings_model->get_earnings_count($this->user_id), $this->earnings_per_page);
         $data['earnings'] = $this->earnings_model->get_paginated_earnings($this->user_id, $pagination['per_page'], $pagination['offset']);
 
         $this->load->view('partials/_header', $data);
@@ -47,8 +48,8 @@ class Earnings_controller extends Home_Core_Controller
         $data['description'] = trans('payouts') . ' - ' . $this->app_name;
         $data['keywords'] = trans('payouts') . ',' . $this->app_name;
         $data['active_tab'] = 'payouts';
-        $data['user'] = user();
-        $pagination = $this->paginate(lang_base_url() . 'earnings', $this->earnings_model->get_payouts_count($this->user_id), $this->earnings_per_page);
+        $data['user'] = $this->auth_user;
+        $pagination = $this->paginate(generate_url('earnings'), $this->earnings_model->get_payouts_count($this->user_id), $this->earnings_per_page);
         $data['payouts'] = $this->earnings_model->get_paginated_payouts($this->user_id, $pagination['per_page'], $pagination['offset']);
 
         $this->load->view('partials/_header', $data);
@@ -65,7 +66,7 @@ class Earnings_controller extends Home_Core_Controller
         $data['description'] = trans('set_payout_account') . ' - ' . $this->app_name;
         $data['keywords'] = trans('set_payout_account') . ',' . $this->app_name;
         $data['active_tab'] = 'set_payout_account';
-        $data['user'] = user();
+        $data['user'] = $this->auth_user;
         $data['user_payout'] = $this->earnings_model->get_user_payout_account($data['user']->id);
 
         if (empty($this->session->flashdata('msg_payout'))) {
@@ -141,7 +142,7 @@ class Earnings_controller extends Home_Core_Controller
             'status' => 0,
             'created_at' => date('Y-m-d H:i:s'),
         ];
-        $data['amount'] = price_database_format($data['amount']);
+        $data['amount'] = get_price($data['amount'], 'database');
 
         //check active payouts
         $active_payouts = $this->earnings_model->get_active_payouts($this->user_id);
@@ -175,7 +176,7 @@ class Earnings_controller extends Home_Core_Controller
             $this->session->set_flashdata('error', trans('invalid_withdrawal_amount'));
             redirect($this->agent->referrer());
         }
-        if ($data['amount'] > user()->balance) {
+        if ($data['amount'] > $this->auth_user->balance) {
             $this->session->set_flashdata('error', trans('invalid_withdrawal_amount'));
             redirect($this->agent->referrer());
         }

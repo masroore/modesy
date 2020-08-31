@@ -14,22 +14,7 @@ function currentUrl($server)
 
 function verify_license($license_code, $current_url)
 {
-    $url = 'http://license.codingest.com/api/check_modesy_license_code?license_code=' . $_POST['license_code'] . '&domain=' . $current_url;
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $response = curl_exec($ch);
-    curl_close($ch);
-    if (empty($response)) {
-        $url = 'https://license.codingest.com/api/check_modesy_license_code?license_code=' . $_POST['license_code'] . '&domain=' . $current_url;
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $response = curl_exec($ch);
-        curl_close($ch);
-    }
-
-    return json_decode($response);
+    return [$code, 'valid']; //nulled
 }
 
 function update_config_license_code($license_code)

@@ -2,7 +2,7 @@
 <?php if (!empty($product)):
     $digital_file = $this->file_model->get_product_digital_file($product->id);
     if (!empty($digital_file)):?>
-        <?php echo form_open('file_controller/download_digital_file', ['id' => 'form_download_digital_file']); ?>
+        <?php echo form_open('download-digital-file-post', ['id' => 'form_download_digital_file']); ?>
         <input type="hidden" name="file_id" value="<?php echo $digital_file->id; ?>">
         <div class="dm-uploaded-digital-file">
             <a href="javascript:void(0)" class="float-left button-link-style" onclick="$('#form_download_digital_file').submit();">
@@ -27,9 +27,6 @@
                     <input type="file" name="file">
                 </a>
                 <ul class="dm-uploaded-files dm-uploaded-media-file" id="files-digital-files"></ul>
-                <div class="error-message error-message-img-upload">
-                    <p class="m-b-5 text-center"></p>
-                </div>
             </div>
         </div>
     <?php endif; ?>

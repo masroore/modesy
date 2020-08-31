@@ -380,13 +380,13 @@ $config['encryption_key'] = '';
 | except for 'cookie_prefix' and 'cookie_httponly', which are ignored here.
 |
 */
-$config['sess_driver'] = 'files';
+$config['sess_driver'] = 'database';
 $config['sess_cookie_name'] = 'ci_session';
 $config['sess_expiration'] = 172800; //48 hours
-$config['sess_save_path'] = APPPATH . 'session';
+$config['sess_save_path'] = 'ci_sessions';
 $config['sess_match_ip'] = false;
 $config['sess_time_to_update'] = 300;
-$config['sess_regenerate_destroy'] = false;
+$config['sess_regenerate_destroy'] = true;
 
 /*
 |--------------------------------------------------------------------------
@@ -456,7 +456,7 @@ $config['csrf_token_name'] = 'csrf_modesy_token';
 $config['csrf_cookie_name'] = 'csrf_modesy_token';
 $config['csrf_expire'] = 7200;
 $config['csrf_regenerate'] = true;
-$config['csrf_exclude_uris'] = ['cart_controller/iyzico_payment_post', 'promote_controller/iyzico_payment_post', 'file_controller/upload_image_session', 'file_controller/upload_image', 'file_controller/upload_video', 'file_controller/upload_audio', 'file_controller/upload_digital_files'];
+$config['csrf_exclude_uris'] = ['iyzico-payment-post'];
 
 /*
 |--------------------------------------------------------------------------
@@ -531,3 +531,18 @@ $config['proxy_ips'] = '';
 |
 */
 $config['app_key'] = 'cbLQtiQWnKjEfgoIRvXyc5hgqbfIbU6atljuyqx5dfgte';
+
+/*
+|--------------------------------------------------------------------------
+| Settings
+|--------------------------------------------------------------------------
+|
+*/
+require_once BASEPATH . 'database/DB.php';
+$db = &DB();
+$config['general_settings'] = $db->get('general_settings')->row();
+$config['routes'] = $db->get('routes')->row();
+$config['languages'] = $db->where('status', 1)->order_by('language_order')->get('languages')->result();
+defined('SITE_MDS_KEY') or define('SITE_MDS_KEY', trim($config['general_settings']->mds_key));
+defined('SITE_PRC_CD') or define('SITE_PRC_CD', trim($config['general_settings']->purchase_code));
+$db->close();

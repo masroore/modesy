@@ -77,8 +77,6 @@ if (!isset($license_code) || !isset($purchase_code)) {
                                 <div class="row">
                                     <div class="col-sm-6">
                                         <p><i class="fa fa-folder-open"></i> application/config</p>
-                                        <p><i class="fa fa-folder-open"></i> application/session</p>
-                                        <p><i class="fa fa-folder-open"></i> application/language</p>
                                         <p><i class="fa fa-folder-open"></i> uploads/audios</p>
                                         <p><i class="fa fa-folder-open"></i> uploads/blocks</p>
                                         <p><i class="fa fa-folder-open"></i> uploads/blog</p>
@@ -95,8 +93,6 @@ if (!isset($license_code) || !isset($purchase_code)) {
                                     </div>
                                     <div class="col-sm-6 text-right">
                                         <p><?php if (is_writable('../application/config')) { ?><i class="fa fa-check color-success"></i><?php } else { ?><i class="fa fa-close color-danger"></i><?php } ?></p>
-                                        <p><?php if (is_writable('../application/session')) { ?><i class="fa fa-check color-success"></i><?php } else { ?><i class="fa fa-close color-danger"></i><?php } ?></p>
-                                        <p><?php if (is_writable('../application/language')) { ?><i class="fa fa-check color-success"></i><?php } else { ?><i class="fa fa-close color-danger"></i><?php } ?></p>
                                         <p><?php if (is_writable('../uploads/audios')) { ?><i class="fa fa-check color-success"></i><?php } else { ?><i class="fa fa-close color-danger"></i><?php } ?></p>
                                         <p><?php if (is_writable('../uploads/blocks')) { ?><i class="fa fa-check color-success"></i><?php } else { ?><i class="fa fa-close color-danger"></i><?php } ?></p>
                                         <p><?php if (is_writable('../uploads/blog')) { ?><i class="fa fa-check color-success"></i><?php } else { ?><i class="fa fa-close color-danger"></i><?php } ?></p>

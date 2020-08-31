@@ -56,10 +56,10 @@ class Language_controller extends Admin_Core_Controller
             $this->session->set_flashdata('form_data', $this->language_model->input_values());
             redirect($this->agent->referrer());
         } else {
-            if ($this->language_model->add_language()) {
-                $last_id = $this->db->insert_id();
-                $this->language_model->add_language_settings($last_id);
-                $this->language_model->add_language_pages($last_id);
+            $language_id = $this->language_model->add_language();
+            if (!empty($language_id)) {
+                $this->language_model->add_language_settings($language_id);
+                $this->language_model->add_language_pages($language_id);
 
                 $this->session->set_flashdata('success_form', trans('msg_language_added'));
                 redirect($this->agent->referrer());
@@ -77,7 +77,6 @@ class Language_controller extends Admin_Core_Controller
     public function update_language($id)
     {
         $data['title'] = trans('update_language');
-
         //get language
         $data['language'] = $this->language_model->get_language($id);
 
@@ -124,8 +123,9 @@ class Language_controller extends Admin_Core_Controller
         $id = $this->input->post('id', true);
 
         $language = $this->language_model->get_language($id);
-        if ('default' == $language->folder_name) {
+        if (1 == $language->id) {
             $this->session->set_flashdata('error', trans('msg_default_language_delete'));
+            exit();
         }
         if ($this->language_model->delete_language($id)) {
             $this->session->set_flashdata('success', trans('msg_language_deleted'));
@@ -135,84 +135,32 @@ class Language_controller extends Admin_Core_Controller
     }
 
     /**
-     * Update Phrases.
+     * Update Translations.
      */
-    public function update_phrases($id)
+    public function update_translations($id)
     {
         $data['title'] = trans('edit_translations');
 
         //get language
         $data['language'] = $this->language_model->get_language($id);
-
         if (empty($data['language'])) {
             redirect($this->agent->referrer());
         }
 
-        $data['page'] = $this->input->get('page', true);
-
-        if (empty($data['page'])) {
-            redirect('language/update_phrases/' . $id . '?page=1');
-        }
-
-        $data['phrases'] = $this->language_model->get_phrases($data['language']->folder_name);
-
-        $data['tab_count'] = ceil(count($data['phrases']) / 50);
-
-        $this->session->set_userdata('phrases', $data['phrases']);
+        //get paginated translations
+        $pagination = $this->paginate(admin_url() . 'translations/' . $data['language']->id, $this->language_model->get_translation_count($data['language']->id));
+        $data['translations'] = $this->language_model->get_paginated_translations($data['language']->id, $pagination['per_page'], $pagination['offset']);
 
         $this->load->view('admin/includes/_header', $data);
-        $this->load->view('admin/language/phrases', $data);
+        $this->load->view('admin/language/translations', $data);
         $this->load->view('admin/includes/_footer');
     }
 
     /**
-     * Update Phrases Post.
+     * Update Translation Post.
      */
-    public function update_phrases_post()
+    public function update_translation_post()
     {
-        $id = $this->input->post('id');
-
-        $data['language'] = $this->language_model->get_language($id);
-
-        if (empty($data['language'])) {
-            redirect($this->agent->referrer());
-        }
-
-        $phrases = $this->input->post(['phrase']);
-        $labels = $this->input->post(['label']);
-
-        $this->language_model->update_language_file($data['language']->folder_name, $phrases, $labels);
-
-        $this->session->set_flashdata('success', trans('msg_updated'));
-        sleep(3);
-        redirect($this->agent->referrer());
-    }
-
-    /**
-     * Search Phrases.
-     */
-    public function search_phrases()
-    {
-        $id = trim($this->input->get('id', true));
-        $data['q'] = trim($this->input->get('q', true));
-        if (empty($data['q'])) {
-            redirect($this->agent->referrer());
-        }
-
-        $data['title'] = trans('edit_translations');
-
-        //get language
-        $data['language'] = $this->language_model->get_language($id);
-
-        if (empty($data['language'])) {
-            redirect($this->agent->referrer());
-        }
-        $data['phrases'] = $this->language_model->search_phrases($data['language']->folder_name, $data['q']);
-
-        $this->session->set_userdata('phrases', $data['phrases']);
-
-        $this->load->view('admin/includes/_header', $data);
-        $this->load->view('admin/language/search_phrases', $data);
-        $this->load->view('admin/includes/_footer');
+        $this->language_model->update_translation();
     }
 }

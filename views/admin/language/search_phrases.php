@@ -31,7 +31,6 @@
 
                         <?php echo form_open('language_controller/update_phrases_post'); ?>
                         <input type="hidden" name="id" class="form-control" value="<?php echo $language->id; ?>">
-                        <input type="hidden" id="lang_folder" class="form-control" value="<?php echo $language->folder_name; ?>">
 
                         <table class="table table-bordered table-striped dataTable">
                             <thead>
@@ -48,8 +47,8 @@
 
                                 <tr class="tr-phrase">
                                     <td style="width: 50px;"><?php echo $count; ?></td>
-                                    <td style="width: 40%;"><input type="text" name="phrase[]" class="form-control" value="<?php echo $item["phrase"]; ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?> readonly></td>
-                                    <td style="width: 60%;"><input type="text" name="label[]" class="form-control" value="<?php echo $item["label"]; ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>></td>
+                                    <td style="width: 40%;"><input type="text" name="phrase[]" class="form-control" value="<?php echo $item["phrase"]; ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?> readonly></td>
+                                    <td style="width: 60%;"><input type="text" name="label[]" class="form-control" value="<?php echo $item["label"]; ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>></td>
                                 </tr>
 
                                 <?php $count++; ?>

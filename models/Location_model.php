@@ -9,9 +9,10 @@ class Location_model extends CI_Model
     {
         $data = [
             'name' => $this->input->post('name', true),
+            'status' => $this->input->post('status', true),
         ];
 
-        return $this->db->insert('countries', $data);
+        return $this->db->insert('location_countries', $data);
     }
 
     //update country
@@ -19,11 +20,12 @@ class Location_model extends CI_Model
     {
         $data = [
             'name' => $this->input->post('name', true),
+            'status' => $this->input->post('status', true),
         ];
 
         $this->db->where('id', $id);
 
-        return $this->db->update('countries', $data);
+        return $this->db->update('location_countries', $data);
     }
 
     //add state
@@ -34,7 +36,7 @@ class Location_model extends CI_Model
             'country_id' => $this->input->post('country_id', true),
         ];
 
-        return $this->db->insert('states', $data);
+        return $this->db->insert('location_states', $data);
     }
 
     //update state
@@ -47,14 +49,24 @@ class Location_model extends CI_Model
 
         $this->db->where('id', $id);
 
-        return $this->db->update('states', $data);
+        return $this->db->update('location_states', $data);
+    }
+
+    //get active countries
+    public function get_active_countries()
+    {
+        $this->db->where('status', 1);
+        $this->db->order_by('name');
+        $query = $this->db->get('location_countries');
+
+        return $query->result();
     }
 
     //get countries
     public function get_countries()
     {
-        $this->db->order_by('countries.id');
-        $query = $this->db->get('countries');
+        $this->db->order_by('name');
+        $query = $this->db->get('location_countries');
 
         return $query->result();
     }
@@ -64,10 +76,11 @@ class Location_model extends CI_Model
     {
         $q = trim($this->input->get('q', true));
         if (!empty($q)) {
-            $this->db->like('countries.name', $q);
+            $this->db->like('name', $q);
         }
+        $this->db->order_by('id');
         $this->db->limit($per_page, $offset);
-        $query = $this->db->get('countries');
+        $query = $this->db->get('location_countries');
 
         return $query->result();
     }
@@ -77,9 +90,9 @@ class Location_model extends CI_Model
     {
         $q = trim($this->input->get('q', true));
         if (!empty($q)) {
-            $this->db->like('countries.name', $q);
+            $this->db->like('name', $q);
         }
-        $query = $this->db->get('countries');
+        $query = $this->db->get('location_countries');
 
         return $query->num_rows();
     }
@@ -88,11 +101,23 @@ class Location_model extends CI_Model
     public function get_country($id)
     {
         $id = clean_number($id);
-        $this->db->where('countries.id', $id);
-        $this->db->limit(8);
-        $query = $this->db->get('countries');
+        $this->db->where('id', $id);
+        $query = $this->db->get('location_countries');
 
         return $query->row();
+    }
+
+    //activate inactivate countries
+    public function activate_inactivate_countries($action)
+    {
+        $status = 1;
+        if ('inactivate' == $action) {
+            $status = 0;
+        }
+        $data = [
+            'status' => $status,
+        ];
+        $this->db->update('location_countries', $data);
     }
 
     //delete country
@@ -103,7 +128,7 @@ class Location_model extends CI_Model
         if (!empty($country)) {
             $this->db->where('id', $id);
 
-            return $this->db->delete('countries');
+            return $this->db->delete('location_countries');
         }
 
         return false;
@@ -112,8 +137,8 @@ class Location_model extends CI_Model
     //get states
     public function get_states()
     {
-        $this->db->order_by('states.name');
-        $query = $this->db->get('states');
+        $this->db->order_by('name');
+        $query = $this->db->get('location_states');
 
         return $query->result();
     }
@@ -123,19 +148,21 @@ class Location_model extends CI_Model
     {
         $country = $this->input->get('country', true);
         $q = trim($this->input->get('q', true));
-        $this->db->join('countries', 'states.country_id = countries.id');
-        $this->db->select('states.*, countries.name as country_name');
+        $this->db->join('location_countries', 'location_states.country_id = location_countries.id');
+        $this->db->select('location_states.*, location_countries.name as country_name, location_countries.status as country_status');
         if (!empty($country)) {
-            $this->db->where('states.country_id', $country);
+            $this->db->where('location_states.country_id', $country);
         }
         if (!empty($q)) {
             $this->db->group_start();
-            $this->db->like('countries.name', $q);
-            $this->db->or_like('states.name', $q);
+            $this->db->like('location_countries.name', $q);
+            $this->db->or_like('location_states.name', $q);
             $this->db->group_end();
         }
+        $this->db->order_by('location_states.id');
+        $this->db->order_by('location_states.name');
         $this->db->limit($per_page, $offset);
-        $query = $this->db->get('states');
+        $query = $this->db->get('location_states');
 
         return $query->result();
     }
@@ -145,18 +172,18 @@ class Location_model extends CI_Model
     {
         $country = $this->input->get('country', true);
         $q = trim($this->input->get('q', true));
-        $this->db->join('countries', 'states.country_id = countries.id');
-        $this->db->select('states.*, countries.name as country_name');
+        $this->db->join('location_countries', 'location_states.country_id = location_countries.id');
+        $this->db->select('location_states.*, location_countries.name as country_name, location_countries.status as country_status');
         if (!empty($country)) {
-            $this->db->where('states.country_id', $country);
+            $this->db->where('location_states.country_id', $country);
         }
         if (!empty($q)) {
             $this->db->group_start();
-            $this->db->like('countries.name', $q);
-            $this->db->or_like('states.name', $q);
+            $this->db->like('location_countries.name', $q);
+            $this->db->or_like('location_states.name', $q);
             $this->db->group_end();
         }
-        $query = $this->db->get('states');
+        $query = $this->db->get('location_states');
 
         return $query->num_rows();
     }
@@ -165,8 +192,8 @@ class Location_model extends CI_Model
     public function get_state($id)
     {
         $id = clean_number($id);
-        $this->db->where('states.id', $id);
-        $query = $this->db->get('states');
+        $this->db->where('id', $id);
+        $query = $this->db->get('location_states');
 
         return $query->row();
     }
@@ -174,35 +201,11 @@ class Location_model extends CI_Model
     //get states by country
     public function get_states_by_country($country_id)
     {
-        $country_id = clean_number($country_id);
-        $this->db->where('states.country_id', $country_id);
-        $this->db->order_by('states.name');
-        $query = $this->db->get('states');
+        $this->db->where('country_id', clean_number($country_id));
+        $this->db->order_by('name');
+        $query = $this->db->get('location_states');
 
         return $query->result();
-    }
-
-    //set location settings
-    public function set_location_settings()
-    {
-        $default_product_location = $this->input->post('default_product_location', true);
-        $country_id = $this->input->post('country_id', true);
-
-        $data = [
-            'default_product_location' => 0,
-        ];
-
-        if (1 == $default_product_location) {
-            if (!empty($country_id)) {
-                $data = [
-                    'default_product_location' => $country_id,
-                ];
-            }
-        }
-
-        $this->db->where('id', 1);
-
-        return $this->db->update('general_settings', $data);
     }
 
     //delete state
@@ -213,7 +216,7 @@ class Location_model extends CI_Model
         if (!empty($state)) {
             $this->db->where('id', $id);
 
-            return $this->db->delete('states');
+            return $this->db->delete('location_states');
         }
 
         return false;
@@ -228,7 +231,7 @@ class Location_model extends CI_Model
             'state_id' => $this->input->post('state_id', true),
         ];
 
-        return $this->db->insert('cities', $data);
+        return $this->db->insert('location_cities', $data);
     }
 
     //update city
@@ -242,14 +245,14 @@ class Location_model extends CI_Model
 
         $this->db->where('id', $id);
 
-        return $this->db->update('cities', $data);
+        return $this->db->update('location_cities', $data);
     }
 
     //get cities
     public function get_cities()
     {
-        $this->db->order_by('cities.name');
-        $query = $this->db->get('cities');
+        $this->db->order_by('name');
+        $query = $this->db->get('location_cities');
 
         return $query->result();
     }
@@ -260,23 +263,23 @@ class Location_model extends CI_Model
         $country = $this->input->get('country', true);
         $state = $this->input->get('state', true);
         $q = trim($this->input->get('q', true));
-        $this->db->join('countries', 'cities.country_id = countries.id');
-        $this->db->join('states', 'cities.state_id = states.id');
-        $this->db->select('cities.*, countries.name as country_name, states.name as state_name');
+        $this->db->join('location_countries', 'location_cities.country_id = location_countries.id');
+        $this->db->join('location_states', 'location_cities.state_id = location_states.id');
+        $this->db->select('location_cities.*, location_countries.name as country_name, location_states.name as state_name');
         if (!empty($country)) {
-            $this->db->where('cities.country_id', $country);
+            $this->db->where('location_cities.country_id', $country);
         }
         if (!empty($state)) {
-            $this->db->where('cities.state_id', $state);
+            $this->db->where('location_cities.state_id', $state);
         }
         if (!empty($q)) {
             $this->db->group_start();
-            $this->db->like('countries.name', $q);
-            $this->db->or_like('cities.name', $q);
+            $this->db->like('location_countries.name', $q);
+            $this->db->or_like('location_cities.name', $q);
             $this->db->group_end();
         }
         $this->db->limit($per_page, $offset);
-        $query = $this->db->get('cities');
+        $query = $this->db->get('location_cities');
 
         return $query->result();
     }
@@ -287,22 +290,22 @@ class Location_model extends CI_Model
         $country = $this->input->get('country', true);
         $state = $this->input->get('state', true);
         $q = trim($this->input->get('q', true));
-        $this->db->join('countries', 'cities.country_id = countries.id');
-        $this->db->join('states', 'cities.state_id = states.id');
-        $this->db->select('cities.*');
+        $this->db->join('location_countries', 'location_cities.country_id = location_countries.id');
+        $this->db->join('location_states', 'location_cities.state_id = location_states.id');
+        $this->db->select('location_cities.*');
         if (!empty($country)) {
-            $this->db->where('cities.country_id', $country);
+            $this->db->where('location_cities.country_id', $country);
         }
         if (!empty($state)) {
-            $this->db->where('cities.state_id', $state);
+            $this->db->where('location_cities.state_id', $state);
         }
         if (!empty($q)) {
             $this->db->group_start();
-            $this->db->like('countries.name', $q);
-            $this->db->or_like('cities.name', $q);
+            $this->db->like('location_countries.name', $q);
+            $this->db->or_like('location_cities.name', $q);
             $this->db->group_end();
         }
-        $query = $this->db->get('cities');
+        $query = $this->db->get('location_cities');
 
         return $query->num_rows();
     }
@@ -311,8 +314,8 @@ class Location_model extends CI_Model
     public function get_city($id)
     {
         $id = clean_number($id);
-        $this->db->where('cities.id', $id);
-        $query = $this->db->get('cities');
+        $this->db->where('id', $id);
+        $query = $this->db->get('location_cities');
 
         return $query->row();
     }
@@ -321,9 +324,9 @@ class Location_model extends CI_Model
     public function get_cities_by_country($country_id)
     {
         $country_id = clean_number($country_id);
-        $this->db->where('cities.country_id', $country_id);
-        $this->db->order_by('cities.name');
-        $query = $this->db->get('cities');
+        $this->db->where('location_cities.country_id', $country_id);
+        $this->db->order_by('location_cities.name');
+        $query = $this->db->get('location_cities');
 
         return $query->result();
     }
@@ -331,10 +334,9 @@ class Location_model extends CI_Model
     //get cities by state
     public function get_cities_by_state($state_id)
     {
-        $state_id = clean_number($state_id);
-        $this->db->where('cities.state_id', $state_id);
-        $this->db->order_by('cities.name');
-        $query = $this->db->get('cities');
+        $this->db->where('location_cities.state_id', clean_number($state_id));
+        $this->db->order_by('location_cities.name');
+        $query = $this->db->get('location_cities');
 
         return $query->result();
     }
@@ -347,7 +349,7 @@ class Location_model extends CI_Model
         if (!empty($city)) {
             $this->db->where('id', $id);
 
-            return $this->db->delete('cities');
+            return $this->db->delete('location_cities');
         }
 
         return false;
@@ -357,8 +359,9 @@ class Location_model extends CI_Model
     public function search_countries($val)
     {
         $val = remove_special_characters($val);
-        $this->db->like('countries.name', $val);
-        $query = $this->db->get('countries');
+        $this->db->like('name', $val);
+        $this->db->where('status', 1);
+        $query = $this->db->get('location_countries');
 
         return $query->result();
     }
@@ -367,13 +370,14 @@ class Location_model extends CI_Model
     public function search_states($val)
     {
         $val = remove_special_characters($val);
-        $this->db->join('countries', 'states.country_id = countries.id');
-        $this->db->select('states.*, countries.name as country_name, countries.id as country_id');
-        $this->db->like('countries.name', $val);
-        $this->db->or_like('states.name', $val);
-        $this->db->or_like('CONCAT(states.name, " ", countries.name)', $val);
+        $this->db->join('location_countries', 'location_states.country_id = location_countries.id');
+        $this->db->select('location_states.*, location_countries.name as country_name, location_countries.id as country_id');
+        $this->db->like('location_countries.name', $val);
+        $this->db->or_like('location_states.name', $val);
+        $this->db->or_like('CONCAT(location_states.name, " ", location_countries.name)', $val);
+        $this->db->where('location_countries.status', 1);
         $this->db->limit(100);
-        $query = $this->db->get('states');
+        $query = $this->db->get('location_states');
 
         return $query->result();
     }
@@ -382,15 +386,16 @@ class Location_model extends CI_Model
     public function search_cities($val)
     {
         $val = remove_special_characters($val);
-        $this->db->join('countries', 'cities.country_id = countries.id');
-        $this->db->join('states', 'cities.state_id = states.id');
-        $this->db->select('cities.*, countries.id as country_id, countries.name as country_name, states.id as state_id, states.name as state_name');
-        $this->db->like('countries.name', $val);
-        $this->db->or_like('states.name', $val);
-        $this->db->or_like('cities.name', $val);
-        $this->db->or_like('CONCAT(cities.name, " ",states.name, " ", countries.name)', $val);
+        $this->db->join('location_countries', 'location_cities.country_id = location_countries.id');
+        $this->db->join('location_states', 'location_cities.state_id = location_states.id');
+        $this->db->select('location_cities.*, location_countries.id as country_id, location_countries.name as country_name, location_states.id as state_id, location_states.name as state_name');
+        $this->db->like('location_countries.name', $val);
+        $this->db->or_like('location_states.name', $val);
+        $this->db->or_like('location_cities.name', $val);
+        $this->db->or_like('CONCAT(location_cities.name, " ",location_states.name, " ", location_countries.name)', $val);
+        $this->db->where('location_countries.status', 1);
         $this->db->limit(200);
-        $query = $this->db->get('cities');
+        $query = $this->db->get('location_cities');
 
         return $query->result();
     }
@@ -422,5 +427,15 @@ class Location_model extends CI_Model
         }
 
         return $str;
+    }
+
+    //get default location
+    public function get_default_location()
+    {
+        if (!empty($this->session->userdata('mds_default_location_id'))) {
+            return $this->session->userdata('mds_default_location_id');
+        }
+
+        return 0;
     }
 }

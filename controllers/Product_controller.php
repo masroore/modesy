@@ -8,7 +8,6 @@ class Product_controller extends Home_Core_Controller
     {
         parent::__construct();
         $this->review_limit = 5;
-        $this->comment_limit = 5;
         $this->product_per_page = 18;
     }
 
@@ -18,15 +17,15 @@ class Product_controller extends Home_Core_Controller
     public function start_selling()
     {
         //check auth
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (is_user_vendor()) {
             redirect(lang_base_url());
         }
-        if (1 == $this->general_settings->email_verification && 1 != user()->email_status) {
+        if (1 == $this->general_settings->email_verification && 1 != $this->auth_user->email_status) {
             $this->session->set_flashdata('error', trans('msg_confirmed_required'));
-            redirect(lang_base_url() . 'settings/update-profile');
+            redirect(generate_url('settings', 'update_profile'));
         }
 
         $data['title'] = trans('start_selling');
@@ -44,7 +43,7 @@ class Product_controller extends Home_Core_Controller
     public function start_selling_post()
     {
         //check auth
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         $user_id = $this->input->post('id', true);
@@ -93,20 +92,21 @@ class Product_controller extends Home_Core_Controller
     public function add_product()
     {
         //check auth
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_user_vendor()) {
-            redirect(lang_base_url() . 'start-selling');
+            redirect(generate_url('start_selling'));
         }
-        if (1 == $this->general_settings->email_verification && 1 != user()->email_status) {
+        if (1 == $this->general_settings->email_verification && 1 != $this->auth_user->email_status) {
             $this->session->set_flashdata('error', trans('msg_confirmed_required'));
-            redirect(lang_base_url() . 'settings/update-profile');
+            redirect(generate_url('settings', 'update_profile'));
         }
 
         $data['title'] = trans('sell_now');
         $data['description'] = trans('sell_now') . ' - ' . $this->app_name;
         $data['keywords'] = trans('sell_now') . ',' . $this->app_name;
+
         $data['modesy_images'] = $this->file_model->get_sess_product_images_array();
         $data['file_manager_images'] = $this->file_model->get_user_file_manager_images();
         $data['active_product_system_array'] = $this->get_activated_product_system();
@@ -122,15 +122,15 @@ class Product_controller extends Home_Core_Controller
     public function add_product_post()
     {
         //check auth
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_user_vendor()) {
             redirect(lang_base_url());
         }
-        if (1 == $this->general_settings->email_verification && 1 != user()->email_status) {
+        if (1 == $this->general_settings->email_verification && 1 != $this->auth_user->email_status) {
             $this->session->set_flashdata('error', trans('msg_confirmed_required'));
-            redirect(lang_base_url() . 'settings/update-profile');
+            redirect(generate_url('settings', 'update_profile'));
         }
         //add product
         if ($this->product_model->add_product()) {
@@ -141,7 +141,7 @@ class Product_controller extends Home_Core_Controller
             //add product images
             $this->file_model->add_product_images($last_id);
 
-            redirect(lang_base_url() . 'sell-now/product-details/' . $last_id);
+            redirect(generate_url('sell_now', 'product_details') . '/' . $last_id);
         } else {
             $this->session->set_flashdata('error', trans('msg_error'));
             redirect($this->agent->referrer());
@@ -154,7 +154,7 @@ class Product_controller extends Home_Core_Controller
     public function edit_draft($id)
     {
         //check auth
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_user_vendor()) {
@@ -167,7 +167,7 @@ class Product_controller extends Home_Core_Controller
         if (1 != $data['product']->is_draft) {
             redirect($this->agent->referrer());
         }
-        if ($data['product']->user_id != user()->id && 'admin' != user()->role) {
+        if ($data['product']->user_id != $this->auth_user->id && 'admin' != $this->auth_user->role) {
             redirect($this->agent->referrer());
         }
 
@@ -175,7 +175,7 @@ class Product_controller extends Home_Core_Controller
         $data['description'] = trans('sell_now') . ' - ' . $this->app_name;
         $data['keywords'] = trans('sell_now') . ',' . $this->app_name;
 
-        $data['category'] = get_category($data['product']->category_id);
+        $data['category'] = $this->category_model->get_category($data['product']->category_id);
         $data['parent_categories_array'] = $this->category_model->get_parent_categories_array_by_category_id($data['product']->category_id);
         $data['modesy_images'] = $this->file_model->get_product_images_uncached($data['product']->id);
         $data['all_categories'] = $this->category_model->get_categories_ordered_by_name();
@@ -193,7 +193,7 @@ class Product_controller extends Home_Core_Controller
     public function edit_product($id)
     {
         //check auth
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_user_vendor()) {
@@ -204,11 +204,11 @@ class Product_controller extends Home_Core_Controller
             redirect($this->agent->referrer());
         }
         if (1 == $data['product']->is_deleted) {
-            if ('admin' != user()->role) {
+            if ('admin' != $this->auth_user->role) {
                 redirect($this->agent->referrer());
             }
         }
-        if ($data['product']->user_id != user()->id && 'admin' != user()->role) {
+        if ($data['product']->user_id != $this->auth_user->id && 'admin' != $this->auth_user->role) {
             redirect($this->agent->referrer());
         }
 
@@ -216,7 +216,7 @@ class Product_controller extends Home_Core_Controller
         $data['description'] = trans('edit_product') . ' - ' . $this->app_name;
         $data['keywords'] = trans('edit_product') . ',' . $this->app_name;
 
-        $data['category'] = get_category($data['product']->category_id);
+        $data['category'] = $this->category_model->get_category($data['product']->category_id);
         $data['parent_categories_array'] = $this->category_model->get_parent_categories_array_by_category_id($data['product']->category_id);
         $data['modesy_images'] = $this->file_model->get_product_images_uncached($data['product']->id);
         $data['all_categories'] = $this->category_model->get_categories_ordered_by_name();
@@ -234,7 +234,7 @@ class Product_controller extends Home_Core_Controller
     public function edit_product_post()
     {
         //check auth
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_user_vendor()) {
@@ -255,7 +255,7 @@ class Product_controller extends Home_Core_Controller
             if (!empty($product)) {
                 $user_id = $product->user_id;
             }
-            if ($product->user_id != user()->id && 'admin' != user()->role) {
+            if ($product->user_id != $this->auth_user->id && 'admin' != $this->auth_user->role) {
                 redirect($this->agent->referrer());
             }
 
@@ -264,7 +264,7 @@ class Product_controller extends Home_Core_Controller
                 $this->product_model->update_slug($product_id);
 
                 if (1 == $product->is_draft) {
-                    redirect(lang_base_url() . 'sell-now/product-details/' . $product_id);
+                    redirect(generate_url('sell_now', 'product_details') . '/' . $product_id);
                 } else {
                     //reset cache
                     reset_cache_data_on_change();
@@ -287,22 +287,22 @@ class Product_controller extends Home_Core_Controller
     public function edit_product_details($id)
     {
         //check auth
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_user_vendor()) {
             redirect(lang_base_url());
         }
-        if (1 == $this->general_settings->email_verification && 1 != user()->email_status) {
+        if (1 == $this->general_settings->email_verification && 1 != $this->auth_user->email_status) {
             $this->session->set_flashdata('error', trans('msg_confirmed_required'));
-            redirect(lang_base_url() . 'settings/update-profile');
+            redirect(generate_url('settings', 'update_profile'));
         }
 
         $data['product'] = $this->product_admin_model->get_product($id);
         if (empty($data['product'])) {
             redirect($this->agent->referrer());
         }
-        if ('admin' != user()->role && user()->id != $data['product']->user_id) {
+        if ('admin' != $this->auth_user->role && $this->auth_user->id != $data['product']->user_id) {
             redirect($this->agent->referrer());
             exit();
         }
@@ -317,14 +317,10 @@ class Product_controller extends Home_Core_Controller
             $data['keywords'] = trans('edit_product') . ',' . $this->app_name;
         }
 
-        if (0 == $this->general_settings->default_product_location) {
-            if (0 == $data['product']->country_id) {
-                $data['states'] = $this->location_model->get_states_by_country($this->auth_user->country_id);
-            } else {
-                $data['states'] = $this->location_model->get_states_by_country($data['product']->country_id);
-            }
+        if (0 == $data['product']->country_id) {
+            $data['states'] = $this->location_model->get_states_by_country($this->auth_user->country_id);
         } else {
-            $data['states'] = $this->location_model->get_states_by_country($this->general_settings->default_product_location);
+            $data['states'] = $this->location_model->get_states_by_country($data['product']->country_id);
         }
         if (0 == $data['product']->country_id) {
             $data['cities'] = $this->location_model->get_cities_by_state($this->auth_user->state_id);
@@ -349,7 +345,7 @@ class Product_controller extends Home_Core_Controller
     public function edit_product_details_post()
     {
         //check auth
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_user_vendor()) {
@@ -361,7 +357,7 @@ class Product_controller extends Home_Core_Controller
             redirect($this->agent->referrer());
             exit();
         }
-        if ('admin' != user()->role && user()->id != $product->user_id) {
+        if ('admin' != $this->auth_user->role && $this->auth_user->id != $product->user_id) {
             redirect($this->agent->referrer());
             exit();
         }
@@ -372,7 +368,7 @@ class Product_controller extends Home_Core_Controller
 
             //reset cache
             reset_cache_data_on_change();
-            reset_user_cache_data(user()->id);
+            reset_user_cache_data($this->auth_user->id);
 
             if (1 != $product->is_draft) {
                 $this->session->set_flashdata('success', trans('msg_updated'));
@@ -389,13 +385,13 @@ class Product_controller extends Home_Core_Controller
 
                 //if draft
                 if ('save_as_draft' == $this->input->post('submit', true)) {
-                    redirect(lang_base_url() . 'drafts');
+                    redirect(generate_url('drafts'));
                     exit();
                 }
-                if (1 == $this->promoted_products_enabled) {
-                    redirect(lang_base_url() . 'promote-product/pricing/' . $product_id . '?type=new');
+                if (1 == $this->general_settings->promoted_products) {
+                    redirect(generate_url('promote_product', 'pricing') . '/' . $product_id . '?type=new');
                 } else {
-                    redirect(lang_base_url() . $product->slug);
+                    redirect(generate_product_url($product));
                 }
             }
         } else {
@@ -410,7 +406,7 @@ class Product_controller extends Home_Core_Controller
     public function delete_product()
     {
         //check auth
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_user_vendor()) {
@@ -425,7 +421,7 @@ class Product_controller extends Home_Core_Controller
             $user_id = $product->user_id;
         }
 
-        if ('admin' == user()->role || user()->id == $user_id) {
+        if ('admin' == $this->auth_user->role || $this->auth_user->id == $user_id) {
             if ($this->product_model->delete_product($id)) {
                 $this->session->set_flashdata('success', trans('msg_product_deleted'));
             } else {
@@ -444,7 +440,7 @@ class Product_controller extends Home_Core_Controller
     public function delete_draft()
     {
         //check auth
-        if (!auth_check()) {
+        if (!$this->auth_check) {
             redirect(lang_base_url());
         }
         if (!is_user_vendor()) {
@@ -459,7 +455,7 @@ class Product_controller extends Home_Core_Controller
             $user_id = $product->user_id;
         }
 
-        if ('admin' == user()->role || user()->id == $user_id) {
+        if ('admin' == $this->auth_user->role || $this->auth_user->id == $user_id) {
             $this->product_admin_model->delete_product_permanently($id);
             //reset cache
             reset_cache_data_on_change();
@@ -467,150 +463,24 @@ class Product_controller extends Home_Core_Controller
         }
     }
 
-    /*
-    *------------------------------------------------------------------------------------------
-    * PRODUCT VARIATIONS
-    *------------------------------------------------------------------------------------------
-    */
-
-    //add product variation
-    public function add_product_variation()
+    //add review
+    public function add_review_post()
     {
-        if ($this->auth_check) {
+        if ($this->auth_check && 1 == $this->general_settings->reviews) {
+            $rating = $this->input->post('rating', true);
             $product_id = $this->input->post('product_id', true);
-            $this->variation_model->add_variation();
-            $data['product_variations'] = $this->variation_model->get_product_variations($product_id);
-            $this->load->view('product/variation/_response_variations', $data);
+            $review_text = $this->input->post('review', true);
+            $product = $this->product_model->get_product_by_id($product_id);
+            if ($product->user_id != $this->auth_user->id) {
+                $review = $this->review_model->get_review($product_id, $this->auth_user->id);
+                if (!empty($review)) {
+                    $this->review_model->update_review($review->id, $rating, $product_id, $review_text);
+                } else {
+                    $this->review_model->add_review($rating, $product_id, $review_text);
+                }
+            }
         }
-    }
-
-    //edit product variation
-    public function edit_product_variation()
-    {
-        if ($this->auth_check) {
-            $common_id = $this->input->post('common_id', true);
-            $product_id = $this->input->post('product_id', true);
-            $lang_id = $this->input->post('lang_id', true);
-
-            $data['product_id'] = $product_id;
-            $data['variation'] = $this->variation_model->get_variation_by_common_id($common_id);
-            $data['main_variation'] = $this->variation_model->get_variation($common_id, $lang_id);
-            $this->load->view('product/variation/_response_variation_edit', $data);
-        }
-    }
-
-    //edit product variation
-    public function edit_product_variation_post()
-    {
-        if ($this->auth_check) {
-            $common_id = $this->input->post('common_id', true);
-            $product_id = $this->input->post('product_id', true);
-            $this->variation_model->edit_variation($common_id);
-            $data['product_variations'] = $this->variation_model->get_product_variations($product_id);
-            $this->load->view('product/variation/_response_variations', $data);
-        }
-    }
-
-    //delete product variation
-    public function delete_product_variation()
-    {
-        if ($this->auth_check) {
-            $common_id = $this->input->post('common_id', true);
-            $product_id = $this->input->post('product_id', true);
-            $this->variation_model->delete_variation($common_id);
-            $data['product_variations'] = $this->variation_model->get_product_variations($product_id);
-            $this->load->view('product/variation/_response_variations', $data);
-        }
-    }
-
-    //add product variation option
-    public function add_product_variation_option()
-    {
-        if ($this->auth_check) {
-            $variation_common_id = $this->input->post('variation_common_id', true);
-            $lang_id = $this->input->post('lang_id', true);
-            $this->variation_model->add_variation_option($variation_common_id, $lang_id);
-            $data['main_variation'] = $this->variation_model->get_variation($variation_common_id, $lang_id);
-            $this->load->view('product/variation/_response_variation_options_edit', $data);
-        }
-    }
-
-    //edit product variation options
-    public function edit_product_variation_options()
-    {
-        if ($this->auth_check) {
-            $common_id = $this->input->post('common_id', true);
-            $product_id = $this->input->post('product_id', true);
-            $lang_id = $this->input->post('lang_id', true);
-            $data['product_id'] = $product_id;
-            $data['main_variation'] = $this->variation_model->get_variation($common_id, $lang_id);
-            $this->load->view('product/variation/_response_variation_options_edit', $data);
-        }
-    }
-
-    //edit product variation options post
-    public function edit_product_variation_options_post()
-    {
-        if ($this->auth_check) {
-            $variation_common_id = $this->input->post('variation_common_id', true);
-            $lang_id = $this->input->post('lang_id', true);
-            $this->variation_model->edit_variation_options($variation_common_id);
-            $data['main_variation'] = $this->variation_model->get_variation($variation_common_id, $lang_id);
-            $this->load->view('product/variation/_response_variation_options_edit', $data);
-        }
-    }
-
-    //delete product variation option
-    public function delete_product_variation_option()
-    {
-        if ($this->auth_check) {
-            $option_common_id = $this->input->post('option_common_id', true);
-            $variation_common_id = $this->input->post('variation_common_id', true);
-            $lang_id = $this->input->post('lang_id', true);
-            $this->variation_model->delete_variation_option($option_common_id);
-            $data['main_variation'] = $this->variation_model->get_variation($variation_common_id, $lang_id);
-            $this->load->view('product/variation/_response_variation_options_edit', $data);
-        }
-    }
-
-    //select product variation
-    public function select_product_variation()
-    {
-        if ($this->auth_check) {
-            $common_id = $this->input->post('common_id', true);
-            $product_id = $this->input->post('product_id', true);
-            $this->variation_model->select_variation($common_id, $product_id);
-            $data['product_variations'] = $this->variation_model->get_product_variations($product_id);
-            $this->load->view('product/variation/_response_variations', $data);
-        }
-    }
-
-    //make review
-    public function make_review()
-    {
-        if (!$this->auth_check) {
-            exit();
-        }
-        if (1 != $this->general_settings->product_reviews) {
-            exit();
-        }
-        $limit = $this->input->post('limit', true);
-        $product_id = $this->input->post('product_id', true);
-        $review = $this->review_model->get_review($product_id, user()->id);
-        $data['product'] = $this->product_model->get_product_by_id($product_id);
-
-        if (!empty($review)) {
-            echo 'voted_error';
-        } elseif ($data['product']->user_id == user()->id) {
-            echo 'error_own_product';
-        } else {
-            $this->review_model->add_review();
-            $data['reviews'] = $this->review_model->get_limited_reviews($product_id, $limit);
-            $data['review_count'] = $this->review_model->get_review_count($data['product']->id);
-            $data['review_limit'] = $limit;
-            $data['product'] = $this->product_model->get_product_by_id($product_id);
-            $this->load->view('product/details/_make_review', $data);
-        }
+        redirect($this->agent->referrer());
     }
 
     //load more review
@@ -636,8 +506,8 @@ class Product_controller extends Home_Core_Controller
         $limit = $this->input->post('limit', true);
 
         $review = $this->review_model->get_review($product_id, $user_id);
-        if (auth_check() && !empty($review)) {
-            if ('admin' == user()->role || user()->id == $review->user_id) {
+        if ($this->auth_check && !empty($review)) {
+            if ('admin' == $this->auth_user->role || $this->auth_user->id == $review->user_id) {
                 $this->review_model->delete_review($id, $product_id);
             }
         }
@@ -648,121 +518,6 @@ class Product_controller extends Home_Core_Controller
         $data['review_limit'] = $limit;
 
         $this->load->view('product/details/_make_review', $data);
-    }
-
-    //make comment
-    public function make_comment()
-    {
-        if (1 != $this->general_settings->product_comments) {
-            exit();
-        }
-        $limit = $this->input->post('limit', true);
-        $product_id = $this->input->post('product_id', true);
-
-        if (auth_check()) {
-            $this->comment_model->add_comment();
-        } else {
-            if ($this->recaptcha_verify_request()) {
-                $this->comment_model->add_comment();
-            }
-        }
-
-        $data['product'] = $this->product_model->get_product_by_id($product_id);
-        $data['comment_count'] = $this->comment_model->get_product_comment_count($product_id);
-        $data['comments'] = $this->comment_model->get_comments($product_id, $limit);
-        $data['comment_limit'] = $limit;
-
-        $this->load->view('product/details/_comments', $data);
-    }
-
-    //load more comment
-    public function load_more_comment()
-    {
-        $product_id = $this->input->post('product_id', true);
-        $limit = $this->input->post('limit', true);
-        $new_limit = $limit + $this->comment_limit;
-        $data['product'] = $this->product_model->get_product_by_id($product_id);
-        $data['comments'] = $this->comment_model->get_comments($product_id, $new_limit);
-        $data['comment_count'] = $this->comment_model->get_product_comment_count($data['product']->id);
-        $data['comment_limit'] = $new_limit;
-
-        $this->load->view('product/details/_comments', $data);
-    }
-
-    //delete comment
-    public function delete_comment()
-    {
-        $id = $this->input->post('id', true);
-        $product_id = $this->input->post('product_id', true);
-        $limit = $this->input->post('limit', true);
-
-        $comment = $this->comment_model->get_comment($id);
-        if (auth_check() && !empty($comment)) {
-            if ('admin' == user()->role || user()->id == $comment->user_id) {
-                $this->comment_model->delete_comment($id);
-            }
-        }
-
-        $data['product'] = $this->product_model->get_product_by_id($product_id);
-        $data['comments'] = $this->comment_model->get_comments($product_id, $limit);
-        $data['comment_count'] = $this->comment_model->get_product_comment_count($data['product']->id);
-        $data['comment_limit'] = $limit;
-
-        $this->load->view('product/details/_comments', $data);
-    }
-
-    //delete comment
-    public function load_subcomment_box()
-    {
-        $comment_id = $this->input->post('comment_id', true);
-        $limit = $this->input->post('limit', true);
-        $data['parent_comment'] = $this->comment_model->get_comment($comment_id);
-        $data['comment_limit'] = $limit;
-        $this->load->view('product/details/_make_subcomment', $data);
-    }
-
-    //set product as sold
-    public function set_product_as_sold()
-    {
-        $product_id = $this->input->post('product_id', true);
-        if (auth_check()) {
-            $this->product_model->set_product_as_sold($product_id);
-        }
-    }
-
-    //add or remove favorites
-    public function add_remove_favorites()
-    {
-        $product_id = $this->input->post('product_id', true);
-        $this->product_model->add_remove_favorites($product_id);
-        redirect($this->agent->referrer());
-    }
-
-    //add or remove favorites
-    public function add_remove_favorite_ajax()
-    {
-        $product_id = $this->input->post('product_id', true);
-        $this->product_model->add_remove_favorites($product_id);
-    }
-
-    //get states
-    public function get_states()
-    {
-        $country_id = $this->input->post('country_id', true);
-        $states = $this->location_model->get_states_by_country($country_id);
-        foreach ($states as $item) {
-            echo '<option value="' . $item->id . '">' . $item->name . '</option>';
-        }
-    }
-
-    //get cities
-    public function get_cities()
-    {
-        $state_id = $this->input->post('state_id', true);
-        $cities = $this->location_model->get_cities_by_state($state_id);
-        foreach ($cities as $item) {
-            echo '<option value="' . $item->id . '">' . $item->name . '</option>';
-        }
     }
 
     //show address on map

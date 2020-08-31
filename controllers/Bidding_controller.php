@@ -49,7 +49,7 @@ class Bidding_controller extends Home_Core_Controller
                         'to' => $seller->email,
                         'subject' => trans('quote_request'),
                         'email_content' => trans('you_have_new_quote_request') . '<br>' . trans('quote') . ': ' . '<strong>#' . $quote_id . '</strong>',
-                        'email_link' => lang_base_url() . 'quote-requests',
+                        'email_link' => generate_url('quote_requests'),
                         'email_button_text' => trans('view_details'),
                     ];
                     $this->session->set_userdata('mds_send_email_data', json_encode($email_data));
@@ -76,7 +76,7 @@ class Bidding_controller extends Home_Core_Controller
                     'to' => $buyer->email,
                     'subject' => trans('quote_request'),
                     'email_content' => trans('your_quote_request_replied') . '<br>' . trans('quote') . ': ' . '<strong>#' . $quote_request->id . '</strong>',
-                    'email_link' => lang_base_url() . 'sent-quote-requests',
+                    'email_link' => generate_url('sent_quote_requests'),
                     'email_button_text' => trans('view_details'),
                 ];
                 $this->session->set_userdata('mds_send_email_data', json_encode($email_data));
@@ -103,7 +103,7 @@ class Bidding_controller extends Home_Core_Controller
                     'to' => $seller->email,
                     'subject' => trans('quote_request'),
                     'email_content' => trans('your_quote_accepted') . '<br>' . trans('quote') . ': ' . '<strong>#' . $quote_request->id . '</strong>',
-                    'email_link' => lang_base_url() . 'quote-requests',
+                    'email_link' => generate_url('quote_requests'),
                     'email_button_text' => trans('view_details'),
                 ];
                 $this->session->set_userdata('mds_send_email_data', json_encode($email_data));
@@ -130,7 +130,7 @@ class Bidding_controller extends Home_Core_Controller
                     'to' => $seller->email,
                     'subject' => trans('quote_request'),
                     'email_content' => trans('your_quote_rejected') . '<br>' . trans('quote') . ': ' . '<strong>#' . $quote_request->id . '</strong>',
-                    'email_link' => lang_base_url() . 'quote-requests',
+                    'email_link' => generate_url('quote_requests'),
                     'email_button_text' => trans('view_details'),
                 ];
                 $this->session->set_userdata('mds_send_email_data', json_encode($email_data));
@@ -146,7 +146,7 @@ class Bidding_controller extends Home_Core_Controller
      */
     public function quote_requests()
     {
-        $data['user'] = user();
+        $data['user'] = $this->auth_user;
         $data['title'] = trans('quote_requests');
         $data['description'] = trans('quote_requests') . ' - ' . $this->app_name;
         $data['keywords'] = trans('quote_requests') . ',' . $this->app_name;
@@ -156,7 +156,7 @@ class Bidding_controller extends Home_Core_Controller
             $data['received_request_count'] = $this->bidding_model->get_received_quote_requests_count($data['user']->id);
             $data['sent_request_count'] = $this->bidding_model->get_sent_quote_requests_count($data['user']->id);
             //set pagination
-            $pagination = $this->paginate(lang_base_url() . 'quote-requests', $data['received_request_count'], $this->rows_per_page);
+            $pagination = $this->paginate(generate_url('quote_requests'), $data['received_request_count'], $this->rows_per_page);
             $data['quote_requests'] = $this->bidding_model->get_received_quote_requests_paginated($data['user']->id, $pagination['per_page'], $pagination['offset']);
 
             $this->load->view('partials/_header', $data);
@@ -167,7 +167,7 @@ class Bidding_controller extends Home_Core_Controller
             $data['received_request_count'] = $this->bidding_model->get_received_quote_requests_count($data['user']->id);
             $data['sent_request_count'] = $this->bidding_model->get_sent_quote_requests_count($data['user']->id);
             //set pagination
-            $pagination = $this->paginate(lang_base_url() . 'quote-requests', $data['sent_request_count'], $this->rows_per_page);
+            $pagination = $this->paginate(generate_url('quote_requests'), $data['sent_request_count'], $this->rows_per_page);
             $data['quote_requests'] = $this->bidding_model->get_sent_quote_requests_paginated($data['user']->id, $pagination['per_page'], $pagination['offset']);
 
             $this->load->view('partials/_header', $data);
@@ -181,20 +181,21 @@ class Bidding_controller extends Home_Core_Controller
      */
     public function sent_quote_requests()
     {
-        $data['user'] = user();
+        $data['user'] = $this->auth_user;
         $data['title'] = trans('quote_requests');
         $data['description'] = trans('quote_requests') . ' - ' . $this->app_name;
         $data['keywords'] = trans('quote_requests') . ',' . $this->app_name;
 
         if (!is_user_vendor()) {
-            redirect(lang_base_url() . 'quote_requests');
+            redirect(generate_url('quote_requests'));
         }
 
         $data['active_tab'] = 'sent_quote_requests';
         $data['received_request_count'] = $this->bidding_model->get_received_quote_requests_count($data['user']->id);
         $data['sent_request_count'] = $this->bidding_model->get_sent_quote_requests_count($data['user']->id);
+
         //set pagination
-        $pagination = $this->paginate(lang_base_url() . 'sent-quote-requests', $data['sent_request_count'], $this->rows_per_page);
+        $pagination = $this->paginate(generate_url('sent_quote_requests'), $data['sent_request_count'], $this->rows_per_page);
         $data['quote_requests'] = $this->bidding_model->get_sent_quote_requests_paginated($data['user']->id, $pagination['per_page'], $pagination['offset']);
 
         $this->load->view('partials/_header', $data);

@@ -227,7 +227,7 @@ class Earnings_admin_model extends CI_Model
                 'balance' => $this->input->post('balance', true),
             ];
 
-            $data['balance'] = price_database_format($data['balance']);
+            $data['balance'] = get_price($data['balance'], 'database');
 
             $this->db->where('id', $user_id);
 
@@ -244,7 +244,7 @@ class Earnings_admin_model extends CI_Model
             'payout_paypal_enabled' => $this->input->post('payout_paypal_enabled', true),
             'min_payout_paypal' => $this->input->post('min_payout_paypal', true),
         ];
-        $data['min_payout_paypal'] = price_database_format($data['min_payout_paypal']);
+        $data['min_payout_paypal'] = get_price($data['min_payout_paypal'], 'database');
         $this->db->where('id', 1);
 
         return $this->db->update('payment_settings', $data);
@@ -257,7 +257,7 @@ class Earnings_admin_model extends CI_Model
             'payout_iban_enabled' => $this->input->post('payout_iban_enabled', true),
             'min_payout_iban' => $this->input->post('min_payout_iban', true),
         ];
-        $data['min_payout_iban'] = price_database_format($data['min_payout_iban']);
+        $data['min_payout_iban'] = get_price($data['min_payout_iban'], 'database');
         $this->db->where('id', 1);
 
         return $this->db->update('payment_settings', $data);
@@ -270,7 +270,7 @@ class Earnings_admin_model extends CI_Model
             'payout_swift_enabled' => $this->input->post('payout_swift_enabled', true),
             'min_payout_swift' => $this->input->post('min_payout_swift', true),
         ];
-        $data['min_payout_swift'] = price_database_format($data['min_payout_swift']);
+        $data['min_payout_swift'] = get_price($data['min_payout_swift'], 'database');
         $this->db->where('id', 1);
 
         return $this->db->update('payment_settings', $data);

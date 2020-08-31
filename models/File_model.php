@@ -503,7 +503,7 @@ class File_model extends Core_Model
     {
         $digital_file = $this->get_product_digital_file($product_id);
         if (!empty($digital_file)) {
-            if (($digital_file->user_id == user()->id) || ('admin' == user()->role)) {
+            if (($digital_file->user_id == $this->auth_user->id) || ('admin' == $this->auth_user->role)) {
                 //delete file
                 if ('aws_s3' == $digital_file->storage) {
                     $this->load->model('aws_model');

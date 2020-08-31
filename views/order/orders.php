@@ -45,7 +45,7 @@
 									<?php foreach ($orders as $order): ?>
 										<tr>
 											<td>#<?php echo $order->order_number; ?></td>
-											<td><?php echo print_price($order->price_total, $order->price_currency); ?></td>
+											<td><?php echo price_formatted($order->price_total, $order->price_currency); ?></td>
 											<td>
 												<?php if ($order->payment_status == 'payment_received'):
 													echo trans("payment_received");
@@ -70,9 +70,9 @@
 													endif; ?>
 												</strong>
 											</td>
-											<td><?php echo date("Y-m-d / h:i", strtotime($order->created_at)); ?></td>
+											<td><?php echo formatted_date($order->created_at); ?></td>
 											<td>
-												<a href="<?php echo lang_base_url(); ?>order/<?php echo $order->order_number; ?>" class="btn btn-sm btn-table-info"><?php echo trans("details"); ?></a>
+												<a href="<?php echo generate_url("order_details") . "/" . $order->order_number; ?>" class="btn btn-sm btn-table-info"><?php echo trans("details"); ?></a>
 											</td>
 										</tr>
 									<?php endforeach; ?>

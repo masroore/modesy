@@ -21,7 +21,7 @@
                 <?php $this->load->view('admin/includes/_messages'); ?>
                 <div class="row">
                     <div class="col-sm-12">
-                        <?php foreach ($languages as $language): ?>
+                        <?php foreach ($this->languages as $language): ?>
                             <div class="form-group">
                                 <label><?php echo trans("field_name"); ?> (<?php echo $language->name; ?>)</label>
                                 <input type="text" class="form-control" name="name_lang_<?php echo $language->id; ?>" placeholder="<?php echo trans("field_name"); ?>" maxlength="255" required>

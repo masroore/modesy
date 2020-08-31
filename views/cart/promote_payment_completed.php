@@ -15,7 +15,7 @@
                     <?php if($method !="gtw"): ?>
                         <p class="p-complete-payment"><?php echo trans("msg_bank_transfer_text_transaction_completed"); ?></p>
                         <div class="bank-account-container">
-                            <?php echo $payment_settings->bank_transfer_accounts; ?>
+                            <?php echo $this->payment_settings->bank_transfer_accounts; ?>
                         </div>
                     <?php endif; ?>
                 </div>

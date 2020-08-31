@@ -98,7 +98,7 @@
 				<div class="form-group">
 					<textarea class="form-control text-area" name="google_analytics"
 							  placeholder="<?php echo trans('google_analytics'); ?>"
-							  style="min-height: 100px;" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>><?php echo html_escape($general_settings->google_analytics); ?></textarea>
+							  style="min-height: 100px;" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>><?php echo html_escape($this->general_settings->google_analytics); ?></textarea>
 				</div>
 
 				<!-- /.box-body -->

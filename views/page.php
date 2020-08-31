@@ -37,3 +37,4 @@
         $('.page-text-content iframe').addClass('embed-responsive-item');
     });
 </script>
+

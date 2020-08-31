@@ -14,7 +14,7 @@
 
         <div class="item-table-filter">
             <label><?php echo trans("search"); ?></label>
-            <input name="q" class="form-control" placeholder="<?php echo trans("user_id"); ?>" type="search" value="<?php echo html_escape($this->input->get('q', true)); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+            <input name="q" class="form-control" placeholder="<?php echo trans("user_id"); ?>" type="search" value="<?php echo html_escape($this->input->get('q', true)); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
         </div>
 
         <div class="item-table-filter md-top-10" style="width: 65px; min-width: 65px;">

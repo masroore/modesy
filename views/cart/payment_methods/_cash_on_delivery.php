@@ -7,12 +7,12 @@
 				<?php $this->load->view('product/_messages'); ?>
 			</div>
 		</div>
-		<?php echo form_open('cart_controller/cash_on_delivery_payment_post'); ?>
+		<?php echo form_open('cash-on-delivery-payment-post'); ?>
 		<div id="payment-button-container" class=paypal-button-cnt">
 			<p class="m-b-30">
 				<?php echo trans("cash_on_delivery_warning"); ?>
 			</p>
-			<button type="submit" name="submit" value="update" class="btn btn-lg btn-custom float-right m-t-30"><?php echo trans("place_order") ?></button>
+			<button type="submit" name="submit" value="update" class="btn btn-lg btn-custom float-right m-t-30" onclick="this.disabled=true;"><?php echo trans("place_order") ?></button>
 		</div>
 		<?php echo form_close(); ?>
 	<?php endif; ?>

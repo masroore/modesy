@@ -26,6 +26,7 @@
                             <th><?php echo trans('username'); ?></th>
                             <th><?php echo trans('email'); ?></th>
                             <th><?php echo trans('status'); ?></th>
+                            <th><?php echo str_replace(":", "", trans('last_seen')); ?></th>
                             <th><?php echo trans('date'); ?></th>
                             <th class="max-width-120"><?php echo trans('options'); ?></th>
                         </tr>
@@ -36,9 +37,13 @@
                             <tr>
                                 <td><?php echo html_escape($user->id); ?></td>
                                 <td>
-                                    <img src="<?php echo get_user_avatar($user); ?>" alt="user" class="img-responsive" style="height: 50px;">
+                                    <a href="<?php echo generate_profile_url($user->slug); ?>" target="_blank" class="table-link">
+                                        <img src="<?php echo get_user_avatar($user); ?>" alt="user" class="img-responsive" style="height: 50px;">
+                                    </a>
                                 </td>
-                                <td><?php echo html_escape($user->username); ?></td>
+                                <td>
+                                    <a href="<?php echo generate_profile_url($user->slug); ?>" target="_blank" class="table-link"><?php echo html_escape($user->username); ?></a>
+                                </td>
                                 <td>
                                     <?php echo html_escape($user->email);
                                     if ($user->email_status == 1): ?>
@@ -54,7 +59,8 @@
                                         <label class="label label-danger"><?php echo trans('banned'); ?></label>
                                     <?php endif; ?>
                                 </td>
-                                <td><?php echo $user->created_at; ?></td>
+                                <td><?php echo time_ago($user->last_seen); ?></td>
+                                <td><?php echo formatted_date($user->created_at); ?></td>
 
                                 <td>
                                     <div class="dropdown">
@@ -78,6 +84,9 @@
                                                 <?php else: ?>
                                                     <a href="javascript:void(0)" onclick="ban_remove_ban_user(<?php echo $user->id; ?>);"><i class="fa fa-circle option-icon"></i><?php echo trans('remove_user_ban'); ?></a>
                                                 <?php endif; ?>
+                                            </li>
+                                            <li>
+                                                <a href="<?php echo admin_url(); ?>edit-user/<?php echo $user->id; ?>"><i class="fa fa-edit option-icon"></i><?php echo trans('edit_user'); ?></a>
                                             </li>
                                             <li>
                                                 <a href="javascript:void(0)" onclick="delete_item('admin_controller/delete_user_post','<?php echo $user->id; ?>','<?php echo trans("confirm_user"); ?>');"><i class="fa fa-trash option-icon"></i><?php echo trans('delete'); ?></a>

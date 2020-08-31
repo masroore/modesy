@@ -45,11 +45,11 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="control-label"><?php echo trans('promoted_products_payment_currency'); ?></label>
+                    <label class="control-label"><?php echo trans('featured_products_payment_currency'); ?></label>
                     <select name="promoted_products_payment_currency" class="form-control">
                         <?php if (!empty($currencies)):
                             foreach ($currencies as $item): ?>
-                                <option value="<?php echo $item->code; ?>" <?php echo ($payment_settings->promoted_products_payment_currency == $item->code) ? 'selected' : ''; ?>><?php echo $item->name . " (" . $item->hex . ")"; ?></option>
+                                <option value="<?php echo $item->code; ?>" <?php echo ($this->payment_settings->promoted_products_payment_currency == $item->code) ? 'selected' : ''; ?>><?php echo $item->name . " (" . $item->hex . ")"; ?></option>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </select>
@@ -83,6 +83,22 @@
                         <div class="col-sm-4 col-xs-12 col-option">
                             <input type="radio" name="currency_symbol_format" value="right" id="currency_symbol_format_2" class="square-purple" <?php echo ($this->payment_settings->currency_symbol_format == 'right') ? 'checked' : ''; ?>>
                             <label for="currency_symbol_format_2" class="option-label">100$ (<?php echo trans("right"); ?>)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-sm-12 col-xs-12 m-b-5">
+                            <label><?php echo trans('add_space_between_money_currency'); ?></label>
+                        </div>
+                        <div class="col-sm-4 col-xs-12 col-option">
+                            <input type="radio" name="space_between_money_currency" value="1" id="space_between_money_currency_1" class="square-purple" <?php echo ($this->payment_settings->space_between_money_currency == 1) ? 'checked' : ''; ?>>
+                            <label for="space_between_money_currency_1" class="option-label"><?php echo trans("yes"); ?></label>
+                        </div>
+                        <div class="col-sm-4 col-xs-12 col-option">
+                            <input type="radio" name="space_between_money_currency" value="0" id="space_between_money_currency_2" class="square-purple" <?php echo ($this->payment_settings->space_between_money_currency == 0) ? 'checked' : ''; ?>>
+                            <label for="space_between_money_currency_2" class="option-label"><?php echo trans("no"); ?></label>
                         </div>
                     </div>
                 </div>
@@ -174,7 +190,7 @@
                                 <?php foreach ($currencies as $item): ?>
                                     <tr>
                                         <td><?php echo html_escape($item->id); ?></td>
-                                        <td><?php echo html_escape($item->name); ?>&nbsp</td>
+                                        <td><?php echo html_escape($item->name); ?>&nbsp;</td>
                                         <td><?php echo html_escape($item->code); ?></td>
                                         <td><?php echo html_escape($item->symbol); ?></td>
                                         <td>

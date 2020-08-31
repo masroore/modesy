@@ -77,7 +77,6 @@ class Page_controller extends Admin_Core_Controller
 
         //find page
         $data['page'] = $this->page_model->get_page_by_id($id);
-
         //page not found
         if (empty($data['page'])) {
             redirect($this->agent->referrer());
@@ -130,7 +129,7 @@ class Page_controller extends Admin_Core_Controller
 
         $page = $this->page_model->get_page_by_id($id);
 
-        if (!empty($page)) {
+        if (!empty($page) && 1 == $page->is_custom) {
             if ($this->page_model->delete($id)) {
                 $this->session->set_flashdata('success', trans('msg_page_deleted'));
             } else {

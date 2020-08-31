@@ -27,7 +27,7 @@
                     <input type="file" name="file">
                 </a>
                 <ul class="dm-uploaded-files dm-uploaded-media-file" id="files-video"></ul>
-                <div class="error-message error-message-img-upload">
+                <div class="error-message-file-upload">
                     <p class="m-b-5 text-center"></p>
                 </div>
             </div>

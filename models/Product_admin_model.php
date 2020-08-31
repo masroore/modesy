@@ -137,11 +137,6 @@ class Product_admin_model extends CI_Model
                 $this->db->where('products.is_deleted', 0);
                 $this->db->order_by('products.created_at', 'DESC');
             }
-            if ('sold_products' == $list) {
-                $this->db->where('products.is_draft', 0);
-                $this->db->where('products.is_sold', 1);
-                $this->db->order_by('products.created_at', 'DESC');
-            }
             if ('drafts' == $list) {
                 $this->db->where('products.is_draft', 1);
                 $this->db->where('products.is_deleted', 0);
@@ -277,27 +272,6 @@ class Product_admin_model extends CI_Model
 
     //get paginated deleted products
     public function get_paginated_deleted_products($per_page, $offset, $list)
-    {
-        $this->filter_products();
-        $this->filter_products_list($list);
-        $this->db->limit($per_page, $offset);
-        $query = $this->db->get('products');
-
-        return $query->result();
-    }
-
-    //get paginated sold product count
-    public function get_sold_products_count($list)
-    {
-        $this->filter_products();
-        $this->filter_products_list($list);
-        $query = $this->db->get('products');
-
-        return $query->num_rows();
-    }
-
-    //get paginated sold products
-    public function get_paginated_sold_products($per_page, $offset, $list)
     {
         $this->filter_products();
         $this->filter_products_list($list);

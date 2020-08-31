@@ -108,7 +108,7 @@ class Order_admin_model extends CI_Model
         $order_products = $this->get_order_products($order_id);
         if (!empty($order_products)) {
             foreach ($order_products as $order_product) {
-                if ('awaiting_payment' == $order_product->order_status || 'order_processing' == $order_product->order_status || 'cancelled' == $order_product->order_status) {
+                if ('awaiting_payment' == $order_product->order_status || 'cancelled' == $order_product->order_status) {
                     $all_received = false;
                 }
             }
@@ -420,5 +420,34 @@ class Order_admin_model extends CI_Model
         }
 
         return false;
+    }
+
+    //filter by values
+    public function filter_invoices()
+    {
+        $order_number = $this->input->get('order_number', true);
+        if (!empty($order_number)) {
+            $this->db->like('order_number', $order_number);
+        }
+    }
+
+    //get invoices count
+    public function get_invoices_count()
+    {
+        $this->filter_invoices();
+        $query = $this->db->get('invoices');
+
+        return $query->num_rows();
+    }
+
+    //get paginated invoices
+    public function get_paginated_invoices($per_page, $offset)
+    {
+        $this->filter_invoices();
+        $this->db->order_by('created_at', 'DESC');
+        $this->db->limit($per_page, $offset);
+        $query = $this->db->get('invoices');
+
+        return $query->result();
     }
 }

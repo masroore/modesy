@@ -2,9 +2,14 @@
 
 <div class="box">
     <div class="box-header with-border">
-        <h3 class="box-title"><?php echo $title; ?></h3>
-        <a href="<?php echo admin_url(); ?>add-state" class="btn btn-sm btn-success" style="position: absolute;right: 20px;"><i class="fa fa-plus"></i> <?php echo trans("add_state"); ?></a>
-
+        <div class="left">
+            <h3 class="box-title"><?php echo $title; ?></h3>
+        </div>
+        <div class="right">
+            <a href="<?php echo admin_url(); ?>add-state" class="btn btn-success btn-add-new">
+                <i class="fa fa-plus"></i>&nbsp;&nbsp;<?php echo trans('add_state'); ?>
+            </a>
+        </div>
     </div><!-- /.box-header -->
 
     <div class="box-body">
@@ -47,7 +52,7 @@
 
                                 <div class="item-table-filter">
                                     <label><?php echo trans("search"); ?></label>
-                                    <input name="q" class="form-control" placeholder="<?php echo trans("search"); ?>" type="search" value="<?php echo html_escape($this->input->get('q', true)); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+                                    <input name="q" class="form-control" placeholder="<?php echo trans("search"); ?>" type="search" value="<?php echo html_escape($this->input->get('q', true)); ?>" <?php echo ($this->rtl == true) ? 'dir="rtl"' : ''; ?>>
                                 </div>
 
                                 <div class="item-table-filter md-top-10" style="width: 65px; min-width: 65px;">
@@ -71,7 +76,14 @@
                             <tr>
                                 <td><?php echo html_escape($item->id); ?></td>
                                 <td><?php echo html_escape($item->name); ?></td>
-                                <td><?php echo html_escape($item->country_name); ?></td>
+                                <td>
+                                    <?php echo html_escape($item->country_name); ?>
+                                    <?php if ($item->country_status == 1): ?>
+                                        <label class="label label-success m-l-15"><?php echo trans("active"); ?></label>
+                                    <?php else: ?>
+                                        <label class="label label-danger m-l-15"><?php echo trans("inactive"); ?></label>
+                                    <?php endif; ?>
+                                </td>
                                 <td width="20%">
                                     <div class="dropdown">
                                         <button class="btn bg-purple dropdown-toggle btn-select-option"
