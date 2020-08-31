@@ -30,7 +30,9 @@
 					$this->load->view('partials/_review_stars', ['review' => $product->rating]);
 				} ?>
 				<div class="item-meta">
-					<?php $this->load->view('product/_price_product_item', ['product' => $product]); ?>
+					<div class="price-product-item-horizontal">
+						<?php $this->load->view('product/_price_product_item', ['product' => $product]); ?>
+					</div>
 					<?php if ($general_settings->product_reviews == 1): ?>
 						<span class="item-comments"><i class="icon-comment"></i>&nbsp;<?php echo get_product_comment_count($product->id); ?></span>
 					<?php endif; ?>

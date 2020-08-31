@@ -63,7 +63,6 @@ class Home_controller extends Home_Core_Controller
         $data['title'] = trans('contact');
         $data['description'] = trans('contact') . ' - ' . $this->app_name;
         $data['keywords'] = trans('contact') . ',' . $this->app_name;
-        $data['site_settings'] = get_site_settings();
         $this->load->view('partials/_header', $data);
         $this->load->view('contact', $data);
         $this->load->view('partials/_footer');
@@ -115,7 +114,6 @@ class Home_controller extends Home_Core_Controller
         }
 
         $data['page'] = $this->page_model->get_page($slug);
-        $data['site_settings'] = get_site_settings();
         //if exists
         if (!empty($data['page'])) {
             if (0 == $data['page']->visibility) {
@@ -154,7 +152,6 @@ class Home_controller extends Home_Core_Controller
         $pagination = $this->paginate($link, $this->product_model->get_paginated_filtered_products_count(null), $this->product_paginate_per_page);
         $data['products'] = $this->product_model->get_paginated_filtered_products(null, $pagination['per_page'], $pagination['offset']);
         $data['categories'] = $this->category_model->get_parent_categories();
-        $data['site_settings'] = get_site_settings();
 
         $data['show_location_filter'] = false;
         if (!empty($data['products'])) {
@@ -193,7 +190,6 @@ class Home_controller extends Home_Core_Controller
         $link = generate_category_url($data['category']);
         $pagination = $this->paginate($link, $this->product_model->get_paginated_filtered_products_count($data['category']->id), $this->product_paginate_per_page);
         $data['products'] = $this->product_model->get_paginated_filtered_products($data['category']->id, $pagination['per_page'], $pagination['offset']);
-        $data['site_settings'] = get_site_settings();
 
         $data['show_location_filter'] = false;
         if (!empty($data['products'])) {
@@ -408,7 +404,6 @@ class Home_controller extends Home_Core_Controller
             $blog_posts_count = $this->blog_model->get_posts_count();
             set_cache_data($key, $blog_posts_count);
         }
-        $data['site_settings'] = get_site_settings();
         //set pagination
         $pagination = $this->paginate(lang_base_url() . 'blog', $blog_posts_count, $this->blog_paginate_per_page);
         $key = 'blog_posts_lang_' . $this->selected_lang->id . '_page_' . $pagination['current_page'];
@@ -440,7 +435,6 @@ class Home_controller extends Home_Core_Controller
         $data['description'] = $data['category']->description;
         $data['keywords'] = $data['category']->keywords;
         $data['active_category'] = $slug;
-        $data['site_settings'] = get_site_settings();
         $key = 'blog_category_' . $data['category']->id . '_posts_count_lang_' . $this->selected_lang->id;
         $blog_posts_count = get_cached_data($key);
         if (empty($blog_posts_count)) {
@@ -481,7 +475,6 @@ class Home_controller extends Home_Core_Controller
         //get paginated posts
         $pagination = $this->paginate(lang_base_url() . 'blog/tag/' . $data['tag']->tag_slug, $this->blog_model->get_paginated_tag_posts_count($data['tag']->tag_slug), $this->blog_paginate_per_page);
         $data['posts'] = $this->blog_model->get_paginated_tag_posts($pagination['per_page'], $pagination['offset'], $data['tag']->tag_slug);
-        $data['site_settings'] = get_site_settings();
         $this->load->view('partials/_header', $data);
         $this->load->view('blog/tag', $data);
         $this->load->view('partials/_footer');
@@ -519,7 +512,6 @@ class Home_controller extends Home_Core_Controller
         $data['og_type'] = 'article';
         $data['og_url'] = lang_base_url() . 'blog/' . $data['post']->category_slug . '/' . $data['post']->slug;
         $data['og_image'] = get_blog_image_url($data['post'], 'image_default');
-        $data['site_settings'] = get_site_settings();
         $data['og_width'] = '750';
         $data['og_height'] = '500';
         if (!empty($data['post_user'])) {

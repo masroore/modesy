@@ -23,7 +23,6 @@ class Message_controller extends Home_Core_Controller
         $data['keywords'] = trans('messages') . ',' . $this->app_name;
 
         $data['conversation'] = $this->message_model->get_user_latest_conversation($this->auth_user->id);
-        $data['user_session'] = get_user_session();
 
         if (!empty($data['conversation'])) {
             $data['unread_conversations'] = $this->message_model->get_unread_conversations($this->auth_user->id);
@@ -47,7 +46,7 @@ class Message_controller extends Home_Core_Controller
         $data['keywords'] = trans('messages') . ',' . $this->app_name;
 
         $data['conversation'] = $this->message_model->get_conversation($id);
-        $data['user_session'] = get_user_session();
+
         //check message
         if (empty($data['conversation'])) {
             redirect(lang_base_url() . 'messages');

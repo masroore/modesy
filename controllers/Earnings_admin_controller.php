@@ -24,7 +24,6 @@ class Earnings_admin_controller extends Admin_Core_Controller
         //get paginated earnings
         $pagination = $this->paginate(admin_url() . 'earnings', $this->earnings_admin_model->get_earnings_count());
         $data['earnings'] = $this->earnings_admin_model->get_paginated_earnings($pagination['per_page'], $pagination['offset']);
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/earnings/earnings', $data);
@@ -51,7 +50,7 @@ class Earnings_admin_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('seller_balances');
         $data['form_action'] = admin_url() . 'seller-balances';
-        $data['admin_settings'] = get_admin_settings();
+
         //get paginated earnings
         $pagination = $this->paginate(admin_url() . 'seller-balances', $this->earnings_admin_model->get_users_count());
         $data['balances'] = $this->earnings_admin_model->get_paginated_users($pagination['per_page'], $pagination['offset']);
@@ -98,7 +97,7 @@ class Earnings_admin_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('completed_payouts');
         $data['form_action'] = admin_url() . 'completed-payouts';
-        $data['admin_settings'] = get_admin_settings();
+
         //get paginated earnings
         $pagination = $this->paginate(admin_url() . 'completed-payouts', $this->earnings_admin_model->get_completed_payouts_count());
         $data['payouts'] = $this->earnings_admin_model->get_paginated_completed_payouts($pagination['per_page'], $pagination['offset']);
@@ -118,7 +117,7 @@ class Earnings_admin_controller extends Admin_Core_Controller
         //get paginated earnings
         $pagination = $this->paginate(admin_url() . 'payout-requests', $this->earnings_admin_model->get_payout_requests_count());
         $data['payout_requests'] = $this->earnings_admin_model->get_paginated_payout_requests($pagination['per_page'], $pagination['offset']);
-        $data['admin_settings'] = get_admin_settings();
+
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/earnings/payout_requests', $data);
         $this->load->view('admin/includes/_footer');
@@ -131,7 +130,7 @@ class Earnings_admin_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('add_payout');
         $data['form_action'] = admin_url() . 'add_payout';
-        $data['admin_settings'] = get_admin_settings();
+
         $data['users'] = $this->auth_model->get_users();
         $data['currencies'] = $this->currency_model->get_currencies();
 
@@ -170,7 +169,6 @@ class Earnings_admin_controller extends Admin_Core_Controller
     public function payout_settings()
     {
         $data['title'] = trans('payout_settings');
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/earnings/payout_settings', $data);

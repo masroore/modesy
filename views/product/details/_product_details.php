@@ -49,9 +49,11 @@ endif; ?>
 			<strong class="lbl-sold"><?php echo trans("sold"); ?></strong>
 		<?php elseif ($product->is_free_product == 1): ?>
 			<strong class="lbl-free"><?php echo trans("free"); ?></strong>
-		<?php else: ?>
-			<strong class="lbl-price"><?php echo print_price($product->price, $product->currency); ?></strong>
-		<?php endif; ?>
+		<?php else:
+			if (!empty($product->price)):?>
+				<strong class="lbl-price"><?php echo print_price($product->price, $product->currency); ?></strong>
+			<?php endif;
+		endif; ?>
 	<?php endif; ?>
 	<?php if (auth_check()): ?>
 		<button class="btn btn-contact-seller" data-toggle="modal" data-target="#messageModal"><i class="icon-envelope"></i> <?php echo trans("ask_question") ?></button>

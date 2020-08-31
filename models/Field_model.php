@@ -514,6 +514,21 @@ class Field_model extends CI_Model
         }
     }
 
+    //delete field product values by product id
+    public function delete_field_product_values_by_product_id($product_id)
+    {
+        $product_id = clean_number($product_id);
+        $this->db->where('product_id', $product_id);
+        $query = $this->db->get('custom_fields_product');
+        $fields = $query->result();
+        if (!empty($fields)) {
+            foreach ($fields as $item) {
+                $this->db->where('id', $item->id);
+                $this->db->delete('custom_fields_product');
+            }
+        }
+    }
+
     //delete field name
     public function delete_field_name($field_id)
     {

@@ -214,7 +214,6 @@ class Auth_controller extends Home_Core_Controller
         $data['title'] = trans('register');
         $data['description'] = trans('register') . ' - ' . $this->app_name;
         $data['keywords'] = trans('register') . ',' . $this->app_name;
-        $data['user_session'] = get_user_session();
 
         $this->load->view('partials/_header', $data);
         $this->load->view('auth/register');
@@ -340,7 +339,7 @@ class Auth_controller extends Home_Core_Controller
         $data['title'] = trans('reset_password');
         $data['description'] = trans('reset_password') . ' - ' . $this->app_name;
         $data['keywords'] = trans('reset_password') . ',' . $this->app_name;
-        $data['user_session'] = get_user_session();
+
         $this->load->view('partials/_header', $data);
         $this->load->view('auth/forgot_password');
         $this->load->view('partials/_footer');
@@ -385,7 +384,7 @@ class Auth_controller extends Home_Core_Controller
         $data['title'] = trans('reset_password');
         $data['description'] = trans('reset_password') . ' - ' . $this->app_name;
         $data['keywords'] = trans('reset_password') . ',' . $this->app_name;
-        $data['user_session'] = get_user_session();
+
         $token = $this->input->get('token', true);
         //get user
         $data['user'] = $this->auth_model->get_user_by_token($token);

@@ -5,13 +5,13 @@
  *
  **/
 
+
 require_once APPPATH . "third_party/paypal/vendor/autoload.php";
 
+use PayPalCheckoutSdk\Orders\OrdersGetRequest;
 use PayPalCheckoutSdk\Core\PayPalHttpClient;
 use PayPalCheckoutSdk\Core\SandboxEnvironment;
 use PayPalCheckoutSdk\Core\ProductionEnvironment;
-use PayPalCheckoutSdk\Orders\OrdersCaptureRequest;
-
 
 class Paypal
 {
@@ -52,10 +52,8 @@ class Paypal
 	 */
 	public function get_order($order_id)
 	{
-		$request = new OrdersCaptureRequest($order_id);
-		$request->prefer('return=representation');
 		try {
-			$response = $this->client->execute($request);
+			$response = $this->client->execute(new OrdersGetRequest($order_id));
 			if (!empty($response) && $response->result->status == 'COMPLETED') {
 				return true;
 			} else {
@@ -66,6 +64,7 @@ class Paypal
 		} catch (HttpException $ex) {
 			return false;
 		}
+		return false;
 	}
 }
 

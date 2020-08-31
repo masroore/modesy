@@ -35,7 +35,6 @@ class Promote_controller extends Home_Core_Controller
         $data['description'] = trans('promote_your_product') . ' - ' . $this->app_name;
         $data['keywords'] = trans('promote_your_product') . ',' . $this->app_name;
         $data['type'] = $this->input->get('type');
-        $data['user_session'] = get_user_session();
         if ('new' != $data['type'] && 'exist' != $data['type']) {
             redirect($this->agent->referrer());
         } else {

@@ -24,7 +24,6 @@ class Product_admin_controller extends Admin_Core_Controller
         //get paginated products
         $pagination = $this->paginate(admin_url() . 'products', $this->product_admin_model->get_paginated_products_count('products'));
         $data['products'] = $this->product_admin_model->get_paginated_products($pagination['per_page'], $pagination['offset'], 'products');
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/product/products', $data);
@@ -42,7 +41,6 @@ class Product_admin_controller extends Admin_Core_Controller
         //get paginated pending products
         $pagination = $this->paginate(admin_url() . 'pending-products', $this->product_admin_model->get_paginated_pending_products_count('pending_products'));
         $data['products'] = $this->product_admin_model->get_paginated_pending_products($pagination['per_page'], $pagination['offset'], 'pending_products');
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/product/pending_products', $data);
@@ -60,7 +58,6 @@ class Product_admin_controller extends Admin_Core_Controller
         //get paginated products
         $pagination = $this->paginate(admin_url() . 'hidden-products', $this->product_admin_model->get_paginated_hidden_products_count('hidden_products'));
         $data['products'] = $this->product_admin_model->get_paginated_hidden_products($pagination['per_page'], $pagination['offset'], 'hidden_products');
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/product/products', $data);
@@ -78,7 +75,6 @@ class Product_admin_controller extends Admin_Core_Controller
         //get paginated products
         $pagination = $this->paginate(admin_url() . 'sold-products', $this->product_admin_model->get_sold_products_count('sold_products'));
         $data['products'] = $this->product_admin_model->get_paginated_sold_products($pagination['per_page'], $pagination['offset'], 'sold_products');
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/product/products', $data);
@@ -96,7 +92,6 @@ class Product_admin_controller extends Admin_Core_Controller
         //get paginated drafts
         $pagination = $this->paginate(admin_url() . 'drafts', $this->product_admin_model->get_paginated_drafts_count('drafts'));
         $data['products'] = $this->product_admin_model->get_paginated_drafts($pagination['per_page'], $pagination['offset'], 'drafts');
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/product/drafts', $data);
@@ -114,7 +109,6 @@ class Product_admin_controller extends Admin_Core_Controller
         //get paginated products
         $pagination = $this->paginate(admin_url() . 'deleted-products', $this->product_admin_model->get_paginated_deleted_products_count('deleted_products'));
         $data['products'] = $this->product_admin_model->get_paginated_deleted_products($pagination['per_page'], $pagination['offset'], 'deleted_products');
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/product/deleted_products', $data);
@@ -132,7 +126,6 @@ class Product_admin_controller extends Admin_Core_Controller
         //get paginated promoted products
         $pagination = $this->paginate(admin_url() . 'promoted-products', $this->product_admin_model->get_paginated_promoted_products_count('promoted_products'));
         $data['products'] = $this->product_admin_model->get_paginated_promoted_products($pagination['per_page'], $pagination['offset'], 'promoted_products');
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/promoted/promoted_products', $data);
@@ -145,7 +138,6 @@ class Product_admin_controller extends Admin_Core_Controller
     public function promoted_products_pricing()
     {
         $data['title'] = trans('pricing');
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/promoted/pricing', $data);
@@ -176,7 +168,6 @@ class Product_admin_controller extends Admin_Core_Controller
 
         $pagination = $this->paginate(admin_url() . 'promoted-products-transactions', $this->transaction_model->get_promoted_transactions_count());
         $data['transactions'] = $this->transaction_model->get_paginated_promoted_transactions($pagination['per_page'], $pagination['offset']);
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/promoted/transactions', $data);
@@ -206,7 +197,6 @@ class Product_admin_controller extends Admin_Core_Controller
         if (empty($data['product'])) {
             redirect($this->agent->referrer());
         }
-        $data['admin_settings'] = get_admin_settings();
 
         $data['review_count'] = $this->review_model->get_review_count($data['product']->id);
         $this->load->view('admin/includes/_header', $data);

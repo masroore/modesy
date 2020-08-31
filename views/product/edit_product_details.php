@@ -12,10 +12,10 @@ if ($product->is_draft == 1) {
 <script src="<?php echo base_url(); ?>assets/vendor/file-uploader/js/jquery.dm-uploader.min.js"></script>
 <script src="<?php echo base_url(); ?>assets/vendor/file-uploader/js/demo-ui.js"></script>
 <script type="text/javascript">
-    history.pushState(null, null, '<?php echo $_SERVER["REQUEST_URI"]; ?>');
-    window.addEventListener('popstate', function (event) {
-        window.location.assign('<?php echo $back_url; ?>');
-    });
+	history.pushState(null, null, '<?php echo $_SERVER["REQUEST_URI"]; ?>');
+	window.addEventListener('popstate', function (event) {
+		window.location.assign('<?php echo $back_url; ?>');
+	});
 </script>
 
 <!-- Wrapper -->
@@ -160,13 +160,13 @@ if ($product->is_draft == 1) {
 														</div>
 													</div>
 													<script>
-                                                        $(document).on('click', '#checkbox_free_product', function () {
-                                                            if ($(this).is(':checked')) {
-                                                                $('#price_input_container').hide();
-                                                            } else {
-                                                                $('#price_input_container').show();
-                                                            }
-                                                        });
+														$(document).on('click', '#checkbox_free_product', function () {
+															if ($(this).is(':checked')) {
+																$('#price_input_container').hide();
+															} else {
+																$('#price_input_container').show();
+															}
+														});
 													</script>
 												<?php if ($product->is_free_product == 1): ?>
 													<style>
@@ -279,7 +279,7 @@ if ($product->is_draft == 1) {
 										<?php endif; ?>
 									<?php endif; ?>
 
-									<?php if ($form_settings->variations == 1 && $product->product_type != 'digital'): ?>
+									<?php if ($form_settings->variations == 1 && $product->product_type != 'digital' && $product->listing_type != 'ordinary_listing'): ?>
 										<div class="form-box">
 											<div class="form-box-head">
 												<h4 class="title"><?php echo trans('variations'); ?></h4>
@@ -322,9 +322,11 @@ if ($product->is_draft == 1) {
 																	<select name="shipping_cost_type" class="form-control" onchange="if($(this).find(':selected').attr('data-shipping-cost')==1){$('.shipping-cost-container').show();}else{$('.shipping-cost-container').hide();}" <?php echo ($form_settings->shipping_required == 1) ? 'required' : ''; ?>>
 																		<option value=""><?php echo trans("select_option"); ?></option>
 																		<?php foreach ($shipping_options as $option):
-																			$shipping_option = get_shipping_option_by_lang($option->common_id, $selected_lang->id) ?>
-																			<option value="<?php echo $shipping_option->option_key; ?>" data-shipping-cost="<?php echo $shipping_option->shipping_cost; ?>" <?php echo ($product->shipping_cost_type == $shipping_option->option_key) ? 'selected' : ''; ?>><?php echo $shipping_option->option_label; ?></option>
-																		<?php endforeach; ?>
+																			$shipping_option = get_shipping_option_by_lang($option->common_id, $selected_lang->id);
+																			if ($shipping_option->is_visible == 1): ?>
+																				<option value="<?php echo $shipping_option->option_key; ?>" data-shipping-cost="<?php echo $shipping_option->shipping_cost; ?>" <?php echo ($product->shipping_cost_type == $shipping_option->option_key) ? 'selected' : ''; ?>><?php echo $shipping_option->option_label; ?></option>
+																			<?php endif;
+																		endforeach; ?>
 																	</select>
 																</div>
 															</div>
@@ -499,74 +501,74 @@ if ($product->is_draft == 1) {
 <script src="<?php echo base_url(); ?>assets/vendor/plyr/plyr.min.js"></script>
 <script src="<?php echo base_url(); ?>assets/vendor/plyr/plyr.polyfilled.min.js"></script>
 <script>
-    const player = new Plyr('#player');
-    $(document).ajaxStop(function () {
-        const player = new Plyr('#player');
-    });
-    const audio_player = new Plyr('#audio_player');
-    $(document).ajaxStop(function () {
-        const player = new Plyr('#audio_player');
-    });
+	const player = new Plyr('#player');
+	$(document).ajaxStop(function () {
+		const player = new Plyr('#player');
+	});
+	const audio_player = new Plyr('#audio_player');
+	$(document).ajaxStop(function () {
+		const player = new Plyr('#audio_player');
+	});
 </script>
 
 <?php if ($product->listing_type == 'sell_on_site'): ?>
 	<script>
-        //calculate product earned value
-        var thousands_separator = '<?php echo $this->thousands_separator; ?>';
-        var commission_rate = '<?php echo $this->general_settings->commission_rate; ?>';
-        $(document).on("input keyup paste change", "#product_price_input", function () {
-            var input_val = $(this).val();
-            input_val = input_val.replace(',', '.');
-            var price = parseFloat(input_val);
-            commission_rate = parseInt(commission_rate);
-            //calculate
-            if (!Number.isNaN(price)) {
-                var earned_price = price - ((price * commission_rate) / 100);
-                earned_price = earned_price.toFixed(2);
-                if (thousands_separator == ',') {
-                    earned_price = earned_price.replace('.', ',');
-                }
-            } else {
-                earned_price = '0' + thousands_separator + '00';
-            }
-            $("#earned_price").html(earned_price);
-        });
+		//calculate product earned value
+		var thousands_separator = '<?php echo $this->thousands_separator; ?>';
+		var commission_rate = '<?php echo $this->general_settings->commission_rate; ?>';
+		$(document).on("input keyup paste change", "#product_price_input", function () {
+			var input_val = $(this).val();
+			input_val = input_val.replace(',', '.');
+			var price = parseFloat(input_val);
+			commission_rate = parseInt(commission_rate);
+			//calculate
+			if (!Number.isNaN(price)) {
+				var earned_price = price - ((price * commission_rate) / 100);
+				earned_price = earned_price.toFixed(2);
+				if (thousands_separator == ',') {
+					earned_price = earned_price.replace('.', ',');
+				}
+			} else {
+				earned_price = '0' + thousands_separator + '00';
+			}
+			$("#earned_price").html(earned_price);
+		});
 	</script>
 <?php endif; ?>
 
 <script>
-    $.fn.datepicker.dates['en'] = {
-        days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-        daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-        daysMin: ['<?php echo substr(trans("monday"), 0, 3); ?>',
-            '<?php echo substr(trans("tuesday"), 0, 3); ?>',
-            '<?php echo substr(trans("wednesday"), 0, 3); ?>',
-            '<?php echo substr(trans("thursday"), 0, 3); ?>',
-            '<?php echo substr(trans("friday"), 0, 3); ?>',
-            '<?php echo substr(trans("saturday"), 0, 3); ?>',
-            '<?php echo substr(trans("sunday"), 0, 3); ?>'],
-        months: ['<?php echo trans("january"); ?>',
-            '<?php echo trans("february"); ?>',
-            '<?php echo trans("march"); ?>',
-            '<?php echo trans("april"); ?>',
-            '<?php echo trans("may"); ?>',
-            '<?php echo trans("june"); ?>',
-            '<?php echo trans("july"); ?>',
-            '<?php echo trans("august"); ?>',
-            '<?php echo trans("september"); ?>',
-            '<?php echo trans("october"); ?>',
-            '<?php echo trans("november"); ?>',
-            '<?php echo trans("december"); ?>'],
-        monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-        today: "Today",
-        clear: "Clear",
-        format: "mm/dd/yyyy",
-        titleFormat: "MM yyyy", /* Leverages same syntax as 'format' */
-        weekStart: 0
-    };
+	$.fn.datepicker.dates['en'] = {
+		days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+		daysShort: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+		daysMin: ['<?php echo substr(trans("monday"), 0, 3); ?>',
+			'<?php echo substr(trans("tuesday"), 0, 3); ?>',
+			'<?php echo substr(trans("wednesday"), 0, 3); ?>',
+			'<?php echo substr(trans("thursday"), 0, 3); ?>',
+			'<?php echo substr(trans("friday"), 0, 3); ?>',
+			'<?php echo substr(trans("saturday"), 0, 3); ?>',
+			'<?php echo substr(trans("sunday"), 0, 3); ?>'],
+		months: ['<?php echo trans("january"); ?>',
+			'<?php echo trans("february"); ?>',
+			'<?php echo trans("march"); ?>',
+			'<?php echo trans("april"); ?>',
+			'<?php echo trans("may"); ?>',
+			'<?php echo trans("june"); ?>',
+			'<?php echo trans("july"); ?>',
+			'<?php echo trans("august"); ?>',
+			'<?php echo trans("september"); ?>',
+			'<?php echo trans("october"); ?>',
+			'<?php echo trans("november"); ?>',
+			'<?php echo trans("december"); ?>'],
+		monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+		today: "Today",
+		clear: "Clear",
+		format: "mm/dd/yyyy",
+		titleFormat: "MM yyyy", /* Leverages same syntax as 'format' */
+		weekStart: 0
+	};
 
-    $('.datepicker').datepicker({
-        language: 'en'
-    });
+	$('.datepicker').datepicker({
+		language: 'en'
+	});
 
 </script>

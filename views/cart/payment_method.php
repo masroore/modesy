@@ -187,7 +187,7 @@
 														</li>
 														<?php $check_option = false;
 													endif; ?>
-													<?php if ($payment_settings->cash_on_delivery_enabled && empty($cart_has_digital_product) && $mds_payment_type != 'promote'): ?>
+													<?php if ($this->auth_check == 1 && $payment_settings->cash_on_delivery_enabled && empty($cart_has_digital_product) && $mds_payment_type != 'promote'): ?>
 														<li>
 															<div class="option-payment">
 																<div class="custom-control custom-radio">

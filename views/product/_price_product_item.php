@@ -4,14 +4,13 @@
 <?php else: ?>
 	<?php if ($product->listing_type == 'bidding'): ?>
 		<a href="<?php echo generate_product_url($product); ?>" class="a-meta-request-quote"><?php echo trans("request_a_quote") ?></a>
-	<?php else: ?>
-		<span class="price"><?php echo print_price($product->price, $product->currency); ?>
-			<?php if ($product->is_sold == 1): ?>
-				<span>(<?php echo trans("sold"); ?>)</span>
-			<?php endif; ?>
-	</span>
-	<?php endif; ?>
+	<?php else:
+		if (!empty($product->price)):?>
+			<span class="price"><?php echo print_price($product->price, $product->currency); ?>
+				<?php if ($product->is_sold == 1): ?>
+					<span>(<?php echo trans("sold"); ?>)</span>
+				<?php endif; ?>
+			</span>
+		<?php endif;
+	endif; ?>
 <?php endif; ?>
-
-
-

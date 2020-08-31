@@ -30,7 +30,6 @@ class Earnings_controller extends Home_Core_Controller
         $data['keywords'] = trans('earnings') . ',' . $this->app_name;
         $data['active_tab'] = 'earnings';
         $data['user'] = user();
-        $data['site_settings'] = get_site_settings();
         $pagination = $this->paginate(lang_base_url() . 'earnings', $this->earnings_model->get_earnings_count($this->user_id), $this->earnings_per_page);
         $data['earnings'] = $this->earnings_model->get_paginated_earnings($this->user_id, $pagination['per_page'], $pagination['offset']);
 
@@ -49,7 +48,6 @@ class Earnings_controller extends Home_Core_Controller
         $data['keywords'] = trans('payouts') . ',' . $this->app_name;
         $data['active_tab'] = 'payouts';
         $data['user'] = user();
-        $data['site_settings'] = get_site_settings();
         $pagination = $this->paginate(lang_base_url() . 'earnings', $this->earnings_model->get_payouts_count($this->user_id), $this->earnings_per_page);
         $data['payouts'] = $this->earnings_model->get_paginated_payouts($this->user_id, $pagination['per_page'], $pagination['offset']);
 
@@ -68,7 +66,6 @@ class Earnings_controller extends Home_Core_Controller
         $data['keywords'] = trans('set_payout_account') . ',' . $this->app_name;
         $data['active_tab'] = 'set_payout_account';
         $data['user'] = user();
-        $data['site_settings'] = get_site_settings();
         $data['user_payout'] = $this->earnings_model->get_user_payout_account($data['user']->id);
 
         if (empty($this->session->flashdata('msg_payout'))) {
@@ -146,6 +143,13 @@ class Earnings_controller extends Home_Core_Controller
         ];
         $data['amount'] = price_database_format($data['amount']);
 
+        //check active payouts
+        $active_payouts = $this->earnings_model->get_active_payouts($this->user_id);
+        if (!empty($active_payouts)) {
+            $this->session->set_flashdata('error', trans('active_payment_request_error'));
+            redirect($this->agent->referrer());
+        }
+
         $min = 0;
         if ('paypal' == $data['payout_method']) {
             //check PayPal email
@@ -168,11 +172,11 @@ class Earnings_controller extends Home_Core_Controller
             redirect($this->agent->referrer());
         }
         if ($data['amount'] < $min) {
-            $this->session->set_flashdata('error', $min);
+            $this->session->set_flashdata('error', trans('invalid_withdrawal_amount'));
             redirect($this->agent->referrer());
         }
         if ($data['amount'] > user()->balance) {
-            $this->session->set_flashdata('error', trans('msg_error'));
+            $this->session->set_flashdata('error', trans('invalid_withdrawal_amount'));
             redirect($this->agent->referrer());
         }
         if (!$this->earnings_model->withdraw_money($data)) {

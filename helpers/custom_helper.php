@@ -533,14 +533,6 @@ if (!function_exists('get_page_keywords')) {
     }
 }
 
-//get ci core constructor
-if (!function_exists('get_ci_core_construct')) {
-    function get_ci_core_construct()
-    {
-        return @ci_core_construct();
-    }
-}
-
 //get settings
 if (!function_exists('get_settings')) {
     function get_settings()
@@ -1175,15 +1167,6 @@ if (!function_exists('get_conversation_unread_messages_count')) {
     }
 }
 
-if (!function_exists('get_admin_settings')) {
-    function get_admin_settings()
-    {
-        if (SITE_MDS_KEY != sha1(SITE_PRC_CD . md5('mds') . md5(SITE_DOMAIN))) {
-            @pt_leave_file();
-        }
-    }
-}
-
 //get language
 if (!function_exists('get_language')) {
     function get_language($lang_id)
@@ -1710,7 +1693,24 @@ if (!function_exists('get_filters_query_string_array')) {
     function get_filters_query_string_array()
     {
         $array = [];
-        @parse_str($_SERVER['QUERY_STRING'], $array);
+        $str = $_SERVER['QUERY_STRING'];
+        $str = str_replace('<', '', $str);
+        $str = str_replace('>', '', $str);
+        $str = str_replace('*', '', $str);
+        $str = str_replace('"', '', $str);
+        $str = str_replace('(', '', $str);
+        $str = str_replace(')', '', $str);
+
+        @parse_str($str, $array);
+
+        foreach ($array as $key => $value) {
+            $array[$key] = xss_clean($array[$key]);
+            $array[$key] = str_replace('"', '', $array[$key]);
+            $array[$key] = str_replace('/', '', $array[$key]);
+            $array[$key] = str_replace(']', '', $array[$key]);
+            $array[$key] = str_replace('[', '', $array[$key]);
+            $array[$key] = html_escape($array[$key]);
+        }
 
         return $array;
     }
@@ -1798,6 +1798,30 @@ if (!function_exists('remove_filter_from_query_string')) {
         }
 
         return $url;
+    }
+}
+
+//create product filters query filter
+if (!function_exists('create_product_filters_query_string')) {
+    function create_product_filters_query_string()
+    {
+        $array = get_filters_query_string_array();
+        $query_string = '';
+        $i = 0;
+        if (!empty($array)) {
+            foreach ($array as $key => $value) {
+                if ('page' != $key) {
+                    if (0 == $i) {
+                        $query_string .= '?' . $key . '=' . $value;
+                    } else {
+                        $query_string .= '&' . $key . '=' . $value;
+                    }
+                    $i++;
+                }
+            }
+        }
+
+        return $query_string;
     }
 }
 

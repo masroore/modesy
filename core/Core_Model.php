@@ -8,8 +8,6 @@ class Core_Model extends CI_Model
     {
         parent::__construct();
 
-        ci_core_construct();
-
         //check auth
         $this->auth_check = auth_check();
         if ($this->auth_check) {

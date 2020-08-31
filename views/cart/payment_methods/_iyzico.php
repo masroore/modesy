@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
-<?php if ($cart_payment_method->payment_option == "iyzico"): ?>
+<?php if ($cart_payment_method->payment_option == "iyzico"):  ?>
 
 	<div class="row">
 		<div class="col-12">
@@ -8,10 +8,11 @@
 		</div>
 	</div>
 	<!--PROMOTE SALES-->
-	<?php if ($mds_payment_type == 'promote'):
+	<?php
+	$user = user();
+	if ($mds_payment_type == 'promote'):
 		$ci =& get_instance();
 		$options = $ci->initialize_iyzico();
-		$user = user();
 		$ip = $this->input->ip_address();
 		if (empty($ip)) {
 			$ip = "85.34.78.112";
@@ -102,33 +103,34 @@
 		$request->setEnabledInstallments(array(2, 3, 6, 9));
 
 		$buyer = new \Iyzipay\Model\Buyer();
-		$buyer->setId($buyer_id);
-		$buyer->setName($shipping_address->shipping_first_name);
-		$buyer->setSurname($shipping_address->shipping_last_name);
-		$buyer->setGsmNumber($shipping_address->shipping_phone_number);
-		$buyer->setEmail($shipping_address->shipping_email);
+		$buyer->setId($user->id);
+		$buyer->setName($user->username);
+		$buyer->setSurname($user->username);
+		$buyer->setGsmNumber($user->phone_number);
+		$buyer->setEmail($user->email);
 		$buyer->setIdentityNumber("11111111111");
-		$buyer->setRegistrationAddress($shipping_address->shipping_address_1);
+		$buyer->setRegistrationAddress("not_set");
 		$buyer->setIp($ip);
-		$buyer->setCity($shipping_address->shipping_city);
-		$buyer->setCountry($country_name);
-		$buyer->setZipCode($shipping_address->shipping_zip_code);
+		$buyer->setCity("not_set");
+		$buyer->setCountry("not_set");
+		$buyer->setZipCode("not_set");
 		$request->setBuyer($buyer);
 
+
 		$shippingAddress = new \Iyzipay\Model\Address();
-		$shippingAddress->setContactName($shipping_address->shipping_first_name . " " . $shipping_address->shipping_last_name);
-		$shippingAddress->setCity($shipping_address->shipping_city);
-		$shippingAddress->setCountry($country_name);
-		$shippingAddress->setAddress($shipping_address->shipping_address_1);
-		$shippingAddress->setZipCode($shipping_address->shipping_zip_code);
+		$shippingAddress->setContactName("not_set");
+		$shippingAddress->setCity("not_set");
+		$shippingAddress->setCountry("not_set");
+		$shippingAddress->setAddress("not_set");
+		$shippingAddress->setZipCode("");
 		$request->setShippingAddress($shippingAddress);
 
 		$billingAddress = new \Iyzipay\Model\Address();
-		$billingAddress->setContactName($shipping_address->billing_first_name . " " . $shipping_address->billing_last_name);
-		$billingAddress->setCity($shipping_address->billing_city);
-		$billingAddress->setCountry($country_name);
-		$billingAddress->setAddress($shipping_address->billing_address_1);
-		$billingAddress->setZipCode($shipping_address->billing_zip_code);
+		$billingAddress->setContactName("not_set");
+		$billingAddress->setCity("not_set");
+		$billingAddress->setCountry("not_set");
+		$billingAddress->setAddress("not_set");
+		$billingAddress->setZipCode("");
 		$request->setBillingAddress($billingAddress);
 
 		$basketItems = array();

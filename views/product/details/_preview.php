@@ -51,18 +51,20 @@ if (!empty($product_images)) {
 
 	<div class="product-slider-container">
 		<div class="left">
-			<div class="dots-container slider-dots slider-custom-scrollbar <?php echo (count($product_images) < 2) ? 'hide-dosts-mobile' : ''; ?>">
-				<?php if (!empty($product_images)):
-					foreach ($product_images as $image): ?>
-						<button class="dot dot_slider"><img src="<?php echo get_product_image_url($image, 'image_small'); ?>" alt="dot"></button>
-					<?php endforeach;
-				endif; ?>
-				<?php if (!empty($video)): ?>
-					<button class="dot dot_slider">
-						<img src="<?php echo get_product_image($product->id, 'image_small'); ?>" alt="dot">
-						<img src="<?php echo base_url() . 'assets/img/play-circle.svg'; ?>" class="dot-video-icon" alt="dot">
-					</button>
-				<?php endif; ?>
+			<div class="slider-custom-scrollbar">
+				<div class="dots-container slider-dots <?php echo (count($product_images) < 2) ? 'hide-dosts-mobile' : ''; ?>">
+					<?php if (!empty($product_images)):
+						foreach ($product_images as $image): ?>
+							<button class="dot dot_slider"><img src="<?php echo get_product_image_url($image, 'image_small'); ?>" alt="dot"></button>
+						<?php endforeach;
+					endif; ?>
+					<?php if (!empty($video)): ?>
+						<button class="dot dot_slider">
+							<img src="<?php echo get_product_image($product->id, 'image_small'); ?>" alt="dot">
+							<img src="<?php echo base_url() . 'assets/img/play-circle.svg'; ?>" class="dot-video-icon" alt="dot">
+						</button>
+					<?php endif; ?>
+				</div>
 			</div>
 		</div>
 		<div class="right">
@@ -94,12 +96,12 @@ if (!empty($product_images)) {
 endif; ?>
 
 <script>
-    $(document).ready(function () {
-        setTimeout(function () {
-            $(".product-video-preview").css("opacity", "1");
-        }, 300);
-        setTimeout(function () {
-            $(".product-audio-preview").css("opacity", "1");
-        }, 300);
-    });
+	$(document).ready(function () {
+		setTimeout(function () {
+			$(".product-video-preview").css("opacity", "1");
+		}, 300);
+		setTimeout(function () {
+			$(".product-audio-preview").css("opacity", "1");
+		}, 300);
+	});
 </script>

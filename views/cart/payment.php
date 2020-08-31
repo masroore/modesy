@@ -1,9 +1,9 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 
 <script>
-    $(window).bind("load", function () {
-        $("#payment-button-container").css("visibility", "visible");
-    });
+	$(window).bind("load", function () {
+		$("#payment-button-container").css("visibility", "visible");
+	});
 </script>
 
 <!-- Wrapper -->
@@ -26,7 +26,7 @@
 										</div>
 									</div>
 								<?php endif; ?>
-								<?php if (!empty($cart_has_physical_product)  && $this->form_settings->shipping == 1 && $mds_payment_type != 'promote'): ?>
+								<?php if (!empty($cart_has_physical_product) && $this->form_settings->shipping == 1 && $mds_payment_type != 'promote'): ?>
 									<div class="tab-checkout tab-checkout-closed">
 										<a href="<?php echo lang_base_url(); ?>cart/shipping"><h2 class=" title">1.&nbsp;&nbsp;<?php echo trans("shipping_information"); ?></h2></a>
 										<a href="<?php echo lang_base_url(); ?>cart/shipping" class="link-underlined"><?php echo trans("edit"); ?></a>
@@ -45,7 +45,7 @@
 										<a href="<?php echo lang_base_url(); ?>cart/payment-method?payment_type=promote" class="link-underlined"><?php echo trans("edit"); ?></a>
 									<?php else: ?>
 										<a href="<?php echo lang_base_url(); ?>cart/payment-method"><h2 class=" title">
-												<?php if (!empty($cart_has_physical_product)  && $this->form_settings->shipping == 1 && $mds_payment_type != 'promote') {
+												<?php if (!empty($cart_has_physical_product) && $this->form_settings->shipping == 1 && $mds_payment_type != 'promote') {
 													echo '2.';
 												} else {
 													echo '1.';
@@ -57,7 +57,7 @@
 
 								<div class="tab-checkout tab-checkout-open">
 									<h2 class="title">
-										<?php if (!empty($cart_has_physical_product)  && $this->form_settings->shipping == 1 && $mds_payment_type != 'promote') {
+										<?php if (!empty($cart_has_physical_product) && $this->form_settings->shipping == 1 && $mds_payment_type != 'promote') {
 											echo '3.';
 										} else {
 											echo '2.';
@@ -82,7 +82,7 @@
 												$this->load->view("cart/payment_methods/_pagseguro", $data);
 											} elseif ($cart_payment_method->payment_option == "bank_transfer") {
 												$this->load->view("cart/payment_methods/_bank_transfer", $data);
-											} elseif ($cart_payment_method->payment_option == "cash_on_delivery") {
+											} elseif ($this->auth_check && $cart_payment_method->payment_option == "cash_on_delivery") {
 												$this->load->view("cart/payment_methods/_cash_on_delivery", $data);
 											} ?>
 										</div>

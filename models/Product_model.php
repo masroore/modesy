@@ -7,7 +7,6 @@ class Product_model extends Core_Model
     public function __construct()
     {
         parent::__construct();
-        get_ci_core_construct();
         //default location
         $this->default_location_id = 0;
         if (!empty($this->session->userdata('modesy_default_location'))) {
@@ -200,104 +199,40 @@ class Product_model extends Core_Model
         if (!empty($product)) {
             $custom_fields = $this->field_model->generate_custom_fields_array($product->category_id, null);
             if (!empty($custom_fields)) {
-                foreach ($custom_fields as $custom_field) {
-                    //check field values
-                    $field_values = $this->field_model->get_product_custom_field_values($custom_field->id, $product_id);
-                    $input_value = $this->input->post('field_' . $custom_field->id, true);
+                //delete previous custom field values
+                $this->field_model->delete_field_product_values_by_product_id($product_id);
 
-                    //update custom field values
-                    if (!empty($field_values)) {
+                foreach ($custom_fields as $custom_field) {
+                    $input_value = $this->input->post('field_' . $custom_field->id, true);
+                    //add custom field values
+                    if (!empty($input_value)) {
                         if ('checkbox' == $custom_field->field_type) {
-                            $this->update_checkbox_selected_values($custom_field, $field_values, $input_value, $product_id);
-                        } else {
-                            $field_value_id = 0;
-                            if (isset($field_values[0]->id)) {
-                                $field_value_id = $field_values[0]->id;
-                            }
-                            if (!empty($field_value_id)) {
-                                if ('radio_button' == $custom_field->field_type || 'dropdown' == $custom_field->field_type) {
-                                    $data = [
-                                        'selected_option_common_id' => $input_value,
-                                    ];
-                                } else {
-                                    $data = [
-                                        'field_value' => $input_value,
-                                    ];
-                                }
-                                $this->db->where('id', $field_value_id);
-                                $this->db->update('custom_fields_product', $data);
-                            }
-                        }
-                    } else {
-                        //add custom field values
-                        if (!empty($input_value)) {
-                            if ('checkbox' == $custom_field->field_type) {
-                                foreach ($input_value as $key => $value) {
-                                    $data = [
-                                        'field_id' => $custom_field->id,
-                                        'product_id' => $product_id,
-                                        'product_filter_key' => $custom_field->product_filter_key,
-                                    ];
-                                    $data['field_value'] = '';
-                                    $data['selected_option_common_id'] = $value;
-                                    $this->db->insert('custom_fields_product', $data);
-                                }
-                            } else {
+                            foreach ($input_value as $key => $value) {
                                 $data = [
                                     'field_id' => $custom_field->id,
                                     'product_id' => $product_id,
                                     'product_filter_key' => $custom_field->product_filter_key,
                                 ];
-                                if ('radio_button' == $custom_field->field_type || 'dropdown' == $custom_field->field_type) {
-                                    $data['field_value'] = '';
-                                    $data['selected_option_common_id'] = $input_value;
-                                } else {
-                                    $data['field_value'] = $input_value;
-                                    $data['selected_option_common_id'] = '';
-                                }
+                                $data['field_value'] = '';
+                                $data['selected_option_common_id'] = $value;
                                 $this->db->insert('custom_fields_product', $data);
                             }
+                        } else {
+                            $data = [
+                                'field_id' => $custom_field->id,
+                                'product_id' => $product_id,
+                                'product_filter_key' => $custom_field->product_filter_key,
+                            ];
+                            if ('radio_button' == $custom_field->field_type || 'dropdown' == $custom_field->field_type) {
+                                $data['field_value'] = '';
+                                $data['selected_option_common_id'] = $input_value;
+                            } else {
+                                $data['field_value'] = $input_value;
+                                $data['selected_option_common_id'] = '';
+                            }
+                            $this->db->insert('custom_fields_product', $data);
                         }
                     }
-                }
-            }
-        }
-    }
-
-    //update selected checkbox values
-    public function update_checkbox_selected_values($custom_field, $field_values, $input_value, $product_id)
-    {
-        $product_id = clean_number($product_id);
-        if (count($field_values) == count($input_value)) {
-            if (!empty($field_values)) {
-                $i = 0;
-                foreach ($field_values as $item) {
-                    $data = [
-                        'field_id' => $custom_field->id,
-                        'product_id' => $product_id,
-                        'product_filter_key' => $custom_field->product_filter_key,
-                        'field_value' => '',
-                        'selected_option_common_id' => @$input_value[$i],
-                    ];
-                    $this->db->where('id', $item->id);
-                    $this->db->update('custom_fields_product', $data);
-                    $i++;
-                }
-            }
-        } else {
-            //delete old values
-            $this->field_model->delete_field_product_values($custom_field->id);
-            //add new values
-            if (!empty($input_value)) {
-                foreach ($input_value as $key => $value) {
-                    $data = [
-                        'field_id' => $custom_field->id,
-                        'product_id' => $product_id,
-                        'product_filter_key' => $custom_field->product_filter_key,
-                        'field_value' => '',
-                        'selected_option_common_id' => $value,
-                    ];
-                    $this->db->insert('custom_fields_product', $data);
                 }
             }
         }

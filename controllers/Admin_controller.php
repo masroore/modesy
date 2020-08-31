@@ -27,7 +27,6 @@ class Admin_controller extends Admin_Core_Controller
 
         $data['latest_pending_products'] = $this->product_admin_model->get_latest_pending_products(15);
         $data['latest_products'] = $this->product_admin_model->get_latest_products(15);
-        $data['admin_settings'] = get_admin_settings();
 
         $data['latest_reviews'] = $this->review_model->get_latest_reviews(15);
         $data['latest_comments'] = $this->comment_model->get_latest_comments(15);
@@ -81,7 +80,7 @@ class Admin_controller extends Admin_Core_Controller
     public function add_slider_item()
     {
         $data['title'] = trans('add_slider_item');
-        $data['admin_settings'] = get_admin_settings();
+
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/slider/add_item', $data);
         $this->load->view('admin/includes/_footer');
@@ -162,7 +161,7 @@ class Admin_controller extends Admin_Core_Controller
         $this->load->model('bidding_model');
         $data['title'] = trans('quote_requests');
         $data['form_action'] = admin_url() . 'quote-requests';
-        $data['admin_settings'] = get_admin_settings();
+
         //get paginated requests
         $pagination = $this->paginate(admin_url() . 'quote-requests', $this->bidding_model->get_admin_quote_requests_count());
         $data['quote_requests'] = $this->bidding_model->get_admin_paginated_quote_requests($pagination['per_page'], $pagination['offset']);
@@ -381,7 +380,7 @@ class Admin_controller extends Admin_Core_Controller
     public function seo_tools()
     {
         $data['title'] = trans('seo_tools');
-        $data['admin_settings'] = get_admin_settings();
+
         $data['current_lang_id'] = $this->input->get('lang', true);
 
         if (empty($data['current_lang_id'])) {
@@ -422,7 +421,7 @@ class Admin_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('currency_settings');
         $data['currencies'] = $this->currency_model->get_currencies();
-        $data['admin_settings'] = get_admin_settings();
+
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/currency/currency_settings', $data);
         $this->load->view('admin/includes/_footer');
@@ -516,7 +515,7 @@ class Admin_controller extends Admin_Core_Controller
         $data['title'] = trans('email_settings');
 
         $data['general_settings'] = $this->settings_model->get_general_settings();
-        $data['admin_settings'] = get_admin_settings();
+
         $data['library'] = $this->input->get('library');
         if (empty($data['library'])) {
             $data['library'] = 'swift';
@@ -633,7 +632,7 @@ class Admin_controller extends Admin_Core_Controller
     public function system_settings()
     {
         $data['title'] = trans('system_settings');
-        $data['admin_settings'] = get_admin_settings();
+
         $data['system_settings'] = $this->settings_model->get_system_settings();
         $data['currencies'] = $this->currency_model->get_currencies();
 
@@ -921,7 +920,6 @@ class Admin_controller extends Admin_Core_Controller
      */
     public function storage()
     {
-        $data['admin_settings'] = get_admin_settings();
         $data['title'] = trans('storage');
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/storage', $data);
@@ -990,7 +988,7 @@ class Admin_controller extends Admin_Core_Controller
     public function preferences()
     {
         $data['title'] = trans('preferences');
-        $data['admin_settings'] = get_admin_settings();
+
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/preferences', $data);
         $this->load->view('admin/includes/_footer');
@@ -1033,7 +1031,7 @@ class Admin_controller extends Admin_Core_Controller
 
         $data['settings'] = $this->settings_model->get_settings($data['settings_lang']);
         $data['general_settings'] = $this->settings_model->get_general_settings();
-        $data['admin_settings'] = get_admin_settings();
+
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/settings/settings', $data);
         $this->load->view('admin/includes/_footer');
@@ -1162,7 +1160,7 @@ class Admin_controller extends Admin_Core_Controller
     public function countries()
     {
         $data['title'] = trans('countries');
-        $data['admin_settings'] = get_admin_settings();
+
         //get paginated products
         $pagination = $this->paginate(admin_url() . 'countries', $this->location_model->get_paginated_countries_count());
         $data['countries'] = $this->location_model->get_paginated_countries($pagination['per_page'], $pagination['offset']);
@@ -1268,7 +1266,7 @@ class Admin_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('states');
         $data['countries'] = $this->location_model->get_countries();
-        $data['admin_settings'] = get_admin_settings();
+
         //get paginated states
         $pagination = $this->paginate(admin_url() . 'states', $this->location_model->get_paginated_states_count());
         $data['states'] = $this->location_model->get_paginated_states($pagination['per_page'], $pagination['offset']);
@@ -1382,7 +1380,7 @@ class Admin_controller extends Admin_Core_Controller
         $data['title'] = trans('cities');
         $data['countries'] = $this->location_model->get_countries();
         $data['states'] = $this->location_model->get_states();
-        $data['admin_settings'] = get_admin_settings();
+
         //get paginated cities
         $pagination = $this->paginate(admin_url() . 'cities', $this->location_model->get_paginated_cities_count());
         $data['cities'] = $this->location_model->get_paginated_cities($pagination['per_page'], $pagination['offset']);

@@ -16,10 +16,6 @@ class Cart_controller extends Home_Core_Controller
     {
         parent::__construct();
 
-        if (!is_sale_active()) {
-            redirect(lang_base_url());
-        }
-
         $this->cart_model->calculate_cart_total();
     }
 
@@ -35,7 +31,6 @@ class Cart_controller extends Home_Core_Controller
         $data['cart_items'] = $this->cart_model->get_sess_cart_items();
         $data['cart_total'] = $this->cart_model->get_sess_cart_total();
         $data['cart_has_physical_product'] = $this->cart_model->check_cart_has_physical_product();
-        $data['site_settings'] = get_site_settings();
 
         $this->load->view('partials/_header', $data);
         $this->load->view('cart/cart', $data);
@@ -100,7 +95,6 @@ class Cart_controller extends Home_Core_Controller
         $data['title'] = trans('shopping_cart');
         $data['description'] = trans('shopping_cart') . ' - ' . $this->app_name;
         $data['keywords'] = trans('shopping_cart') . ',' . $this->app_name;
-        $data['site_settings'] = get_site_settings();
         $data['cart_items'] = $this->cart_model->get_sess_cart_items();
         $data['mds_payment_type'] = 'sale';
 
@@ -148,7 +142,6 @@ class Cart_controller extends Home_Core_Controller
         $data['title'] = trans('shopping_cart');
         $data['description'] = trans('shopping_cart') . ' - ' . $this->app_name;
         $data['keywords'] = trans('shopping_cart') . ',' . $this->app_name;
-        $data['site_settings'] = get_site_settings();
         $data['mds_payment_type'] = 'sale';
 
         $payment_type = $this->input->get('payment_type', true);

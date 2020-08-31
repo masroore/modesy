@@ -23,7 +23,6 @@ class Order_admin_controller extends Admin_Core_Controller
 
         $pagination = $this->paginate(admin_url() . 'orders', $this->order_admin_model->get_orders_count());
         $data['orders'] = $this->order_admin_model->get_paginated_orders($pagination['per_page'], $pagination['offset']);
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/order/orders', $data);
@@ -42,7 +41,7 @@ class Order_admin_controller extends Admin_Core_Controller
             redirect(admin_url() . 'orders');
         }
         $data['order_products'] = $this->order_admin_model->get_order_products($id);
-        $data['admin_settings'] = get_admin_settings();
+
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/order/order_details', $data);
         $this->load->view('admin/includes/_footer');
@@ -132,7 +131,7 @@ class Order_admin_controller extends Admin_Core_Controller
 
         $pagination = $this->paginate(admin_url() . 'transactions', $this->transaction_model->get_transactions_count());
         $data['transactions'] = $this->transaction_model->get_paginated_transactions($pagination['per_page'], $pagination['offset']);
-        $data['admin_settings'] = get_admin_settings();
+
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/order/transactions', $data);
         $this->load->view('admin/includes/_footer');
@@ -228,7 +227,7 @@ class Order_admin_controller extends Admin_Core_Controller
 
         $pagination = $this->paginate(admin_url() . 'digital-sales', $this->order_admin_model->get_digital_sales_count());
         $data['digital_sales'] = $this->order_admin_model->get_digital_sales($pagination['per_page'], $pagination['offset']);
-        $data['admin_settings'] = get_admin_settings();
+
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/order/digital_sales', $data);
         $this->load->view('admin/includes/_footer');

@@ -401,7 +401,6 @@ class Auth_model extends CI_Model
     //update last seen time
     public function update_last_seen()
     {
-        get_ci_core_construct();
         if ($this->is_logged_in()) {
             $user = user();
             //update last seen

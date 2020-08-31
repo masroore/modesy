@@ -189,6 +189,18 @@ class Earnings_model extends CI_Model
         return $query->result();
     }
 
+    //get active payouts
+    public function get_active_payouts($user_id)
+    {
+        $user_id = clean_number($user_id);
+        $this->db->where('user_id', $user_id);
+        $this->db->where('status', 0);
+        $this->db->order_by('payouts.created_at', 'DESC');
+        $query = $this->db->get('payouts');
+
+        return $query->result();
+    }
+
     //withdraw money
     public function withdraw_money($data)
     {

@@ -194,7 +194,7 @@ class Bidding_controller extends Home_Core_Controller
         $data['received_request_count'] = $this->bidding_model->get_received_quote_requests_count($data['user']->id);
         $data['sent_request_count'] = $this->bidding_model->get_sent_quote_requests_count($data['user']->id);
         //set pagination
-        $pagination = $this->paginate(lang_base_url() . 'quote-requests', $data['sent_request_count'], $this->rows_per_page);
+        $pagination = $this->paginate(lang_base_url() . 'sent-quote-requests', $data['sent_request_count'], $this->rows_per_page);
         $data['quote_requests'] = $this->bidding_model->get_sent_quote_requests_paginated($data['user']->id, $pagination['per_page'], $pagination['offset']);
 
         $this->load->view('partials/_header', $data);

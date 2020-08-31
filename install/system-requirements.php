@@ -1,4 +1,5 @@
 <?php
+error_reporting(0);
 require_once 'functions.php';
 
 $license_code = $_GET['license_code'];

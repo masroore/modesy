@@ -259,7 +259,6 @@ class Admin_Core_Controller extends Core_Controller
     public function __construct()
     {
         parent::__construct();
-        get_ci_core_construct();
     }
 
     public function paginate($url, $total_rows)

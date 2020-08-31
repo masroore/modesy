@@ -1,9 +1,6 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 
-<?php $query_string = "";
-if (!empty($_SERVER["QUERY_STRING"])) {
-	$query_string = "?" . $_SERVER["QUERY_STRING"];
-} ?>
+<?php $query_string = create_product_filters_query_string(); ?>
 
 <!--product filters-->
 <div class="col-12 col-md-3 sidebar-products">
@@ -57,7 +54,11 @@ if (!empty($_SERVER["QUERY_STRING"])) {
 						<i class="icon-map-marker"></i>
 						<input type="text" id="input_location" class="form-control form-input" value="<?php echo get_location_input($country_id, $state_id, $city_id); ?>" placeholder="<?php echo trans("enter_location") ?>" autocomplete="off">
 					</div>
-					<div id="response_search_location" class="search-results-ajax search-results-location"></div>
+					<div class="search-results-ajax">
+						<div class="search-results-location">
+							<div id="response_search_location"></div>
+						</div>
+					</div>
 				</div>
 				<?php if (!empty($country_id)): ?>
 				<input type="hidden" name="country" value="<?php echo $country_id; ?>" class="input-location-filter">

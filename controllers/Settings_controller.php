@@ -24,7 +24,6 @@ class Settings_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('payment_settings');
         $data['general_settings'] = $this->settings_model->get_general_settings();
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/settings/payment_settings', $data);
@@ -187,7 +186,7 @@ class Settings_controller extends Admin_Core_Controller
         $data['title'] = trans('form_settings');
 
         $data['form_settings'] = $this->settings_model->get_form_settings();
-        $data['admin_settings'] = get_admin_settings();
+
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/settings_form/form_settings', $data);
         $this->load->view('admin/includes/_footer');
@@ -241,7 +240,7 @@ class Settings_controller extends Admin_Core_Controller
         $data['title'] = trans('shipping_options');
 
         $data['shipping_options'] = $this->settings_model->get_grouped_shipping_options();
-        $data['admin_settings'] = get_admin_settings();
+
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/settings_form/shipping_options', $data);
         $this->load->view('admin/includes/_footer');
@@ -296,7 +295,7 @@ class Settings_controller extends Admin_Core_Controller
         $data['title'] = trans('product_conditions');
 
         $data['product_conditions'] = $this->settings_model->get_grouped_product_conditions();
-        $data['admin_settings'] = get_admin_settings();
+
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/settings_form/product_conditions', $data);
         $this->load->view('admin/includes/_footer');

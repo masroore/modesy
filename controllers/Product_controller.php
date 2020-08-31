@@ -32,7 +32,6 @@ class Product_controller extends Home_Core_Controller
         $data['title'] = trans('start_selling');
         $data['description'] = trans('start_selling') . ' - ' . $this->app_name;
         $data['keywords'] = trans('start_selling') . ',' . $this->app_name;
-        $data['site_settings'] = get_site_settings();
 
         $this->load->view('partials/_header', $data);
         $this->load->view('product/start_selling', $data);
@@ -108,7 +107,6 @@ class Product_controller extends Home_Core_Controller
         $data['title'] = trans('sell_now');
         $data['description'] = trans('sell_now') . ' - ' . $this->app_name;
         $data['keywords'] = trans('sell_now') . ',' . $this->app_name;
-        $data['site_settings'] = get_site_settings();
         $data['modesy_images'] = $this->file_model->get_sess_product_images_array();
         $data['file_manager_images'] = $this->file_model->get_user_file_manager_images();
         $data['active_product_system_array'] = $this->get_activated_product_system();
@@ -176,7 +174,6 @@ class Product_controller extends Home_Core_Controller
         $data['title'] = trans('sell_now');
         $data['description'] = trans('sell_now') . ' - ' . $this->app_name;
         $data['keywords'] = trans('sell_now') . ',' . $this->app_name;
-        $data['site_settings'] = get_site_settings();
 
         $data['category'] = get_category($data['product']->category_id);
         $data['parent_categories_array'] = $this->category_model->get_parent_categories_array_by_category_id($data['product']->category_id);
@@ -218,7 +215,6 @@ class Product_controller extends Home_Core_Controller
         $data['title'] = trans('edit_product');
         $data['description'] = trans('edit_product') . ' - ' . $this->app_name;
         $data['keywords'] = trans('edit_product') . ',' . $this->app_name;
-        $data['site_settings'] = get_site_settings();
 
         $data['category'] = get_category($data['product']->category_id);
         $data['parent_categories_array'] = $this->category_model->get_parent_categories_array_by_category_id($data['product']->category_id);
@@ -342,7 +338,6 @@ class Product_controller extends Home_Core_Controller
         $data['form_settings'] = $this->settings_model->get_form_settings();
         $data['license_keys'] = $this->product_model->get_license_keys($data['product']->id);
 
-        $data['site_settings'] = get_site_settings();
         $this->load->view('partials/_header', $data);
         $this->load->view('product/edit_product_details');
         $this->load->view('partials/_footer');

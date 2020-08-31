@@ -489,9 +489,6 @@ class Settings_model extends CI_Model
     //get general settings
     public function get_general_settings()
     {
-        if (SITE_MDS_KEY != sha1(SITE_PRC_CD . md5('mds') . md5(SITE_DOMAIN))) {
-            @pt_leave_file();
-        }
         $this->db->where('id', 1);
         $query = $this->db->get('general_settings');
 
@@ -528,7 +525,6 @@ class Settings_model extends CI_Model
     //get settings
     public function get_settings($lang_id)
     {
-        $ci = get_ci_core_construct();
         $this->db->where('lang_id', $lang_id);
         $query = $this->db->get('settings');
 

@@ -20,7 +20,7 @@ class Sitemap_controller extends Admin_Core_Controller
     public function generate_sitemap()
     {
         $data['title'] = trans('generate_sitemap');
-        $data['admin_settings'] = get_admin_settings();
+
         $this->load->view('admin/_header', $data);
         $this->load->view('admin/generate_sitemap', $data);
         $this->load->view('admin/_footer');

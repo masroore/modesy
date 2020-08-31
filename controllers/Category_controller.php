@@ -20,7 +20,6 @@ class Category_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('categories');
         $data['categories'] = $this->category_model->get_categories_all();
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/category/categories', $data);
@@ -34,7 +33,7 @@ class Category_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('add_category');
         $data['parent_categories'] = $this->category_model->get_all_parent_categories();
-        $data['admin_settings'] = get_admin_settings();
+
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/category/add_category', $data);
         $this->load->view('admin/includes/_footer');
@@ -68,7 +67,7 @@ class Category_controller extends Admin_Core_Controller
     public function update_category($id)
     {
         $data['title'] = trans('update_category');
-        $data['admin_settings'] = get_admin_settings();
+
         //get category
         $data['category'] = $this->category_model->get_category($id);
         if (empty($data['category'])) {
@@ -158,7 +157,6 @@ class Category_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('add_custom_field');
         $data['categories'] = $this->category_model->get_parent_categories();
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/category/add_custom_field', $data);
@@ -191,7 +189,7 @@ class Category_controller extends Admin_Core_Controller
         $data['title'] = trans('update_custom_field');
         //get field
         $data['field'] = $this->field_model->get_field($id);
-        $data['admin_settings'] = get_admin_settings();
+
         if (empty($data['field'])) {
             redirect(admin_url() . 'custom-fields');
         }
@@ -228,7 +226,6 @@ class Category_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('custom_fields');
         $data['fields'] = $this->field_model->get_fields();
-        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/category/custom_fields', $data);
