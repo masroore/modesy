@@ -24,6 +24,7 @@ class Settings_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('payment_settings');
         $data['general_settings'] = $this->settings_model->get_general_settings();
+        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/settings/payment_settings', $data);
@@ -79,6 +80,54 @@ class Settings_controller extends Admin_Core_Controller
     }
 
     /**
+     * Paystack Settings Post.
+     */
+    public function paystack_settings_post()
+    {
+        if ($this->settings_model->update_paystack_settings()) {
+            $this->session->set_flashdata('success', trans('msg_updated'));
+            $this->session->set_flashdata('mes_paystack', 1);
+            redirect($this->agent->referrer());
+        } else {
+            $this->session->set_flashdata('error', trans('msg_error'));
+            $this->session->set_flashdata('mes_paystack', 1);
+            redirect($this->agent->referrer());
+        }
+    }
+
+    /**
+     * Razorpay Settings Post.
+     */
+    public function razorpay_settings_post()
+    {
+        if ($this->settings_model->update_razorpay_settings()) {
+            $this->session->set_flashdata('success', trans('msg_updated'));
+            $this->session->set_flashdata('mes_razorpay', 1);
+            redirect($this->agent->referrer());
+        } else {
+            $this->session->set_flashdata('error', trans('msg_error'));
+            $this->session->set_flashdata('mes_razorpay', 1);
+            redirect($this->agent->referrer());
+        }
+    }
+
+    /**
+     * Pagseguro Settings Post.
+     */
+    public function pagseguro_settings_post()
+    {
+        if ($this->settings_model->update_pagseguro_settings()) {
+            $this->session->set_flashdata('success', trans('msg_updated'));
+            $this->session->set_flashdata('mes_pagseguro', 1);
+            redirect($this->agent->referrer());
+        } else {
+            $this->session->set_flashdata('error', trans('msg_error'));
+            $this->session->set_flashdata('mes_pagseguro', 1);
+            redirect($this->agent->referrer());
+        }
+    }
+
+    /**
      * Iyzico Settings Post.
      */
     public function iyzico_settings_post()
@@ -90,22 +139,6 @@ class Settings_controller extends Admin_Core_Controller
         } else {
             $this->session->set_flashdata('error', trans('msg_error'));
             $this->session->set_flashdata('mes_iyzico', 1);
-            redirect($this->agent->referrer());
-        }
-    }
-
-    /**
-     * Mercado Pago Settings Post.
-     */
-    public function mercado_pago_settings_post()
-    {
-        if ($this->settings_model->update_mercado_pago_settings()) {
-            $this->session->set_flashdata('success', trans('msg_updated'));
-            $this->session->set_flashdata('mes_mercado_pago', 1);
-            redirect($this->agent->referrer());
-        } else {
-            $this->session->set_flashdata('error', trans('msg_error'));
-            $this->session->set_flashdata('mes_mercado_pago', 1);
             redirect($this->agent->referrer());
         }
     }
@@ -126,6 +159,22 @@ class Settings_controller extends Admin_Core_Controller
         }
     }
 
+    /**
+     * Cash on Delivery Settings Post.
+     */
+    public function cash_on_delivery_settings_post()
+    {
+        if ($this->settings_model->update_cash_on_delivery_settings()) {
+            $this->session->set_flashdata('success', trans('msg_updated'));
+            $this->session->set_flashdata('mes_cash_on_delivery', 1);
+            redirect($this->agent->referrer());
+        } else {
+            $this->session->set_flashdata('error', trans('msg_error'));
+            $this->session->set_flashdata('mes_cash_on_delivery', 1);
+            redirect($this->agent->referrer());
+        }
+    }
+
     /*
     *-------------------------------------------------------------------------------------------------
     * FORM SETTINGS
@@ -138,6 +187,7 @@ class Settings_controller extends Admin_Core_Controller
         $data['title'] = trans('form_settings');
 
         $data['form_settings'] = $this->settings_model->get_form_settings();
+        $data['admin_settings'] = get_admin_settings();
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/settings_form/form_settings', $data);
         $this->load->view('admin/includes/_footer');
@@ -190,7 +240,8 @@ class Settings_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('shipping_options');
 
-        $data['shipping_options'] = $this->settings_model->get_shipping_options($this->selected_lang->id);
+        $data['shipping_options'] = $this->settings_model->get_grouped_shipping_options();
+        $data['admin_settings'] = get_admin_settings();
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/settings_form/shipping_options', $data);
         $this->load->view('admin/includes/_footer');
@@ -244,7 +295,8 @@ class Settings_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('product_conditions');
 
-        $data['product_conditions'] = $this->settings_model->get_product_conditions($this->selected_lang->id);
+        $data['product_conditions'] = $this->settings_model->get_grouped_product_conditions();
+        $data['admin_settings'] = get_admin_settings();
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/settings_form/product_conditions', $data);
         $this->load->view('admin/includes/_footer');

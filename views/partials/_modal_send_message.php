@@ -7,7 +7,7 @@
             <div class="modal-content">
                 <!-- form start -->
                 <form id="form_send_message" novalidate="novalidate">
-                    <input type="hidden" name="sender_id" value="<?php echo $this->auth_user->id; ?>">
+                    <input type="hidden" name="sender_id" id="message_sender_id" value="<?php echo $this->auth_user->id; ?>">
                     <input type="hidden" name="receiver_id" id="message_receiver_id" value="<?php echo $user->id; ?>">
                     <input type="hidden" id="message_send_em" value="<?php echo $user->send_email_new_message; ?>">
 

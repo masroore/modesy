@@ -6,25 +6,25 @@
             $field_common_ids_array = $custom_field->field_common_ids; ?>
 
             <?php if ($custom_field->field_type == "text"): ?>
-            <div class="col-12 <?php echo ($custom_field->row_width == "half") ? "col-sm-6" : "col-sm-12"; ?> col-custom-field custom-field-type-<?php echo $category->category_level; ?>">
+            <div class="col-12 <?php echo ($custom_field->row_width == "half") ? "col-sm-6" : "col-sm-12"; ?> col-custom-field">
                 <label class="control-label"><?php echo html_escape($custom_field->name); ?></label>
                 <input type="text" name="field_<?php echo $custom_field->id; ?>" class="form-control form-input" value="<?php echo html_escape($custom_field->field_value); ?>"
                        placeholder="<?php echo html_escape($custom_field->name); ?>" <?php echo ($custom_field->is_required == 1) ? 'required' : ''; ?>>
             </div>
         <?php elseif ($custom_field->field_type == "number"): ?>
-            <div class="col-12 <?php echo ($custom_field->row_width == "half") ? "col-sm-6" : "col-sm-12"; ?> col-custom-field custom-field-type-<?php echo $category->category_level; ?>">
+            <div class="col-12 <?php echo ($custom_field->row_width == "half") ? "col-sm-6" : "col-sm-12"; ?> col-custom-field">
                 <label class="control-label"><?php echo html_escape($custom_field->name); ?></label>
                 <input type="number" name="field_<?php echo $custom_field->id; ?>" class="form-control form-input" value="<?php echo html_escape($custom_field->field_value); ?>"
                        placeholder="<?php echo html_escape($custom_field->name); ?>" min="0" max="999999999" <?php echo ($custom_field->is_required == 1) ? 'required' : ''; ?>>
             </div>
         <?php elseif ($custom_field->field_type == "textarea"): ?>
-            <div class="col-12 <?php echo ($custom_field->row_width == "half") ? "col-sm-6" : "col-sm-12"; ?> col-custom-field custom-field-type-<?php echo $category->category_level; ?>">
+            <div class="col-12 <?php echo ($custom_field->row_width == "half") ? "col-sm-6" : "col-sm-12"; ?> col-custom-field">
                 <label class="control-label"><?php echo html_escape($custom_field->name); ?></label>
                 <textarea class="form-control form-input custom-field-input" name="field_<?php echo $custom_field->id; ?>"
                           placeholder="<?php echo html_escape($custom_field->name); ?>" <?php echo ($custom_field->is_required == 1) ? 'required' : ''; ?>><?php echo html_escape($custom_field->field_value); ?></textarea>
             </div>
         <?php elseif ($custom_field->field_type == "date"): ?>
-            <div class="col-12 <?php echo ($custom_field->row_width == "half") ? "col-sm-6" : "col-sm-12"; ?> col-custom-field custom-field-type-<?php echo $category->category_level; ?>">
+            <div class="col-12 <?php echo ($custom_field->row_width == "half") ? "col-sm-6" : "col-sm-12"; ?> col-custom-field">
                 <label class="control-label"><?php echo html_escape($custom_field->name); ?></label>
                 <div class="input-group date" data-provide="datepicker">
                     <input type="text" name="field_<?php echo $custom_field->id; ?>" value="<?php echo html_escape($custom_field->field_value); ?>" class="datepicker form-control form-input" placeholder="<?php echo html_escape($custom_field->name); ?>" <?php echo ($custom_field->is_required == 1) ? 'required' : ''; ?>>
@@ -35,7 +35,7 @@
             </div>
         <?php elseif ($custom_field->field_type == "dropdown"): ?>
             <?php $options = get_custom_field_options($custom_field->id); ?>
-            <div class="col-12 <?php echo ($custom_field->row_width == "half") ? "col-sm-6" : "col-sm-12"; ?> col-custom-field custom-field-type-<?php echo $category->category_level; ?>">
+            <div class="col-12 <?php echo ($custom_field->row_width == "half") ? "col-sm-6" : "col-sm-12"; ?> col-custom-field">
                 <label class="control-label"><?php echo html_escape($custom_field->name); ?></label>
                 <div class="selectdiv">
                     <select name="field_<?php echo $custom_field->id; ?>" class="form-control" <?php echo ($custom_field->is_required == 1) ? 'required' : ''; ?>>
@@ -49,7 +49,7 @@
                 </div>
             </div>
         <?php elseif ($custom_field->field_type == "radio_button"): ?>
-            <div class="col-12 <?php echo ($custom_field->row_width == "half") ? "col-sm-6" : "col-sm-12"; ?> col-custom-field custom-field-type-<?php echo $category->category_level; ?>">
+            <div class="col-12 <?php echo ($custom_field->row_width == "half") ? "col-sm-6" : "col-sm-12"; ?> col-custom-field">
                 <label class="control-label"><?php echo html_escape($custom_field->name); ?></label>
                 <div class="row">
                     <?php $common_options = get_custom_field_options_by_lang($custom_field->id, $this->general_settings->site_lang); ?>
@@ -81,7 +81,7 @@
                 </div>
             </div>
         <?php elseif ($custom_field->field_type == "checkbox"): ?>
-            <div class="col-12 <?php echo ($custom_field->row_width == "half") ? "col-sm-6" : "col-sm-12"; ?> col-custom-field custom-field-type-<?php echo $category->category_level; ?>">
+            <div class="col-12 <?php echo ($custom_field->row_width == "half") ? "col-sm-6" : "col-sm-12"; ?> col-custom-field">
                 <label class="control-label"><?php echo html_escape($custom_field->name); ?></label>
                 <div class="row">
                     <?php $common_options = get_custom_field_options_by_lang($custom_field->id, $this->general_settings->site_lang); ?>

@@ -79,7 +79,7 @@ class Page_model extends CI_Model
     //check page slug
     public function check_page_slug($slug, $id)
     {
-        $slug = clean_slug($slug);
+        $slug = remove_special_characters($slug);
         $id = clean_number($id);
         $this->db->where('slug', $slug);
         $this->db->where('id !=', $id);
@@ -91,7 +91,7 @@ class Page_model extends CI_Model
     //check page slug for product
     public function check_page_slug_for_product($slug)
     {
-        $slug = clean_slug($slug);
+        $slug = remove_special_characters($slug);
         $this->db->where('slug', $slug);
         $query = $this->db->get('pages');
 
@@ -144,7 +144,7 @@ class Page_model extends CI_Model
     //get page
     public function get_page($slug)
     {
-        $slug = clean_slug($slug);
+        $slug = remove_special_characters($slug);
         $this->db->where('slug', $slug);
         $this->db->where('visibility', 1);
         $this->db->where('pages.lang_id', $this->selected_lang->id);

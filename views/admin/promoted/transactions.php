@@ -60,7 +60,7 @@
                                 <td><?php echo $item->product_id; ?></td>
                                 <td><?php echo $item->currency; ?></td>
                                 <td><?php echo $item->payment_amount; ?></td>
-                                <td><?php echo trans($item->payment_status); ?></td>
+                                <td><?php echo $item->payment_status; ?></td>
                                 <td><?php echo $item->purchased_plan; ?></td>
                                 <td><?php echo $item->ip_address; ?></td>
                                 <td><?php echo $item->created_at; ?></td>

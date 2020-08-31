@@ -88,6 +88,44 @@ class Language_model extends CI_Model
         $this->db->insert('pages', $page);
     }
 
+    //add language category names
+    public function add_language_category_names($lang_id)
+    {
+        $categories = $this->category_model->get_categories_all();
+        if (!empty($categories)) {
+            foreach ($categories as $category) {
+                $this->db->where('category_id', $category->id);
+                $query = $this->db->get('categories_lang');
+                $row = $query->row();
+                if (!empty($row)) {
+                    $data = [
+                        'category_id' => $category->id,
+                        'lang_id' => $lang_id,
+                        'name' => $row->name,
+                    ];
+                    $this->db->insert('categories_lang', $data);
+                }
+            }
+        }
+
+        //add terms page
+        $page = [
+            'lang_id' => $lang_id,
+            'title' => 'Terms & Conditions',
+            'slug' => 'terms-conditions',
+            'description' => 'Page, Terms Conditions',
+            'keywords' => 'Page, Terms Conditions',
+            'page_content' => '',
+            'page_order' => 1,
+            'visibility' => 1,
+            'title_active' => 1,
+            'location' => 'information',
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
+
+        $this->db->insert('pages', $page);
+    }
+
     //get language
     public function get_language($id)
     {

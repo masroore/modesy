@@ -38,11 +38,11 @@
                                                 <input type="hidden" name="follower_id" value="<?php echo user()->id; ?>">
                                                 <?php if (is_user_follows($member->id, user()->id)): ?>
                                                     <p>
-                                                        <button class="btn btn-md btn-custom"><i class="icon-user-plus"></i><?php echo trans("unfollow"); ?></button>
+                                                        <button class="btn btn-md btn-outline-gray"><i class="icon-user-minus"></i><?php echo trans("unfollow"); ?></button>
                                                     </p>
                                                 <?php else: ?>
                                                     <p>
-                                                        <button class="btn btn-md btn-outline"><i class="icon-user-plus"></i><?php echo trans("follow"); ?></button>
+                                                        <button class="btn btn-md btn-outline-gray"><i class="icon-user-plus"></i><?php echo trans("follow"); ?></button>
                                                     </p>
                                                 <?php endif; ?>
                                                 <?php echo form_close(); ?>

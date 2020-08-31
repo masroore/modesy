@@ -4,6 +4,10 @@ require_once 'functions.php';
 $license_code = $_GET['license_code'];
 $purchase_code = $_GET['purchase_code'];
 
+if (!isset($license_code) || !isset($purchase_code)) {
+    header('Location: index.php');
+    exit();
+}
 ?>
 
 <!DOCTYPE html>

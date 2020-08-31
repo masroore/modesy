@@ -23,6 +23,7 @@ class Message_controller extends Home_Core_Controller
         $data['keywords'] = trans('messages') . ',' . $this->app_name;
 
         $data['conversation'] = $this->message_model->get_user_latest_conversation($this->auth_user->id);
+        $data['user_session'] = get_user_session();
 
         if (!empty($data['conversation'])) {
             $data['unread_conversations'] = $this->message_model->get_unread_conversations($this->auth_user->id);
@@ -46,6 +47,7 @@ class Message_controller extends Home_Core_Controller
         $data['keywords'] = trans('messages') . ',' . $this->app_name;
 
         $data['conversation'] = $this->message_model->get_conversation($id);
+        $data['user_session'] = get_user_session();
         //check message
         if (empty($data['conversation'])) {
             redirect(lang_base_url() . 'messages');
@@ -71,16 +73,23 @@ class Message_controller extends Home_Core_Controller
     {
         $conversation_id = $this->input->post('conversation_id', true);
         if ($this->message_model->add_message($conversation_id)) {
-            //send email
-            $receiver_id = $this->input->post('receiver_id', true);
-            $message = $this->input->post('message', true);
-            $user = get_user($receiver_id);
-            if (!empty($user)) {
-                if (1 == $user->send_email_new_message) {
-                    //set email session
-                    $this->session->set_userdata('mds_send_email_new_message', 1);
-                    $this->session->set_userdata('mds_send_email_new_message_send_to', $receiver_id);
-                    $this->session->set_userdata('mds_send_email_new_message_text', $message);
+            $conversation = $this->message_model->get_conversation($conversation_id);
+            if (!empty($conversation)) {
+                //send email
+                $sender_id = $this->input->post('sender_id', true);
+                $receiver_id = $this->input->post('receiver_id', true);
+                $message = $this->input->post('message', true);
+                $user = get_user($receiver_id);
+
+                if (!empty($user) && 1 == $user->send_email_new_message && !empty($message)) {
+                    $email_data = [
+                        'email_type' => 'new_message',
+                        'sender_id' => $sender_id,
+                        'receiver_id' => $receiver_id,
+                        'message_subject' => $conversation->subject,
+                        'message_text' => $message,
+                    ];
+                    $this->session->set_userdata('mds_send_email_data', json_encode($email_data));
                 }
             }
         }

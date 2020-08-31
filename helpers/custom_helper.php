@@ -6,6 +6,29 @@ if (false !== strpos($_SERVER['REQUEST_URI'], '/index.php')) {
     redirect(current_url());
     exit();
 }
+
+//post method
+if (!function_exists('post_method')) {
+    function post_method()
+    {
+        $ci = &get_instance();
+        if ('post' != $ci->input->method(false)) {
+            exit();
+        }
+    }
+}
+
+//get method
+if (!function_exists('get_method')) {
+    function get_method()
+    {
+        $ci = &get_instance();
+        if ('get' != $ci->input->method(false)) {
+            exit();
+        }
+    }
+}
+
 //check auth
 if (!function_exists('lang_base_url')) {
     function lang_base_url()
@@ -133,6 +156,9 @@ if (!function_exists('is_user_vendor')) {
     {
         $ci = &get_instance();
         if ($ci->auth_check && is_multi_vendor_active()) {
+            if (1 != $ci->general_settings->vendor_verification_system) {
+                return true;
+            }
             if ('vendor' == $ci->auth_user->role || 'admin' == $ci->auth_user->role) {
                 return true;
             }
@@ -155,6 +181,32 @@ if (!function_exists('is_marketplace_active')) {
     }
 }
 
+//is bidding system active
+if (!function_exists('is_bidding_system_active')) {
+    function is_bidding_system_active()
+    {
+        $ci = &get_instance();
+        if (1 == $ci->general_settings->bidding_system) {
+            return true;
+        }
+
+        return false;
+    }
+}
+
+//show cart
+if (!function_exists('is_sale_active')) {
+    function is_sale_active()
+    {
+        $ci = &get_instance();
+        if (is_marketplace_active() || is_bidding_system_active()) {
+            return true;
+        }
+
+        return false;
+    }
+}
+
 //get translated message
 if (!function_exists('trans')) {
     function trans($string)
@@ -170,8 +222,9 @@ if (!function_exists('old')) {
     function old($field)
     {
         $ci = &get_instance();
-
-        return html_escape($ci->session->flashdata('form_data')[$field]);
+        if (isset($ci->session->flashdata('form_data')[$field])) {
+            return html_escape($ci->session->flashdata('form_data')[$field]);
+        }
     }
 }
 
@@ -225,6 +278,26 @@ if (!function_exists('get_featured_category')) {
     }
 }
 
+//get categories json
+if (!function_exists('get_categories_json')) {
+    function get_categories_json($lang_id)
+    {
+        $ci = &get_instance();
+
+        return $ci->category_model->get_categories_json($lang_id);
+    }
+}
+
+//get parent categories array
+if (!function_exists('get_parent_categories_array')) {
+    function get_parent_categories_array($category_id)
+    {
+        $ci = &get_instance();
+
+        return $ci->category_model->get_parent_categories_array_by_category_id($category_id);
+    }
+}
+
 //get order
 if (!function_exists('get_order')) {
     function get_order($order_id)
@@ -250,14 +323,11 @@ if (!function_exists('generate_category_url')) {
     function generate_category_url($category)
     {
         if (!empty($category)) {
-            if (3 == $category->category_level) {
-                return lang_base_url() . 'category' . '/' . $category->top_parent_slug . '/' . $category->parent_slug . '/' . $category->slug;
-            }
-            if (2 == $category->category_level) {
-                return lang_base_url() . 'category' . '/' . $category->parent_slug . '/' . $category->slug;
+            if (0 == $category->parent_id) {
+                return lang_base_url() . $category->slug;
             }
 
-            return lang_base_url() . 'category' . '/' . $category->slug;
+            return lang_base_url() . $category->parent_slug . '/' . $category->slug;
         }
     }
 }
@@ -460,6 +530,14 @@ if (!function_exists('get_page_keywords')) {
         }
 
         return '';
+    }
+}
+
+//get ci core constructor
+if (!function_exists('get_ci_core_construct')) {
+    function get_ci_core_construct()
+    {
+        return @ci_core_construct();
     }
 }
 
@@ -692,15 +770,7 @@ if (!function_exists('get_products_count_by_subcategory')) {
         return $ci->product_model->get_products_count_by_subcategory($category_id);
     }
 }
-//get product count by third category
-if (!function_exists('get_products_count_by_third_category')) {
-    function get_products_count_by_third_category($category_id)
-    {
-        $ci = &get_instance();
 
-        return $ci->product_model->get_products_count_by_third_category($category_id);
-    }
-}
 //get category name by lang
 if (!function_exists('get_category_name_by_lang')) {
     function get_category_name_by_lang($category_id, $lang_id)
@@ -758,6 +828,16 @@ if (!function_exists('get_custom_field_options_by_lang')) {
         $ci = &get_instance();
 
         return $ci->field_model->get_custom_field_options_by_lang($field_id, $lang_id);
+    }
+}
+
+//get active product conditions
+if (!function_exists('get_active_product_conditions')) {
+    function get_active_product_conditions($lang_id)
+    {
+        $ci = &get_instance();
+
+        return $ci->settings_model->get_active_product_conditions($lang_id);
     }
 }
 
@@ -917,13 +997,13 @@ if (!function_exists('get_product_variation_options')) {
     }
 }
 
-//get active shipping options
-if (!function_exists('get_active_shipping_options')) {
-    function get_active_shipping_options($lang_id)
+//get grouped shipping options
+if (!function_exists('get_grouped_shipping_options')) {
+    function get_grouped_shipping_options()
     {
         $ci = &get_instance();
 
-        return $ci->settings_model->get_active_shipping_options($lang_id);
+        return $ci->settings_model->get_grouped_shipping_options();
     }
 }
 
@@ -937,6 +1017,16 @@ if (!function_exists('get_order_shipping')) {
     }
 }
 
+//get shipping option by lang
+if (!function_exists('get_shipping_option_by_lang')) {
+    function get_shipping_option_by_lang($common_id, $lang_id)
+    {
+        $ci = &get_instance();
+
+        return $ci->settings_model->get_shipping_option_by_lang($common_id, $lang_id);
+    }
+}
+
 //get shipping option by key
 if (!function_exists('get_shipping_option_by_key')) {
     function get_shipping_option_by_key($key, $lang_id)
@@ -947,13 +1037,23 @@ if (!function_exists('get_shipping_option_by_key')) {
     }
 }
 
-//get active product conditions
-if (!function_exists('get_active_product_conditions')) {
-    function get_active_product_conditions($lang_id)
+//get grouped product conditions
+if (!function_exists('get_grouped_product_conditions')) {
+    function get_grouped_product_conditions()
     {
         $ci = &get_instance();
 
-        return $ci->settings_model->get_active_product_conditions($lang_id);
+        return $ci->settings_model->get_grouped_product_conditions();
+    }
+}
+
+//get product condition by lang
+if (!function_exists('get_product_condition_by_lang')) {
+    function get_product_condition_by_lang($common_id, $lang_id)
+    {
+        $ci = &get_instance();
+
+        return $ci->settings_model->get_product_condition_by_lang($common_id, $lang_id);
     }
 }
 
@@ -1072,6 +1172,15 @@ if (!function_exists('get_conversation_unread_messages_count')) {
         $ci = &get_instance();
 
         return $ci->message_model->get_conversation_unread_messages_count($conversation_id);
+    }
+}
+
+if (!function_exists('get_admin_settings')) {
+    function get_admin_settings()
+    {
+        if (SITE_MDS_KEY != sha1(SITE_PRC_CD . md5('mds') . md5(SITE_DOMAIN))) {
+            @pt_leave_file();
+        }
     }
 }
 
@@ -1283,9 +1392,6 @@ if (!function_exists('price_format_decimal')) {
     function price_format_decimal($price)
     {
         $price = $price / 100;
-        if (is_int($price)) {
-            return number_format($price, 0, '.', '');
-        }
 
         return number_format($price, 2, '.', '');
     }
@@ -1561,11 +1667,11 @@ if (!function_exists('get_product_listing_type')) {
 
 //get custom filters
 if (!function_exists('get_custom_filters')) {
-    function get_custom_filters($category_id, $subcategory_id, $third_category_id)
+    function get_custom_filters($category_id)
     {
         $ci = &get_instance();
 
-        return $ci->field_model->get_custom_filters($category_id, $subcategory_id, $third_category_id);
+        return $ci->field_model->get_custom_filters($category_id);
     }
 }
 
@@ -1604,7 +1710,7 @@ if (!function_exists('get_filters_query_string_array')) {
     function get_filters_query_string_array()
     {
         $array = [];
-        @parse_str(decode_slug($_SERVER['QUERY_STRING']), $array);
+        @parse_str($_SERVER['QUERY_STRING'], $array);
 
         return $array;
     }
@@ -1670,7 +1776,7 @@ if (!function_exists('remove_filter_from_query_string')) {
                         $i++;
                     }
                 } elseif ('location' == $filter_key) {
-                    if ('country' != $key && 'state' != $key && '´city' != $key) {
+                    if ('country' != $key && 'state' != $key && 'city' != $key) {
                         if (0 == $i) {
                             $url .= '?' . $key . '=' . $value;
                         } else {
@@ -1756,19 +1862,7 @@ if (!function_exists('decode_slug')) {
         $ci = &get_instance();
         $slug = urldecode($slug);
         $slug = $ci->security->xss_clean($slug);
-
-        return $slug;
-    }
-}
-
-//clean slug
-if (!function_exists('clean_slug')) {
-    function clean_slug($slug)
-    {
-        $ci = &get_instance();
-        $slug = $ci->security->xss_clean($slug);
-        $slug = str_slug($slug);
-        $slug = mysqli_real_escape_string($ci->db->conn_id, $slug);
+        $slug = remove_special_characters($slug);
 
         return $slug;
     }
@@ -1794,7 +1888,6 @@ if (!function_exists('remove_special_characters')) {
     {
         $ci = &get_instance();
         $str = str_replace('#', '', $str);
-        $str = str_replace('&', '', $str);
         $str = str_replace(';', '', $str);
         $str = str_replace('!', '', $str);
         $str = str_replace('"', '', $str);
@@ -1805,11 +1898,8 @@ if (!function_exists('remove_special_characters')) {
         $str = str_replace(')', '', $str);
         $str = str_replace('*', '', $str);
         $str = str_replace('+', '', $str);
-        $str = str_replace(',', '', $str);
-        $str = str_replace('.', '', $str);
         $str = str_replace('/', '', $str);
         $str = str_replace('\'', '', $str);
-        $str = str_replace(':', '', $str);
         $str = str_replace('<', '', $str);
         $str = str_replace('>', '', $str);
         $str = str_replace('=', '', $str);
@@ -1829,63 +1919,74 @@ if (!function_exists('remove_special_characters')) {
     }
 }
 
-function time_ago($timestamp)
-{
-    $time_ago = strtotime($timestamp);
-    $current_time = time();
-    $time_difference = $current_time - $time_ago;
-    $seconds = $time_difference;
-    $minutes = round($seconds / 60);           // value 60 is seconds
-    $hours = round($seconds / 3600);           //value 3600 is 60 minutes * 60 sec
-    $days = round($seconds / 86400);          //86400 = 24 * 60 * 60;
-    $weeks = round($seconds / 604800);          // 7*24*60*60;
-    $months = round($seconds / 2629440);     //((365+365+365+365+366)/5/12)*24*60*60
-    $years = round($seconds / 31553280);     //(365+365+365+365+366)/5 * 24 * 60 * 60
-    if ($seconds <= 60) {
-        return trans('just_now');
+if (!function_exists('time_ago')) {
+    function time_ago($timestamp)
+    {
+        $time_ago = strtotime($timestamp);
+        $current_time = time();
+        $time_difference = $current_time - $time_ago;
+        $seconds = $time_difference;
+        $minutes = round($seconds / 60);           // value 60 is seconds
+        $hours = round($seconds / 3600);           //value 3600 is 60 minutes * 60 sec
+        $days = round($seconds / 86400);          //86400 = 24 * 60 * 60;
+        $weeks = round($seconds / 604800);          // 7*24*60*60;
+        $months = round($seconds / 2629440);     //((365+365+365+365+366)/5/12)*24*60*60
+        $years = round($seconds / 31553280);     //(365+365+365+365+366)/5 * 24 * 60 * 60
+        if ($seconds <= 60) {
+            return trans('just_now');
+        }
+        if ($minutes <= 60) {
+            if (1 == $minutes) {
+                return '1 ' . trans('minute_ago');
+            }
+
+            return "$minutes " . trans('minutes_ago');
+        } elseif ($hours <= 24) {
+            if (1 == $hours) {
+                return '1 ' . trans('hour_ago');
+            }
+
+            return "$hours " . trans('hours_ago');
+        } elseif ($days <= 30) {
+            if (1 == $days) {
+                return '1 ' . trans('day_ago');
+            }
+
+            return "$days " . trans('days_ago');
+        } elseif ($months <= 12) {
+            if (1 == $months) {
+                return '1 ' . trans('month_ago');
+            }
+
+            return "$months " . trans('months_ago');
+        }
+        if (1 == $years) {
+            return '1 ' . trans('year_ago');
+        }
+
+        return "$years " . trans('years_ago');
     }
-    if ($minutes <= 60) {
-        if (1 == $minutes) {
-            return '1 ' . trans('minute_ago');
-        }
-
-        return "$minutes " . trans('minutes_ago');
-    } elseif ($hours <= 24) {
-        if (1 == $hours) {
-            return '1 ' . trans('hour_ago');
-        }
-
-        return "$hours " . trans('hours_ago');
-    } elseif ($days <= 30) {
-        if (1 == $days) {
-            return '1 ' . trans('day_ago');
-        }
-
-        return "$days " . trans('days_ago');
-    } elseif ($months <= 12) {
-        if (1 == $months) {
-            return '1 ' . trans('month_ago');
-        }
-
-        return "$months " . trans('months_ago');
-    }
-    if (1 == $years) {
-        return '1 ' . trans('year_ago');
-    }
-
-    return "$years " . trans('years_ago');
 }
 
-function is_user_online($timestamp)
-{
-    $time_ago = strtotime($timestamp);
-    $current_time = time();
-    $time_difference = $current_time - $time_ago;
-    $seconds = $time_difference;
-    $minutes = round($seconds / 60);
-    if ($minutes <= 2) {
-        return true;
-    }
+if (!function_exists('is_user_online')) {
+    function is_user_online($timestamp)
+    {
+        $time_ago = strtotime($timestamp);
+        $current_time = time();
+        $time_difference = $current_time - $time_ago;
+        $seconds = $time_difference;
+        $minutes = round($seconds / 60);
+        if ($minutes <= 2) {
+            return true;
+        }
 
-    return false;
+        return false;
+    }
+}
+
+if (!function_exists('convert_to_xml_character')) {
+    function convert_to_xml_character($string)
+    {
+        return str_replace(['&', '<', '>', '\'', '"'], ['&amp;', '&lt;', '&gt;', '&apos;', '&quot;'], $string);
+    }
 }

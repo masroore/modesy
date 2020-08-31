@@ -13,7 +13,7 @@ class Earnings_controller extends Home_Core_Controller
         if (!is_user_vendor()) {
             redirect(lang_base_url());
         }
-        if (!is_marketplace_active()) {
+        if (!is_sale_active()) {
             redirect(lang_base_url());
         }
         $this->earnings_per_page = 15;
@@ -30,6 +30,7 @@ class Earnings_controller extends Home_Core_Controller
         $data['keywords'] = trans('earnings') . ',' . $this->app_name;
         $data['active_tab'] = 'earnings';
         $data['user'] = user();
+        $data['site_settings'] = get_site_settings();
         $pagination = $this->paginate(lang_base_url() . 'earnings', $this->earnings_model->get_earnings_count($this->user_id), $this->earnings_per_page);
         $data['earnings'] = $this->earnings_model->get_paginated_earnings($this->user_id, $pagination['per_page'], $pagination['offset']);
 
@@ -48,6 +49,7 @@ class Earnings_controller extends Home_Core_Controller
         $data['keywords'] = trans('payouts') . ',' . $this->app_name;
         $data['active_tab'] = 'payouts';
         $data['user'] = user();
+        $data['site_settings'] = get_site_settings();
         $pagination = $this->paginate(lang_base_url() . 'earnings', $this->earnings_model->get_payouts_count($this->user_id), $this->earnings_per_page);
         $data['payouts'] = $this->earnings_model->get_paginated_payouts($this->user_id, $pagination['per_page'], $pagination['offset']);
 
@@ -66,6 +68,7 @@ class Earnings_controller extends Home_Core_Controller
         $data['keywords'] = trans('set_payout_account') . ',' . $this->app_name;
         $data['active_tab'] = 'set_payout_account';
         $data['user'] = user();
+        $data['site_settings'] = get_site_settings();
         $data['user_payout'] = $this->earnings_model->get_user_payout_account($data['user']->id);
 
         if (empty($this->session->flashdata('msg_payout'))) {
@@ -164,8 +167,8 @@ class Earnings_controller extends Home_Core_Controller
             $this->session->set_flashdata('error', trans('msg_error'));
             redirect($this->agent->referrer());
         }
-        if ($data['amount'] <= $min) {
-            $this->session->set_flashdata('error', trans('msg_error'));
+        if ($data['amount'] < $min) {
+            $this->session->set_flashdata('error', $min);
             redirect($this->agent->referrer());
         }
         if ($data['amount'] > user()->balance) {

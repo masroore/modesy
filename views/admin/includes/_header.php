@@ -171,6 +171,11 @@
                         <li><a href="<?php echo admin_url(); ?>promoted-products-transactions"> <?php echo trans("transactions"); ?></a></li>
                     </ul>
                 </li>
+				<li>
+					<a href="<?php echo admin_url(); ?>quote-requests">
+						<i class="fa fa-tag"></i> <span><?php echo trans("quote_requests"); ?></span>
+					</a>
+				</li>
                 <li class="treeview">
                     <a href="#">
                         <i class="fa fa-folder-open"></i>
@@ -341,18 +346,19 @@
                         <li><a href="<?php echo admin_url(); ?>location-settings"> <?php echo trans("location_settings"); ?></a></li>
                     </ul>
                 </li>
-                <li>
-                    <a href="<?php echo admin_url(); ?>social-login">
-                        <i class="fa fa-share-alt"></i> <span><?php echo trans("social_login"); ?></span>
-                    </a>
-                </li>
-                <li>
-                    <a href="<?php echo admin_url(); ?>preferences">
-                        <i class="fa fa-check-square-o"></i>
-                        <span><?php echo trans("preferences"); ?></span>
-                    </a>
-                </li>
+
                 <li class="header text-uppercase"><?php echo trans("settings"); ?></li>
+				<li>
+					<a href="<?php echo admin_url(); ?>preferences">
+						<i class="fa fa-check-square-o"></i>
+						<span><?php echo trans("preferences"); ?></span>
+					</a>
+				</li>
+				<li>
+					<a href="<?php echo admin_url(); ?>social-login">
+						<i class="fa fa-share-alt"></i> <span><?php echo trans("social_login"); ?></span>
+					</a>
+				</li>
                 <li class="treeview">
                     <a href="#">
                         <i class="fa fa-cogs"></i>

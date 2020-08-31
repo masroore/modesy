@@ -81,4 +81,15 @@ class Ad_model extends CI_Model
     {
         return '<a href="' . $url . '"><img src="' . base_url() . $image_path . '" alt=""></a>';
     }
+
+    //update google adsense code
+    public function update_google_adsense_code()
+    {
+        $data = [
+            'google_adsense_code' => $this->input->post('google_adsense_code', false),
+        ];
+        $this->db->where('id', 1);
+
+        return $this->db->update('general_settings', $data);
+    }
 }

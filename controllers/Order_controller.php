@@ -10,7 +10,7 @@ class Order_controller extends Home_Core_Controller
         if (!auth_check()) {
             redirect(lang_base_url());
         }
-        if (!is_marketplace_active()) {
+        if (!is_sale_active()) {
             redirect(lang_base_url());
         }
         $this->order_per_page = 15;
@@ -27,6 +27,7 @@ class Order_controller extends Home_Core_Controller
         $data['description'] = trans('orders') . ' - ' . $this->app_name;
         $data['keywords'] = trans('orders') . ',' . $this->app_name;
         $data['active_tab'] = 'active_orders';
+        $data['user_session'] = get_user_session();
 
         $pagination = $this->paginate(lang_base_url() . 'orders', $this->order_model->get_orders_count($this->user_id), $this->order_per_page);
         $data['orders'] = $this->order_model->get_paginated_orders($this->user_id, $pagination['per_page'], $pagination['offset']);
@@ -48,6 +49,7 @@ class Order_controller extends Home_Core_Controller
 
         $pagination = $this->paginate(lang_base_url() . 'orders', $this->order_model->get_completed_orders_count($this->user_id), $this->order_per_page);
         $data['orders'] = $this->order_model->get_paginated_completed_orders($this->user_id, $pagination['per_page'], $pagination['offset']);
+        $data['user_session'] = get_user_session();
         $this->load->view('partials/_header', $data);
         $this->load->view('order/orders', $data);
         $this->load->view('partials/_footer');
@@ -71,6 +73,7 @@ class Order_controller extends Home_Core_Controller
             redirect(lang_base_url());
         }
         $data['order_products'] = $this->order_model->get_order_products($data['order']->id);
+        $data['user_session'] = get_user_session();
         $data['last_bank_transfer'] = $this->order_admin_model->get_bank_transfer_by_order_number($data['order']->order_number);
 
         $this->load->view('partials/_header', $data);
@@ -100,6 +103,7 @@ class Order_controller extends Home_Core_Controller
         $data['description'] = trans('sales') . ' - ' . $this->app_name;
         $data['keywords'] = trans('sales') . ',' . $this->app_name;
         $data['active_tab'] = 'active_sales';
+        $data['user_session'] = get_user_session();
         $pagination = $this->paginate(lang_base_url() . 'sales', $this->order_model->get_sales_count($this->user_id), $this->order_per_page);
         $data['orders'] = $this->order_model->get_paginated_sales($this->user_id, $pagination['per_page'], $pagination['offset']);
 
@@ -121,6 +125,7 @@ class Order_controller extends Home_Core_Controller
         $data['description'] = trans('sales') . ' - ' . $this->app_name;
         $data['keywords'] = trans('sales') . ',' . $this->app_name;
         $data['active_tab'] = 'completed_sales';
+        $data['user_session'] = get_user_session();
         $pagination = $this->paginate(lang_base_url() . 'sales', $this->order_model->get_completed_sales_count($this->user_id), $this->order_per_page);
         $data['orders'] = $this->order_model->get_paginated_completed_sales($this->user_id, $pagination['per_page'], $pagination['offset']);
 
@@ -142,6 +147,7 @@ class Order_controller extends Home_Core_Controller
         $data['description'] = trans('sales') . ' - ' . $this->app_name;
         $data['keywords'] = trans('sales') . ',' . $this->app_name;
         $data['active_tab'] = '';
+        $data['user_session'] = get_user_session();
         $data['order'] = $this->order_model->get_order_by_order_number($order_number);
         if (empty($data['order'])) {
             redirect(lang_base_url());
@@ -171,7 +177,6 @@ class Order_controller extends Home_Core_Controller
                 if ('completed' == $order_status || 'payment_received' == $order_status) {
                     $this->order_model->add_digital_sale($order_product->product_id, $order_product->order_id);
                 }
-
                 $this->order_admin_model->update_payment_status_if_all_received($order_product->order_id);
                 $this->order_admin_model->update_order_status_if_completed($order_product->order_id);
             }

@@ -7,7 +7,7 @@ class Product_model extends Core_Model
     public function __construct()
     {
         parent::__construct();
-
+        get_ci_core_construct();
         //default location
         $this->default_location_id = 0;
         if (!empty($this->session->userdata('modesy_default_location'))) {
@@ -22,9 +22,6 @@ class Product_model extends Core_Model
             'title' => $this->input->post('title', true),
             'product_type' => $this->input->post('product_type', true),
             'listing_type' => $this->input->post('listing_type', true),
-            'category_id' => $this->input->post('category_id', true),
-            'subcategory_id' => $this->input->post('subcategory_id', true),
-            'third_category_id' => $this->input->post('third_category_id', true),
             'price' => 0,
             'currency' => '',
             'description' => $this->input->post('description', false),
@@ -54,49 +51,25 @@ class Product_model extends Core_Model
             'is_sold' => 0,
             'is_deleted' => 0,
             'is_draft' => 1,
+            'is_free_product' => 0,
             'created_at' => date('Y-m-d H:i:s'),
         ];
 
         $data['slug'] = str_slug($data['title']);
-        if (empty($data['subcategory_id'])) {
-            $data['subcategory_id'] = 0;
+        //set category id
+        $data['category_id'] = 0;
+        $post_inputs = $this->input->post();
+        foreach ($post_inputs as $key => $value) {
+            if (false !== strpos($key, 'category_id_')) {
+                $data['category_id'] = $value;
+            }
         }
-        if (empty($data['third_category_id'])) {
-            $data['third_category_id'] = 0;
-        }
+
         if (empty($data['country_id'])) {
             $data['country_id'] = 0;
         }
-        if (0 == $this->general_settings->approve_before_publishing) {
-            $data['status'] = 1;
-        }
 
         return $this->db->insert('products', $data);
-    }
-
-    //edit draft
-    public function edit_draft($id)
-    {
-        $id = clean_number($id);
-        $data = [
-            'title' => $this->input->post('title', true),
-            'product_type' => $this->input->post('product_type', true),
-            'listing_type' => $this->input->post('listing_type', true),
-            'category_id' => $this->input->post('category_id', true),
-            'subcategory_id' => $this->input->post('subcategory_id', true),
-            'third_category_id' => $this->input->post('third_category_id', true),
-            'description' => $this->input->post('description', false),
-        ];
-        $data['slug'] = str_slug($data['title']);
-        if (empty($data['subcategory_id'])) {
-            $data['subcategory_id'] = 0;
-        }
-        if (empty($data['third_category_id'])) {
-            $data['third_category_id'] = 0;
-        }
-        $this->db->where('id', $id);
-
-        return $this->db->update('products', $data);
     }
 
     //edit product details
@@ -119,6 +92,7 @@ class Product_model extends Core_Model
             'quantity' => $this->input->post('quantity', true),
             'shipping_time' => $this->input->post('shipping_time', true),
             'shipping_cost_type' => $this->input->post('shipping_cost_type', true),
+            'is_free_product' => $this->input->post('is_free_product', true),
             'is_draft' => 0,
         ];
 
@@ -150,6 +124,16 @@ class Product_model extends Core_Model
         if (empty($data['quantity'])) {
             $data['quantity'] = 1;
         }
+        if (!empty($data['is_free_product'])) {
+            $data['is_free_product'] = 1;
+        } else {
+            $data['is_free_product'] = 0;
+        }
+
+        //unset price if bidding system selected
+        if (1 == $this->general_settings->bidding_system) {
+            $array['price'] = 0;
+        }
 
         if (1 == $this->settings_model->is_shipping_option_require_cost($data['shipping_cost_type'])) {
             $data['shipping_cost'] = $this->input->post('shipping_cost', true);
@@ -160,6 +144,10 @@ class Product_model extends Core_Model
 
         if ('save_as_draft' == $this->input->post('submit', true)) {
             $data['is_draft'] = 1;
+        } else {
+            if (0 == $this->general_settings->approve_before_publishing || 'admin' == $this->auth_user->role) {
+                $data['status'] = 1;
+            }
         }
 
         $this->db->where('id', $id);
@@ -168,35 +156,38 @@ class Product_model extends Core_Model
     }
 
     //edit product
-    public function edit_product($id)
+    public function edit_product($product)
     {
-        $id = clean_number($id);
         $data = [
             'title' => $this->input->post('title', true),
             'product_type' => $this->input->post('product_type', true),
             'listing_type' => $this->input->post('listing_type', true),
-            'category_id' => $this->input->post('category_id', true),
-            'subcategory_id' => $this->input->post('subcategory_id', true),
-            'third_category_id' => $this->input->post('third_category_id', true),
             'description' => $this->input->post('description', false),
         ];
         $data['slug'] = str_slug($data['title']);
-        if (empty($data['subcategory_id'])) {
-            $data['subcategory_id'] = 0;
+
+        //set category id
+        $data['category_id'] = 0;
+        $post_inputs = $this->input->post();
+        foreach ($post_inputs as $key => $value) {
+            if (false !== strpos($key, 'category_id_')) {
+                $data['category_id'] = $value;
+            }
         }
-        if (empty($data['third_category_id'])) {
-            $data['third_category_id'] = 0;
+
+        if (1 != $product->is_draft) {
+            $is_sold = $this->input->post('status_sold', true);
+            if ('active' == $is_sold) {
+                $data['is_sold'] = 0;
+            } elseif ('sold' == $is_sold) {
+                $data['is_sold'] = 1;
+            }
+            if (is_admin()) {
+                $data['visibility'] = $this->input->post('visibility', true);
+            }
         }
-        $is_sold = $this->input->post('status_sold', true);
-        if ('active' == $is_sold) {
-            $data['is_sold'] = 0;
-        } elseif ('sold' == $is_sold) {
-            $data['is_sold'] = 1;
-        }
-        if (is_admin()) {
-            $data['visibility'] = $this->input->post('visibility', true);
-        }
-        $this->db->where('id', $id);
+
+        $this->db->where('id', $product->id);
 
         return $this->db->update('products', $data);
     }
@@ -207,7 +198,7 @@ class Product_model extends Core_Model
         $product_id = clean_number($product_id);
         $product = $this->get_product_by_id($product_id);
         if (!empty($product)) {
-            $custom_fields = $this->field_model->generate_custom_fields_array($product->category_id, $product->subcategory_id, $product->third_category_id, null);
+            $custom_fields = $this->field_model->generate_custom_fields_array($product->category_id, null);
             if (!empty($custom_fields)) {
                 foreach ($custom_fields as $custom_field) {
                     //check field values
@@ -349,11 +340,15 @@ class Product_model extends Core_Model
         $this->db->join('users', 'products.user_id = users.id');
         $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
         $this->db->where('users.banned', 0);
-        $this->db->where('users.role !=', 'member');
         $this->db->where('products.status', 1);
         $this->db->where('products.visibility', 1);
         $this->db->where('products.is_draft', 0);
+        $this->db->where('products.is_sold', 0);
         $this->db->where('products.is_deleted', 0);
+
+        if (1 == $this->general_settings->vendor_verification_system) {
+            $this->db->where('users.role !=', 'member');
+        }
 
         //default location
         if (0 != $this->default_location_id) {
@@ -367,20 +362,20 @@ class Product_model extends Core_Model
         $this->db->join('users', 'products.user_id = users.id');
         $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
         $this->db->where('users.banned', 0);
-        $this->db->where('users.role !=', 'member');
         $this->db->where('products.status', 1);
         $this->db->where('products.visibility', 1);
         $this->db->where('products.is_draft', 0);
         $this->db->where('products.is_deleted', 0);
+
+        if (1 == $this->general_settings->vendor_verification_system) {
+            $this->db->where('users.role !=', 'member');
+        }
     }
 
     //filter products
-    public function filter_products($category_id, $subcategory_id, $third_category_id)
+    public function filter_products($category_id)
     {
         $category_id = clean_number($category_id);
-        $subcategory_id = clean_number($subcategory_id);
-        $third_category_id = clean_number($third_category_id);
-
         $country = clean_number($this->input->get('country', true));
         $state = clean_number($this->input->get('state', true));
         $city = clean_number($this->input->get('city', true));
@@ -405,6 +400,7 @@ class Product_model extends Core_Model
                 }
             }
         }
+
         if (!empty($custom_filters)) {
             foreach ($custom_filters as $filter) {
                 if (!empty($filter)) {
@@ -429,16 +425,11 @@ class Product_model extends Core_Model
 
         //add protuct filter options
         if (!empty($category_id)) {
-            $this->db->where('products.category_id', $category_id);
-            $this->db->order_by('products.is_promoted', 'DESC');
-        }
-        if (!empty($subcategory_id)) {
-            $this->db->where('products.subcategory_id', $subcategory_id);
-            $this->db->order_by('products.is_promoted', 'DESC');
-        }
-        if (!empty($third_category_id)) {
-            $this->db->where('products.third_category_id', $third_category_id);
-            $this->db->order_by('products.is_promoted', 'DESC');
+            $category_tree_ids = $this->category_model->get_category_tree_ids_string($category_id);
+            if (!empty($category_tree_ids)) {
+                $this->db->where('products.category_id IN (' . $category_tree_ids . ')', null, false);
+                $this->db->order_by('products.is_promoted', 'DESC');
+            }
         }
         if (!empty($country)) {
             $this->db->where('products.country_id', $country);
@@ -572,9 +563,9 @@ class Product_model extends Core_Model
     }
 
     //get paginated filtered products
-    public function get_paginated_filtered_products($category_id, $subcategory_id, $third_category_id, $per_page, $offset)
+    public function get_paginated_filtered_products($category_id, $per_page, $offset)
     {
-        $this->filter_products($category_id, $subcategory_id, $third_category_id);
+        $this->filter_products($category_id);
         $this->db->limit($per_page, $offset);
         $query = $this->db->get('products');
 
@@ -582,9 +573,9 @@ class Product_model extends Core_Model
     }
 
     //get paginated filtered products count
-    public function get_paginated_filtered_products_count($category_id, $subcategory_id, $third_category_id)
+    public function get_paginated_filtered_products_count($category_id)
     {
-        $this->filter_products($category_id, $subcategory_id, $third_category_id);
+        $this->filter_products($category_id);
         $query = $this->db->get('products');
 
         return $query->num_rows();
@@ -593,34 +584,8 @@ class Product_model extends Core_Model
     //get products count by category
     public function get_products_count_by_category($category_id)
     {
-        $category_id = clean_number($category_id);
-        $this->build_query();
+        return clean_number($category_id);
         $this->db->where('products.category_id', $category_id);
-        $this->db->order_by('products.created_at', 'DESC');
-        $query = $this->db->get('products');
-
-        return $query->num_rows();
-    }
-
-    //get products count by subcategory
-    public function get_products_count_by_subcategory($category_id)
-    {
-        $category_id = clean_number($category_id);
-        $this->build_query();
-        $this->db->where('products.subcategory_id', $category_id);
-        $this->db->order_by('products.created_at', 'DESC');
-        $query = $this->db->get('products');
-
-        return $query->num_rows();
-    }
-
-    //get products count by third category
-    public function get_products_count_by_third_category($category_id)
-    {
-        $category_id = clean_number($category_id);
-        $this->build_query();
-        $this->db->where('products.third_category_id', $category_id);
-        $this->db->order_by('products.created_at', 'DESC');
         $query = $this->db->get('products');
 
         return $query->num_rows();
@@ -629,26 +594,47 @@ class Product_model extends Core_Model
     //get related products
     public function get_related_products($product)
     {
+        $rows_2 = [];
         $this->build_query();
-        if (0 != $product->third_category_id) {
-            $this->db->where('products.third_category_id', $product->third_category_id);
-        } elseif (0 != $product->subcategory_id) {
-            $this->db->where('products.subcategory_id', $product->subcategory_id);
-        } else {
-            $this->db->where('products.category_id', $product->category_id);
-        }
+        $this->db->where('products.category_id', $product->category_id);
         $this->db->where('products.id !=', $product->id);
         $this->db->limit(4);
-        $this->db->order_by('products.created_at', 'DESC');
+        $this->db->order_by('rand()');
         $query = $this->db->get('products');
+        $rows = $query->result_array();
+        if (count($rows) < 4) {
+            $category = get_category($product->category_id);
+            if (empty($category)) {
+                return $rows;
+            }
+            if (0 != $category->parent_id) {
+                $category = get_category($category->parent_id);
+            }
+            if (empty($category)) {
+                return $rows;
+            }
+            $category_tree_ids = $this->category_model->get_category_tree_ids_string($category->id);
+            if (!empty($category_tree_ids)) {
+                $this->build_query();
+                $this->db->where('products.category_id IN (' . $category_tree_ids . ')', null, false);
+                $this->db->where('products.id !=', $product->id);
+                $this->db->where('products.category_id !=', $product->category_id);
+                $this->db->limit(4);
+                $this->db->order_by('rand()');
+                $query = $this->db->get('products');
+                $rows_2 = $query->result_array();
+                if (!empty($rows_2)) {
+                    return array_merge($rows, $rows_2);
+                }
+            }
+        }
 
-        return $query->result();
+        return $rows;
     }
 
     //get user products
     public function get_user_products($user_slug, $limit, $product_id)
     {
-        $user_slug = clean_slug($user_slug);
         $limit = clean_number($limit);
         $product_id = clean_number($product_id);
         $this->build_query_unlocated();
@@ -664,7 +650,6 @@ class Product_model extends Core_Model
     //get paginated user products
     public function get_paginated_user_products($user_slug, $per_page, $offset)
     {
-        $user_slug = clean_slug($user_slug);
         $this->build_query_unlocated();
         $this->db->where('users.slug', $user_slug);
         $this->db->limit($per_page, $offset);
@@ -677,7 +662,6 @@ class Product_model extends Core_Model
     //get user products count
     public function get_user_products_count($user_slug)
     {
-        $user_slug = clean_slug($user_slug);
         $user = $this->auth_model->get_user_by_slug($user_slug);
         if (empty($user)) {
             return 0;
@@ -698,9 +682,11 @@ class Product_model extends Core_Model
         $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
         $this->db->where('products.status', 0);
         $this->db->where('users.id', $user_id);
-        $this->db->where('users.role !=', 'member');
         $this->db->where('products.is_draft', 0);
         $this->db->where('products.is_deleted', 0);
+        if (1 == $this->general_settings->vendor_verification_system) {
+            $this->db->where('users.role !=', 'member');
+        }
         $this->db->order_by('products.created_at', 'DESC');
         $this->db->limit($per_page, $offset);
         $query = $this->db->get('products');
@@ -716,9 +702,11 @@ class Product_model extends Core_Model
         $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
         $this->db->where('products.status', 0);
         $this->db->where('users.id', $user_id);
-        $this->db->where('users.role !=', 'member');
         $this->db->where('products.is_draft', 0);
         $this->db->where('products.is_deleted', 0);
+        if (1 == $this->general_settings->vendor_verification_system) {
+            $this->db->where('users.role !=', 'member');
+        }
         $query = $this->db->get('products');
 
         return $query->num_rows();
@@ -731,7 +719,9 @@ class Product_model extends Core_Model
         $this->db->join('users', 'products.user_id = users.id');
         $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
         $this->db->where('users.id', $user_id);
-        $this->db->where('users.role !=', 'member');
+        if (1 == $this->general_settings->vendor_verification_system) {
+            $this->db->where('users.role !=', 'member');
+        }
         $this->db->where('products.is_draft', 1);
         $this->db->where('products.is_deleted', 0);
         $query = $this->db->get('products');
@@ -746,9 +736,11 @@ class Product_model extends Core_Model
         $this->db->join('users', 'products.user_id = users.id');
         $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
         $this->db->where('users.id', $user_id);
-        $this->db->where('users.role !=', 'member');
         $this->db->where('products.is_draft', 1);
         $this->db->where('products.is_deleted', 0);
+        if (1 == $this->general_settings->vendor_verification_system) {
+            $this->db->where('users.role !=', 'member');
+        }
         $this->db->order_by('products.created_at', 'DESC');
         $this->db->limit($per_page, $offset);
         $query = $this->db->get('products');
@@ -764,9 +756,11 @@ class Product_model extends Core_Model
         $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
         $this->db->where('products.visibility', 0);
         $this->db->where('users.id', $user_id);
-        $this->db->where('users.role !=', 'member');
         $this->db->where('products.is_draft', 0);
         $this->db->where('products.is_deleted', 0);
+        if (1 == $this->general_settings->vendor_verification_system) {
+            $this->db->where('users.role !=', 'member');
+        }
         $this->db->order_by('products.created_at', 'DESC');
         $query = $this->db->get('products');
 
@@ -781,9 +775,11 @@ class Product_model extends Core_Model
         $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
         $this->db->where('products.visibility', 0);
         $this->db->where('users.id', $user_id);
-        $this->db->where('users.role !=', 'member');
         $this->db->where('products.is_draft', 0);
         $this->db->where('products.is_deleted', 0);
+        if (1 == $this->general_settings->vendor_verification_system) {
+            $this->db->where('users.role !=', 'member');
+        }
         $this->db->order_by('products.created_at', 'DESC');
         $this->db->limit($per_page, $offset);
         $query = $this->db->get('products');
@@ -894,12 +890,15 @@ class Product_model extends Core_Model
         $this->db->join('users', 'products.user_id = users.id');
         $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
         $this->db->where('users.banned', 0);
-        $this->db->where('users.role !=', 'member');
         $this->db->where('products.status', 1);
         $this->db->where('products.visibility', 1);
         $this->db->where('products.is_draft', 0);
+        $this->db->where('products.is_sold', 0);
         $this->db->where('products.is_deleted', 0);
         $this->db->where('products.id', $id);
+        if (1 == $this->general_settings->vendor_verification_system) {
+            $this->db->where('users.role !=', 'member');
+        }
         $query = $this->db->get('products');
 
         return $query->row();
@@ -908,14 +907,15 @@ class Product_model extends Core_Model
     //get product by slug
     public function get_product_by_slug($slug)
     {
-        $slug = clean_slug($slug);
         $this->db->join('users', 'products.user_id = users.id');
         $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
         $this->db->where('users.banned', 0);
-        $this->db->where('users.role !=', 'member');
         $this->db->where('products.slug', $slug);
         $this->db->where('products.is_draft', 0);
         $this->db->where('products.is_deleted', 0);
+        if (1 == $this->general_settings->vendor_verification_system) {
+            $this->db->where('users.role !=', 'member');
+        }
         $this->db->order_by('products.created_at', 'DESC');
         $query = $this->db->get('products');
 
@@ -1021,15 +1021,22 @@ class Product_model extends Core_Model
     public function get_rss_products_by_category($category_id)
     {
         $category_id = clean_number($category_id);
+        $category_tree_ids = $this->category_model->get_category_tree_ids_string($category_id);
+        if (empty($category_tree_ids)) {
+            return [];
+        }
         $this->db->join('users', 'products.user_id = users.id');
         $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
         $this->db->where('users.banned', 0);
-        $this->db->where('users.role !=', 'member');
         $this->db->where('products.status', 1);
         $this->db->where('products.visibility', 1);
-        $this->db->where('products.category_id', $category_id);
+        $this->db->where('products.category_id IN (' . $category_tree_ids . ')', null, false);
         $this->db->where('products.is_draft', 0);
+        $this->db->where('products.is_sold', 0);
         $this->db->where('products.is_deleted', 0);
+        if (1 == $this->general_settings->vendor_verification_system) {
+            $this->db->where('users.role !=', 'member');
+        }
         $this->db->order_by('products.created_at', 'DESC');
         $query = $this->db->get('products');
 
@@ -1043,12 +1050,15 @@ class Product_model extends Core_Model
         $this->db->join('users', 'products.user_id = users.id');
         $this->db->select('products.*, users.username as user_username, users.shop_name as shop_name, users.role as user_role, users.slug as user_slug');
         $this->db->where('users.banned', 0);
-        $this->db->where('users.role !=', 'member');
         $this->db->where('products.status', 1);
         $this->db->where('products.visibility', 1);
         $this->db->where('users.id', $user_id);
         $this->db->where('products.is_draft', 0);
+        $this->db->where('products.is_sold', 0);
         $this->db->where('products.is_deleted', 0);
+        if (1 == $this->general_settings->vendor_verification_system) {
+            $this->db->where('users.role !=', 'member');
+        }
         $this->db->order_by('products.created_at', 'DESC');
         $query = $this->db->get('products');
 
@@ -1092,6 +1102,114 @@ class Product_model extends Core_Model
             $this->db->where('id', $product_id);
 
             return $this->db->update('products', $data);
+        }
+
+        return false;
+    }
+
+    /*
+    *------------------------------------------------------------------------------------------
+    * LICENSE KEYS
+    *------------------------------------------------------------------------------------------
+    */
+
+    //add license keys
+    public function add_license_keys($product_id)
+    {
+        $license_keys = trim($this->input->post('license_keys', true));
+        $allow_duplicate = $this->input->post('allow_duplicate', true);
+
+        $license_keys_array = explode(',', $license_keys);
+        if (!empty($license_keys_array)) {
+            foreach ($license_keys_array as $license_key) {
+                $license_key = trim($license_key);
+                if (!empty($license_key)) {
+
+                    //check duplicate
+                    $add_key = true;
+                    if (empty($allow_duplicate)) {
+                        $row = $this->check_license_key($product_id, $license_key);
+                        if (!empty($row)) {
+                            $add_key = false;
+                        }
+                    }
+
+                    //add license key
+                    if (true == $add_key) {
+                        $data = [
+                            'product_id' => $product_id,
+                            'license_key' => trim($license_key),
+                            'is_used' => 0,
+                        ];
+                        $this->db->insert('product_license_keys', $data);
+                    }
+                }
+            }
+        }
+    }
+
+    //get license keys
+    public function get_license_keys($product_id)
+    {
+        $product_id = clean_number($product_id);
+        $this->db->where('product_id', $product_id);
+        $query = $this->db->get('product_license_keys');
+
+        return $query->result();
+    }
+
+    //get license key
+    public function get_license_key($id)
+    {
+        $id = clean_number($id);
+        $this->db->where('id', $id);
+        $query = $this->db->get('product_license_keys');
+
+        return $query->row();
+    }
+
+    //get unused license key
+    public function get_unused_license_key($product_id)
+    {
+        $product_id = clean_number($product_id);
+        $this->db->where('product_id', $product_id);
+        $this->db->where('is_used', 0);
+        $query = $this->db->get('product_license_keys');
+
+        return $query->row();
+    }
+
+    //check license key
+    public function check_license_key($product_id, $license_key)
+    {
+        $product_id = clean_number($product_id);
+        $this->db->where('license_key', $license_key);
+        $this->db->where('product_id', $product_id);
+        $query = $this->db->get('product_license_keys');
+
+        return $query->row();
+    }
+
+    //set license key used
+    public function set_license_key_used($id)
+    {
+        $id = clean_number($id);
+        $data = [
+            'is_used' => 1,
+        ];
+        $this->db->where('id', $id);
+        $this->db->update('product_license_keys', $data);
+    }
+
+    //delete license key
+    public function delete_license_key($id)
+    {
+        $id = clean_number($id);
+        $license_key = $this->get_license_key($id);
+        if (!empty($license_key)) {
+            $this->db->where('id', $id);
+
+            return $this->db->delete('product_license_keys');
         }
 
         return false;

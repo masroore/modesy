@@ -54,6 +54,10 @@ class Order_model extends CI_Model
                 //add payment transaction
                 $this->add_payment_transaction($data_transaction, $order_id);
 
+                //set bidding quotes as completed
+                $this->load->model('bidding_model');
+                $this->bidding_model->set_bidding_quotes_as_completed_after_purchase();
+
                 //clear cart
                 $this->cart_model->clear_cart();
 
@@ -66,9 +70,15 @@ class Order_model extends CI_Model
         return false;
     }
 
-    //add order bank transfer
-    public function add_order_bank_transfer()
+    //add order offline payment
+    public function add_order_offline_payment($payment_method)
     {
+        $order_status = 'awaiting_payment';
+        $payment_status = 'awaiting_payment';
+        if ('Cash On Delivery' == $payment_method) {
+            $order_status = 'order_processing';
+        }
+
         $cart_total = $this->cart_model->get_sess_cart_total();
         if (!empty($cart_total)) {
             $data = [
@@ -80,8 +90,8 @@ class Order_model extends CI_Model
                 'price_total' => $cart_total->total,
                 'price_currency' => $cart_total->currency,
                 'status' => 0,
-                'payment_method' => 'Bank Transfer',
-                'payment_status' => 'awaiting_payment',
+                'payment_method' => $payment_method,
+                'payment_status' => $payment_status,
                 'updated_at' => date('Y-m-d H:i:s'),
                 'created_at' => date('Y-m-d H:i:s'),
             ];
@@ -100,7 +110,11 @@ class Order_model extends CI_Model
                 $this->add_order_shipping($order_id);
 
                 //add order products
-                $this->add_order_products($order_id, 'awaiting_payment');
+                $this->add_order_products($order_id, $order_status);
+
+                //set bidding quotes as completed
+                $this->load->model('bidding_model');
+                $this->bidding_model->set_bidding_quotes_as_completed_after_purchase();
 
                 //clear cart
                 $this->cart_model->clear_cart();
@@ -129,7 +143,7 @@ class Order_model extends CI_Model
     public function add_order_shipping($order_id)
     {
         $order_id = clean_number($order_id);
-        if (true == $this->cart_model->check_cart_has_physical_product()) {
+        if (true == $this->cart_model->check_cart_has_physical_product() && 1 == $this->form_settings->shipping) {
             $shipping_address = $this->cart_model->get_sess_cart_shipping_address();
             $data = [
                 'order_id' => $order_id,
@@ -185,11 +199,11 @@ class Order_model extends CI_Model
                         'product_type' => $product->product_type,
                         'product_title' => $cart_item->product_title,
                         'product_slug' => $product->slug,
-                        'product_unit_price' => $product->price,
+                        'product_unit_price' => $cart_item->unit_price,
                         'product_quantity' => $cart_item->quantity,
-                        'product_currency' => $product->currency,
-                        'product_shipping_cost' => $product->shipping_cost,
-                        'product_total_price' => $product->price,
+                        'product_currency' => $cart_item->currency,
+                        'product_shipping_cost' => $cart_item->shipping_cost,
+                        'product_total_price' => $cart_item->total_price,
                         'commission_rate' => $this->general_settings->commission_rate,
                         'order_status' => $order_status,
                         'is_approved' => 0,
@@ -211,8 +225,7 @@ class Order_model extends CI_Model
                             $data['order_status'] = $order_status;
                         }
                     }
-                    $total_price = ($product->price * $cart_item->quantity) + $product->shipping_cost;
-                    $data['product_total_price'] = $total_price;
+                    $data['product_total_price'] = $cart_item->total_price + $cart_item->shipping_cost;
 
                     $this->db->insert('order_products', $data);
                 }
@@ -236,12 +249,24 @@ class Order_model extends CI_Model
                         'product_title' => $product->title,
                         'seller_id' => $product->user_id,
                         'buyer_id' => $order->buyer_id,
+                        'license_key' => '',
                         'purchase_code' => generate_purchase_code(),
                         'currency' => $product->currency,
                         'price' => $product->price,
                         'purchase_date' => date('Y-m-d H:i:s'),
                     ];
+
+                    $license_key = $this->product_model->get_unused_license_key($product->id);
+                    if (!empty($license_key)) {
+                        $data_digital['license_key'] = $license_key->license_key;
+                    }
+
                     $this->db->insert('digital_sales', $data_digital);
+
+                    //set license key as used
+                    if (!empty($license_key)) {
+                        $this->product_model->set_license_key_used($license_key->id);
+                    }
                 }
             }
         }
@@ -261,12 +286,24 @@ class Order_model extends CI_Model
                 'product_title' => $product->title,
                 'seller_id' => $product->user_id,
                 'buyer_id' => $order->buyer_id,
+                'license_key' => '',
                 'purchase_code' => generate_purchase_code(),
                 'currency' => $product->currency,
                 'price' => $product->price,
                 'purchase_date' => date('Y-m-d H:i:s'),
             ];
+
+            $license_key = $this->product_model->get_unused_license_key($product->id);
+            if (!empty($license_key)) {
+                $data_digital['license_key'] = $license_key->license_key;
+            }
+
             $this->db->insert('digital_sales', $data_digital);
+
+            //set license key as used
+            if (!empty($license_key)) {
+                $this->product_model->set_license_key_used($license_key->id);
+            }
         }
     }
 
@@ -456,9 +493,14 @@ class Order_model extends CI_Model
                 }
 
                 if ('shipped' == $data['order_status']) {
-                    //set email session
-                    $this->session->set_userdata('mds_send_email_order_shipped', 1);
-                    $this->session->set_userdata('mds_send_email_order_shipped_order_product_id', $order_product->id);
+                    //send email
+                    if (1 == $this->general_settings->send_email_order_shipped) {
+                        $email_data = [
+                            'email_type' => 'order_shipped',
+                            'order_product_id' => $order_product->id,
+                        ];
+                        $this->session->set_userdata('mds_send_email_data', json_encode($email_data));
+                    }
                 }
 
                 $this->db->where('id', $order_product_id);

@@ -20,6 +20,11 @@
                 </div>
                 <div class="form-group">
                     <label><?php echo trans('content'); ?></label>
+					<div class="row">
+						<div class="col-sm-12 m-b-10">
+							<button type="button" class="btn btn-sm bg-purple color-white btn_ck_add_image"><i class="icon-image"></i><?php echo trans("add_image"); ?></button>
+						</div>
+					</div>
                     <textarea id="ckEditor" name="message" class="form-control textarea-exp" required></textarea>
                 </div>
             </div>

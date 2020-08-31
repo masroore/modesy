@@ -30,3 +30,10 @@
     </div>
 </div>
 <!-- Wrapper End-->
+
+<script>
+    $(function () {
+        $('.page-text-content iframe').wrap('<div class="embed-responsive embed-responsive-16by9"></div>');
+        $('.page-text-content iframe').addClass('embed-responsive-item');
+    });
+</script>

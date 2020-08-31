@@ -79,7 +79,6 @@ class Blog_category_model extends CI_Model
     //get category by slug
     public function get_category_by_slug($slug)
     {
-        $slug = clean_slug($slug);
         $this->db->where('slug', $slug);
         $query = $this->db->get('blog_categories');
 

@@ -48,22 +48,17 @@
                                         <?php echo html_escape($item->title); ?>
                                     </a>
                                 </td>
-                                <td>
-                                    <?php $category = get_category_joined($item->category_id);
-                                    if (!empty($category)): ?>
-                                        <?php echo html_escape($category->name); ?>
-                                    <?php endif; ?>
-
-                                    <?php $category = get_category_joined($item->subcategory_id);
-                                    if (!empty($category)): ?>
-                                        <?php echo "<br>" . html_escape($category->name); ?>
-                                    <?php endif; ?>
-
-                                    <?php $category = get_category_joined($item->third_category_id);
-                                    if (!empty($category)): ?>
-                                        <?php echo "<br>" . html_escape($category->name); ?>
-                                    <?php endif; ?>
-                                </td>
+								<td>
+									<?php $categories_array = get_parent_categories_array($item->category_id);
+									if (!empty($categories_array)) {
+										foreach ($categories_array as $item_array) {
+											$item_category = get_category_joined($item_array->id);
+											if (!empty($item_category)) {
+												echo @html_escape($item_category->name) . "<br>";
+											}
+										}
+									} ?>
+								</td>
                                 <td style="min-width: 120px;">
                                     <?php if ($item->is_promoted == 1): ?>
                                         <strong><?php echo date_difference($item->promote_end_date, date('Y-m-d H:i:s')); ?></strong>

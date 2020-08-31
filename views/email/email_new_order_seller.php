@@ -16,11 +16,13 @@
                                         <?php echo trans("order"); ?>:&nbsp;#<?php echo $order->order_number; ?><br>
                                         <?php echo trans("payment_status"); ?>:&nbsp;<?php echo trans($order->payment_status); ?><br>
                                         <?php echo trans("payment_method"); ?>:&nbsp;<?php
-                                        if ($order->payment_method == "Bank Transfer") {
-                                            echo trans("bank_transfer");
-                                        } else {
-                                            echo $order->payment_method;
-                                        } ?><br>
+										if ($order->payment_method == "Bank Transfer") {
+											echo trans("bank_transfer");
+										} elseif ($order->payment_method == "Cash On Delivery") {
+											echo trans("cash_on_delivery");
+										} else {
+											echo $order->payment_method;
+										} ?><br>
                                         <?php echo trans("date"); ?>:&nbsp;<?php echo date("Y-m-d / h:i", strtotime($order->created_at)); ?><br>
                                     </p>
                                 </div>

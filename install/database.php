@@ -6,6 +6,11 @@ if (isset($_POST['btn_install'])) {
     $license_code = $_POST['license_code'];
     $purchase_code = $_POST['purchase_code'];
 
+    if (!isset($license_code) || !isset($purchase_code)) {
+        header('Location: index.php');
+        exit();
+    }
+
     $db_host = $_POST['db_host'];
     $db_name = $_POST['db_name'];
     $db_user = $_POST['db_user'];

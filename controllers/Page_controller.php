@@ -19,6 +19,7 @@ class Page_controller extends Admin_Core_Controller
     public function add_page()
     {
         $data['title'] = trans('add_page');
+        $data['admin_settings'] = get_admin_settings();
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/page/add', $data);
         $this->load->view('admin/includes/_footer');
@@ -61,6 +62,7 @@ class Page_controller extends Admin_Core_Controller
         $data['title'] = trans('pages');
         $data['pages'] = $this->page_model->get_pages_all();
         $data['lang_search_column'] = 2;
+        $data['admin_settings'] = get_admin_settings();
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/page/pages', $data);
         $this->load->view('admin/includes/_footer');
@@ -75,6 +77,7 @@ class Page_controller extends Admin_Core_Controller
 
         //find page
         $data['page'] = $this->page_model->get_page_by_id($id);
+        $data['admin_settings'] = get_admin_settings();
         //page not found
         if (empty($data['page'])) {
             redirect($this->agent->referrer());

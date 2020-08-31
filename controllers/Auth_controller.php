@@ -214,6 +214,7 @@ class Auth_controller extends Home_Core_Controller
         $data['title'] = trans('register');
         $data['description'] = trans('register') . ' - ' . $this->app_name;
         $data['keywords'] = trans('register') . ',' . $this->app_name;
+        $data['user_session'] = get_user_session();
 
         $this->load->view('partials/_header', $data);
         $this->load->view('auth/register');
@@ -266,22 +267,24 @@ class Auth_controller extends Home_Core_Controller
                 redirect($this->agent->referrer());
             }
             //register
-            $user = $this->auth_model->register();
-            if ($user) {
-                //update slug
-                $this->auth_model->update_slug($user->id);
-                $this->auth_model->login_direct($user);
-                if (1 == $this->general_settings->email_verification) {
-                    $this->session->set_flashdata('success', trans('msg_send_confirmation_email'));
-                } else {
-                    $this->session->set_flashdata('success', trans('msg_register_success'));
+            $user_id = $this->auth_model->register();
+            if ($user_id) {
+                $user = get_user($user_id);
+                if (!empty($user)) {
+                    //update slug
+                    $this->auth_model->update_slug($user->id);
+                    if (1 != $this->general_settings->email_verification) {
+                        $this->auth_model->login_direct($user);
+                        $this->session->set_flashdata('success', trans('msg_register_success'));
+                        redirect(lang_base_url() . 'settings/update-profile');
+                    }
                 }
-                redirect(lang_base_url() . 'settings');
+                redirect(lang_base_url() . 'register');
             } else {
                 //error
                 $this->session->set_flashdata('form_data', $this->auth_model->input_values());
                 $this->session->set_flashdata('error', trans('msg_error'));
-                redirect($this->agent->referrer());
+                redirect(lang_base_url() . 'register');
             }
         }
     }
@@ -300,9 +303,9 @@ class Auth_controller extends Home_Core_Controller
      */
     public function confirm_email()
     {
-        $data['title'] = trans('confirm_your_email');
-        $data['description'] = trans('confirm_your_email') . ' - ' . $this->app_name;
-        $data['keywords'] = trans('confirm_your_email') . ',' . $this->app_name;
+        $data['title'] = trans('confirm_your_account');
+        $data['description'] = trans('confirm_your_account') . ' - ' . $this->app_name;
+        $data['keywords'] = trans('confirm_your_account') . ',' . $this->app_name;
 
         $token = trim($this->input->get('token', true));
         $data['user'] = $this->auth_model->get_user_by_token($token);
@@ -337,6 +340,7 @@ class Auth_controller extends Home_Core_Controller
         $data['title'] = trans('reset_password');
         $data['description'] = trans('reset_password') . ' - ' . $this->app_name;
         $data['keywords'] = trans('reset_password') . ',' . $this->app_name;
+        $data['user_session'] = get_user_session();
         $this->load->view('partials/_header', $data);
         $this->load->view('auth/forgot_password');
         $this->load->view('partials/_footer');
@@ -381,6 +385,7 @@ class Auth_controller extends Home_Core_Controller
         $data['title'] = trans('reset_password');
         $data['description'] = trans('reset_password') . ' - ' . $this->app_name;
         $data['keywords'] = trans('reset_password') . ',' . $this->app_name;
+        $data['user_session'] = get_user_session();
         $token = $this->input->get('token', true);
         //get user
         $data['user'] = $this->auth_model->get_user_by_token($token);
@@ -422,5 +427,29 @@ class Auth_controller extends Home_Core_Controller
                 redirect($this->agent->referrer());
             }
         }
+    }
+
+    /**
+     * Send Activation Email.
+     */
+    public function send_activation_email_post()
+    {
+        post_method();
+        $user_id = $this->input->post('id', true);
+        $token = $this->input->post('token', true);
+        $type = $this->input->post('type', true);
+        if ('login' == $type) {
+            $this->session->set_flashdata('success', trans('msg_send_confirmation_email') . "&nbsp;<a href='javascript:void(0)' class='link-resend-activation-email' onclick=\"send_activation_email('" . $user_id . "','" . $token . "');\">" . trans('resend_activation_email') . '</a>');
+        } else {
+            $this->session->set_flashdata('success', trans('msg_send_confirmation_email') . "&nbsp;<a href='javascript:void(0)' class='link-resend-activation-email' onclick=\"send_activation_email_register('" . $user_id . "','" . $token . "');\">" . trans('resend_activation_email') . '</a>');
+        }
+
+        $data = [
+            'result' => 1,
+            'success_message' => $this->load->view('partials/_messages', '', true),
+        ];
+        echo json_encode($data);
+        reset_flash_data();
+        $this->auth_model->send_email_activation($user_id, $token);
     }
 }

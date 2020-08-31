@@ -99,7 +99,7 @@ class Tag_model extends CI_Model
     //get post tag
     public function get_post_tag($tag_slug)
     {
-        $tag_slug = clean_slug($tag_slug);
+        $tag_slug = remove_special_characters($tag_slug);
         $this->db->join('blog_posts', 'blog_posts.id = blog_tags.post_id');
         $this->db->select('blog_tags.*, blog_posts.lang_id as tag_lang_id');
         $this->db->where('blog_tags.tag_slug', $tag_slug);

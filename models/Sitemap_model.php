@@ -16,11 +16,24 @@ class Sitemap_model extends CI_Model
     public function input_values()
     {
         return [
-            'frequency' => $this->input->post('frequency', true),
-            'last_modification' => $this->input->post('last_modification', true),
-            'lastmod_time' => $this->input->post('lastmod_time', true),
-            'priority' => $this->input->post('priority', true),
+            'frequency' => $this->form_settings->sitemap_frequency,
+            'last_modification' => $this->form_settings->sitemap_last_modification,
+            'priority' => $this->form_settings->sitemap_priority,
+            'lastmod_time' => null,
         ];
+    }
+
+    //update sitemap settings
+    public function update_sitemap_settings()
+    {
+        $db_data = [
+            'sitemap_frequency' => $this->input->post('frequency', true),
+            'sitemap_last_modification' => $this->input->post('last_modification', true),
+            'sitemap_priority' => $this->input->post('priority', true),
+        ];
+
+        $this->db->where('id', 1);
+        $this->db->update('form_settings', $db_data);
     }
 
     public function add($loc, $changefreq = null, $lastmod = null, $priority = null, $priority_value = null, $lastmod_time = null)
@@ -231,14 +244,14 @@ class Sitemap_model extends CI_Model
         if (file_exists($full_path)) {
             unlink($full_path);
         }
-
-        $this->add_static_urls('daily', 'server_response', '0.8', null);
-        $this->add_page_urls('daily', 'server_response', '0.8', null);
-        $this->add_product_category_urls('daily', 'server_response', '0.8', null);
-        $this->add_product_urls('daily', 'server_response', '0.8', null);
-        $this->add_blog_category_urls('daily', 'server_response', '0.8', null);
-        $this->add_blog_post_urls('daily', 'server_response', '0.8', null);
-        $this->add_blog_tag_urls('daily', 'server_response', '0.8', null);
+        $data = $this->input_values();
+        $this->add_static_urls($data['frequency'], $data['last_modification'], $data['priority'], $data['lastmod_time']);
+        $this->add_page_urls($data['frequency'], $data['last_modification'], $data['priority'], $data['lastmod_time']);
+        $this->add_product_category_urls($data['frequency'], $data['last_modification'], $data['priority'], $data['lastmod_time']);
+        $this->add_product_urls($data['frequency'], $data['last_modification'], $data['priority'], $data['lastmod_time']);
+        $this->add_blog_category_urls($data['frequency'], $data['last_modification'], $data['priority'], $data['lastmod_time']);
+        $this->add_blog_post_urls($data['frequency'], $data['last_modification'], $data['priority'], $data['lastmod_time']);
+        $this->add_blog_tag_urls($data['frequency'], $data['last_modification'], $data['priority'], $data['lastmod_time']);
 
         $xml = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8" ?><urlset/>');
         $xml->addAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');

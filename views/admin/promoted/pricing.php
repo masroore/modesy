@@ -21,6 +21,23 @@
                     <label class="control-label"><?php echo trans('price_per_month'); ?></label>
                     <input type="text" name="price_per_month" class="form-control form-input price-input" value="<?php echo price_format_input($payment_settings->price_per_month); ?>" onpaste="return false;" maxlength="32" required>
                 </div>
+				<div class="form-group">
+					<div class="row">
+						<div class="col-sm-4 col-xs-12">
+							<label><?php echo trans("free_promotion"); ?></label>
+						</div>
+						<div class="col-md-4 col-sm-4 col-xs-12 col-option">
+							<input type="radio" name="free_product_promotion" value="1" id="free_promotion_1"
+								   class="square-purple" <?php echo ($payment_settings->free_product_promotion == 1) ? 'checked' : ''; ?>>
+							<label for="free_promotion_1" class="option-label"><?php echo trans('enable'); ?></label>
+						</div>
+						<div class="col-md-4 col-sm-4 col-xs-12 col-option">
+							<input type="radio" name="free_product_promotion" value="0" id="free_promotion_2"
+								   class="square-purple" <?php echo ($payment_settings->free_product_promotion != 1) ? 'checked' : ''; ?>>
+							<label for="free_promotion_2" class="option-label"><?php echo trans('disable'); ?></label>
+						</div>
+					</div>
+				</div>
             </div>
             <!-- /.box-body -->
             <div class="box-footer">

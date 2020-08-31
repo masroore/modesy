@@ -86,23 +86,22 @@ class Product_admin_model extends CI_Model
         $data = [
             'category' => $this->input->get('category', true),
             'subcategory' => $this->input->get('subcategory', true),
-            'third_category' => $this->input->get('third_category', true),
             'q' => $this->input->get('q', true),
         ];
 
         $data['q'] = trim($data['q']);
-
+        $category_id = $data['category'];
+        if (!empty($data['subcategory'])) {
+            $category_id = $data['subcategory'];
+        }
+        if (!empty($category_id)) {
+            $category_tree_ids = $this->category_model->get_category_tree_ids_string($category_id);
+            if (!empty($category_tree_ids)) {
+                $this->db->where('products.category_id IN (' . $category_tree_ids . ')', null, false);
+            }
+        }
         if (!empty($data['type']) && 'regular' == $data['type']) {
             $this->db->where('products.is_promoted', 0);
-        }
-        if (!empty($data['category'])) {
-            $this->db->where('products.category_id', $data['category']);
-        }
-        if (!empty($data['subcategory'])) {
-            $this->db->where('products.subcategory_id', $data['subcategory']);
-        }
-        if (!empty($data['third_category'])) {
-            $this->db->where('products.third_category_id', $data['third_category']);
         }
         if (!empty($data['q'])) {
             $this->db->like('products.title', $data['q']);

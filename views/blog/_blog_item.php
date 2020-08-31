@@ -2,7 +2,7 @@
 <div class="blog-item">
     <div class="blog-item-img">
         <a href="<?php echo lang_base_url(); ?>blog/<?php echo $item->category_slug; ?>/<?php echo $item->slug; ?>">
-            <img src="<?php echo $img_bg_blog_small; ?>" data-src="<?php echo get_blog_image_url($item, 'image_small'); ?>" alt="<?php echo html_escape($item->title); ?>"
+            <img data-src="<?php echo get_blog_image_url($item, 'image_small'); ?>" alt="<?php echo html_escape($item->title); ?>"
                  class="img-fluid <?php echo (isset($class)) ? $class : 'lazyload'; ?>" onerror="this.src='<?php echo $img_bg_blog_small; ?>'">
         </a>
     </div>

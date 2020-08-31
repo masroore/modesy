@@ -25,11 +25,7 @@
                     $this->load->view('partials/_review_stars', ['review' => $product->rating]);
                 } ?>
                 <div class="item-meta">
-                    <span class="price"><?php echo print_price($product->price, $product->currency); ?>
-                        <?php if ($product->is_sold == 1): ?>
-                            <span>(<?php echo trans("sold"); ?>)</span>
-                        <?php endif; ?>
-                    </span>
+					<?php $this->load->view('product/_price_product_item', ['product' => $product]); ?>
                     <?php if ($general_settings->product_reviews == 1): ?>
                         <span class="item-comments"><i class="icon-comment"></i>&nbsp;<?php echo get_product_comment_count($product->id); ?></span>
                     <?php endif; ?>

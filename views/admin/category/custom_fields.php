@@ -3,11 +3,16 @@
 <div class="row">
     <div class="col-md-12">
         <div class="box">
-            <div class="box-header with-border">
-                <div class="pull-left">
-                    <h3 class="box-title"><?php echo trans('custom_fields'); ?></h3>
-                </div>
-            </div><!-- /.box-header -->
+			<div class="box-header with-border">
+				<div class="left">
+					<h3 class="box-title"><?php echo trans('custom_fields'); ?></h3>
+				</div>
+				<div class="right">
+					<a href="<?php echo admin_url(); ?>add-custom-field" class="btn btn-success btn-add-new">
+						<i class="fa fa-plus"></i>&nbsp;&nbsp;<?php echo trans('add_custom_field'); ?>
+					</a>
+				</div>
+			</div><!-- /.box-header -->
 
             <!-- include message block -->
             <div class="col-sm-12">

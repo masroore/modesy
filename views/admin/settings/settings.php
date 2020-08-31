@@ -39,6 +39,32 @@
                                value="<?php echo html_escape($general_settings->application_name); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
                     </div>
 
+					<div class="form-group">
+						<label class="control-label"><?php echo trans('site_title'); ?></label>
+						<input type="text" class="form-control" name="site_title"
+							   placeholder="<?php echo trans('site_title'); ?>" value="<?php echo html_escape($settings->site_title); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+					</div>
+
+					<div class="form-group">
+						<label class="control-label"><?php echo trans('homepage_title'); ?></label>
+						<input type="text" class="form-control" name="homepage_title"
+							   placeholder="<?php echo trans('homepage_title'); ?>" value="<?php echo html_escape($settings->homepage_title); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+					</div>
+
+					<div class="form-group">
+						<label class="control-label"><?php echo trans('site_description'); ?></label>
+						<input type="text" class="form-control" name="site_description"
+							   placeholder="<?php echo trans('site_description'); ?>"
+							   value="<?php echo html_escape($settings->site_description); ?>" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>>
+					</div>
+
+					<div class="form-group">
+						<label class="control-label"><?php echo trans('keywords'); ?></label>
+						<textarea class="form-control text-area" name="keywords"
+								  placeholder="<?php echo trans('keywords'); ?>"
+								  style="min-height: 100px;" <?php echo ($rtl == true) ? 'dir="rtl"' : ''; ?>><?php echo html_escape($settings->keywords); ?></textarea>
+					</div>
+
                     <div class="form-group">
                         <label class="control-label"><?php echo trans('footer_about_section'); ?></label>
                         <textarea class="form-control text-area" name="about_footer" placeholder="<?php echo trans('footer_about_section'); ?>"

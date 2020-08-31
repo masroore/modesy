@@ -51,14 +51,16 @@ defined('BASEPATH') or exit('No direct script access allowed');
 |		my-controller/my-method	-> my_controller/my_method
 */
 
-include_once 'route_slugs.php';
-//routes
-$r_admin = $custom_slug_array['admin'];
-
 $route['default_controller'] = 'home_controller';
 $route['404_override'] = 'home_controller/error_404';
 $route['translate_uri_dashes'] = false;
 $route['error-404'] = 'home_controller/error_404';
+
+include_once 'route_controllers.php';
+include_once 'route_slugs.php';
+//routes
+$r_admin = $custom_slug_array['admin'];
+
 //auth routes
 $route['logout'] = 'common_controller/logout';
 $route['register'] = 'auth_controller/register';
@@ -93,19 +95,16 @@ $route['sell-now/(:num)'] = 'product_controller/edit_draft/$1';
 $route['sell-now/product-details/(:num)'] = 'product_controller/edit_product_details/$1';
 $route['sell-now/edit-product/(:num)'] = 'product_controller/edit_product/$1';
 $route['search'] = 'home_controller/search';
-$route['products'] = 'product_controller/products';
+$route['products'] = 'home_controller/products';
 $route['drafts'] = 'profile_controller/drafts';
 $route['downloads'] = 'profile_controller/downloads';
 $route['pending-products'] = 'profile_controller/pending_products';
 $route['hidden-products'] = 'profile_controller/hidden_products';
 // promote product routes
 $route['promote-product/pricing/(:num)'] = 'promote_controller/pricing/$1';
-$route['promote-product/payment-method'] = 'promote_controller/payment_method';
-$route['promote-product/payment'] = 'promote_controller/payment';
-$route['promote-product/completed'] = 'promote_controller/completed';
 // blog routes
 $route['blog'] = 'home_controller/blog';
-$route['blog/(:any)'] = 'home_controller/category/$1';
+$route['blog/(:any)'] = 'home_controller/blog_category/$1';
 $route['blog/tag/(:any)'] = 'home_controller/tag/$1';
 $route['blog/(:any)/(:any)'] = 'home_controller/post/$1/$2';
 
@@ -131,8 +130,10 @@ $route['cart'] = 'cart_controller/cart';
 $route['cart/shipping'] = 'cart_controller/shipping';
 $route['cart/payment-method'] = 'cart_controller/payment_method';
 $route['cart/payment'] = 'cart_controller/payment';
-$route['add-to-cart'] = 'cart_controller/add_to_cart';
+$route['add-to-cart']['POST'] = 'cart_controller/add_to_cart';
+$route['add-to-cart-quote']['POST'] = 'cart_controller/add_to_cart_quote';
 $route['order-completed/(:num)'] = 'cart_controller/order_completed/$1';
+$route['promote-payment-completed'] = 'cart_controller/promote_payment_completed';
 // orders
 $route['orders'] = 'order_controller/orders';
 $route['orders/completed-orders'] = 'order_controller/completed_orders';
@@ -145,6 +146,15 @@ $route['sale/(:num)'] = 'order_controller/sale/$1';
 $route['earnings'] = 'earnings_controller/earnings';
 $route['set-payout-account'] = 'earnings_controller/set_payout_account';
 $route['payouts'] = 'earnings_controller/payouts';
+// bidding
+$route['request-quote']['POST'] = 'bidding_controller/request_quote';
+$route['quote-requests']['GET'] = 'bidding_controller/quote_requests';
+$route['sent-quote-requests']['GET'] = 'bidding_controller/sent_quote_requests';
+
+// old category routes
+$route['category/(:any)'] = 'home_controller/any/$1';
+$route['category/(:any)/(:any)'] = 'home_controller/subcategory/$1/$2';
+$route['category/(:any)/(:any)/(:any)'] = 'home_controller/subcategory/$2/$3';
 
 // ADMIN ROUTES
 //login
@@ -183,6 +193,8 @@ $route[$r_admin . '/product-details/(:num)'] = 'product_admin_controller/product
 $route[$r_admin . '/promoted-products'] = 'product_admin_controller/promoted_products';
 $route[$r_admin . '/promoted-products-transactions'] = 'product_admin_controller/promoted_products_transactions';
 $route[$r_admin . '/promoted-products-pricing'] = 'product_admin_controller/promoted_products_pricing';
+// bidding system
+$route[$r_admin . '/quote-requests'] = 'admin_controller/quote_requests';
 // page routes
 $route[$r_admin . '/pages'] = 'page_controller/pages';
 $route[$r_admin . '/update-page/(:num)'] = 'page_controller/update_page/$1';
@@ -275,6 +287,8 @@ $route[$r_admin . '/form-settings/edit-product-condition/(:num)'] = 'settings_co
 require_once BASEPATH . 'database/DB.php';
 $db = &DB();
 $general_settings = $db->get('general_settings')->row();
+defined('SITE_MDS_KEY') or define('SITE_MDS_KEY', trim($general_settings->mds_key));
+defined('SITE_PRC_CD') or define('SITE_PRC_CD', trim($general_settings->purchase_code));
 $languages = $db->get('languages')->result();
 foreach ($languages as $language) {
     if (1 == $language->status && $general_settings->site_lang != $language->id) {
@@ -282,6 +296,7 @@ foreach ($languages as $language) {
 
         $route[$key] = 'home_controller/index';
         $route[$key . '/error-404'] = 'home_controller/error_404';
+
         //auth routes
         $route[$key . '/logout'] = 'common_controller/logout';
         $route[$key . '/register'] = 'auth_controller/register';
@@ -313,19 +328,16 @@ foreach ($languages as $language) {
         $route[$key . '/sell-now/product-details/(:num)'] = 'product_controller/edit_product_details/$1';
         $route[$key . '/sell-now/edit-product/(:num)'] = 'product_controller/edit_product/$1';
         $route[$key . '/search'] = 'home_controller/search';
-        $route[$key . '/products'] = 'product_controller/products';
+        $route[$key . '/products'] = 'home_controller/products';
         $route[$key . '/drafts'] = 'profile_controller/drafts';
         $route[$key . '/downloads'] = 'profile_controller/downloads';
         $route[$key . '/pending-products'] = 'profile_controller/pending_products';
         $route[$key . '/hidden-products'] = 'profile_controller/hidden_products';
         // promote product routes
         $route[$key . '/promote-product/pricing/(:num)'] = 'promote_controller/pricing/$1';
-        $route[$key . '/promote-product/payment-method'] = 'promote_controller/payment_method';
-        $route[$key . '/promote-product/payment'] = 'promote_controller/payment';
-        $route[$key . '/promote-product/completed'] = 'promote_controller/completed';
         // blog routes
         $route[$key . '/blog'] = 'home_controller/blog';
-        $route[$key . '/blog/(:any)'] = 'home_controller/category/$1';
+        $route[$key . '/blog/(:any)'] = 'home_controller/blog_category/$1';
         $route[$key . '/blog/tag/(:any)'] = 'home_controller/tag/$1';
         $route[$key . '/blog/(:any)/(:any)'] = 'home_controller/post/$1/$2';
 
@@ -351,8 +363,10 @@ foreach ($languages as $language) {
         $route[$key . '/cart/shipping'] = 'cart_controller/shipping';
         $route[$key . '/cart/payment-method'] = 'cart_controller/payment_method';
         $route[$key . '/cart/payment'] = 'cart_controller/payment';
-        $route[$key . '/add-to-cart'] = 'cart_controller/add_to_cart';
+        $route[$key . '/add-to-cart']['POST'] = 'cart_controller/add_to_cart';
+        $route[$key . '/add-to-cart-quote']['POST'] = 'cart_controller/add_to_cart_quote';
         $route[$key . '/order-completed/(:num)'] = 'cart_controller/order_completed/$1';
+        $route[$key . '/promote-payment-completed'] = 'cart_controller/promote_payment_completed';
         // orders
         $route[$key . '/orders'] = 'order_controller/orders';
         $route[$key . '/orders/completed-orders'] = 'order_controller/completed_orders';
@@ -365,7 +379,20 @@ foreach ($languages as $language) {
         $route[$key . '/earnings'] = 'earnings_controller/earnings';
         $route[$key . '/set-payout-account'] = 'earnings_controller/set_payout_account';
         $route[$key . '/payouts'] = 'earnings_controller/payouts';
-        $route[$key . '/(:any)'] = 'home_controller/any/$1';
+        // bidding
+        $route[$key . '/request-quote']['POST'] = 'bidding_controller/request_quote';
+        $route[$key . '/quote-requests']['GET'] = 'bidding_controller/quote_requests';
+        $route[$key . '/sent-quote-requests']['GET'] = 'bidding_controller/sent_quote_requests';
+        // old category routes
+        $route[$key . '/category/(:any)'] = 'home_controller/any/$1';
+        $route[$key . '/category/(:any)/(:any)'] = 'home_controller/subcategory/$1/$2';
+        $route[$key . '/category/(:any)/(:any)/(:any)'] = 'home_controller/subcategory/$2/$3';
+
+        $route[$key . '/(:any)/(:any)']['GET'] = 'home_controller/subcategory/$1/$2';
+        $route[$key . '/(:any)']['GET'] = 'home_controller/any/$1';
     }
 }
-$route['(:any)'] = 'home_controller/any/$1';
+$db->close();
+
+$route['(:any)/(:any)']['GET'] = 'home_controller/subcategory/$1/$2';
+$route['(:any)']['GET'] = 'home_controller/any/$1';

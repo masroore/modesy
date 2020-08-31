@@ -22,6 +22,7 @@
                             <th width="20"><input type="checkbox" class="checkbox-table" id="checkAll"></th>
                             <th width="20"><?php echo trans('id'); ?></th>
                             <th><?php echo trans('product'); ?></th>
+							<th><?php echo trans('product_type'); ?></th>
                             <th><?php echo trans('category'); ?></th>
                             <th><?php echo trans('purchased_plan'); ?></th>
                             <th><?php echo trans('user'); ?></th>
@@ -48,22 +49,18 @@
                                         <?php echo html_escape($item->title); ?>
                                     </a>
                                 </td>
-                                <td>
-                                    <?php $category = get_category_joined($item->category_id);
-                                    if (!empty($category)): ?>
-                                        <?php echo html_escape($category->name); ?>
-                                    <?php endif; ?>
-
-                                    <?php $category = get_category_joined($item->subcategory_id);
-                                    if (!empty($category)): ?>
-                                        <?php echo "<br>" . html_escape($category->name); ?>
-                                    <?php endif; ?>
-
-                                    <?php $category = get_category_joined($item->third_category_id);
-                                    if (!empty($category)): ?>
-                                        <?php echo "<br>" . html_escape($category->name); ?>
-                                    <?php endif; ?>
-                                </td>
+								<td><?php echo trans($item->product_type); ?></td>
+								<td>
+									<?php $categories_array = get_parent_categories_array($item->category_id);
+									if (!empty($categories_array)) {
+										foreach ($categories_array as $item_array) {
+											$item_category = get_category_joined($item_array->id);
+											if (!empty($item_category)) {
+												echo @html_escape($item_category->name) . "<br>";
+											}
+										}
+									} ?>
+								</td>
                                 <td style="min-width: 120px;">
                                     <?php if ($item->is_promoted == 1): ?>
                                         <strong><?php echo $item->promote_plan; ?></strong>

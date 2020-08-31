@@ -28,7 +28,7 @@ class Email_model extends CI_Model
             }
 
             $data = [
-                'subject' => trans('confirm_your_email'),
+                'subject' => trans('confirm_your_account'),
                 'to' => $user->email,
                 'template_path' => 'email/email_activation',
                 'token' => $token,
@@ -60,123 +60,6 @@ class Email_model extends CI_Model
                 'to' => $user->email,
                 'template_path' => 'email/email_reset_password',
                 'token' => $token,
-            ];
-
-            $this->send_email($data);
-        }
-    }
-
-    //send email new product
-    public function send_email_new_product($product_url)
-    {
-        $data = [
-            'subject' => trans('email_text_new_product'),
-            'product_url' => $product_url,
-            'to' => $this->general_settings->mail_options_account,
-            'template_path' => 'email/email_new_product',
-            'product_url' => $product_url,
-        ];
-
-        $this->send_email($data);
-    }
-
-    //send email contact message
-    public function send_email_contact_message($message_name, $message_email, $message_text)
-    {
-        $data = [
-            'subject' => trans('contact_message'),
-            'to' => $this->general_settings->mail_options_account,
-            'template_path' => 'email/email_contact_message',
-            'message_name' => $message_name,
-            'message_email' => $message_email,
-            'message_text' => $message_text,
-        ];
-
-        $this->send_email($data);
-    }
-
-    //send email new order
-    public function send_email_new_order($order_id)
-    {
-        $order_id = clean_number($order_id);
-        $order = get_order($order_id);
-        $order_products = $this->order_model->get_order_products($order_id);
-        $order_shipping = get_order_shipping($order_id);
-        if (!empty($order)) {
-            //send to buyer
-            $to = '';
-            if (!empty($order_shipping)) {
-                $to = $order_shipping->shipping_email;
-            }
-            if ('registered' == $order->buyer_type) {
-                $user = get_user($order->buyer_id);
-                if (!empty($user)) {
-                    $to = $user->email;
-                }
-            }
-            $data = [
-                'subject' => trans('email_text_thank_for_order'),
-                'order' => $order,
-                'order_products' => $order_products,
-                'to' => $to,
-                'template_path' => 'email/email_new_order',
-            ];
-            $this->send_email($data);
-
-            //send to seller
-            if (!empty($order_products)) {
-                $seller_ids = [];
-                foreach ($order_products as $order_product) {
-                    $seller = get_user($order_product->seller_id);
-                    if (!empty($seller)) {
-                        if (1 == $seller->send_email_when_item_sold && !in_array($seller->id, $seller_ids)) {
-                            array_push($seller_ids, $seller->id);
-                            $seller_order_products = $this->order_model->get_seller_order_products($order_id, $seller->id);
-                            $data = [
-                                'subject' => trans('you_have_new_order'),
-                                'order' => $order,
-                                'order_products' => $seller_order_products,
-                                'to' => $seller->email,
-                                'template_path' => 'email/email_new_order_seller',
-                            ];
-                            $this->send_email($data);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    //send email new message
-    public function send_email_new_message($user, $message_subject, $message_text)
-    {
-        $data = [
-            'subject' => trans('you_have_new_message'),
-            'to' => $user->email,
-            'template_path' => 'email/email_new_message',
-            'message_sender' => $user->username,
-            'message_subject' => $message_subject,
-            'message_text' => $message_text,
-        ];
-        $this->send_email($data);
-    }
-
-    //send email order shipped
-    public function send_email_order_shipped($order_product)
-    {
-        $order = get_order($order_product->order_id);
-        if (!empty($order)) {
-            $to = $order->shipping_email;
-            if ('registered' == $order->buyer_type) {
-                $user = get_user($order->buyer_id);
-                $to = $user->email;
-            }
-            $data = [
-                'subject' => trans('your_order_shipped'),
-                'to' => $to,
-                'template_path' => 'email/email_order_shipped',
-                'order' => $order,
-                'order_product' => $order_product,
             ];
 
             $this->send_email($data);

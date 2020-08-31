@@ -154,59 +154,176 @@ class Ajax_controller extends Home_Core_Controller
     *------------------------------------------------------------------------------------------
     */
 
-    //send email order summary to user
-    public function send_email_order_summary()
+    //send email
+    public function send_email()
     {
-        $order_id = $this->input->post('order_id', true);
-        //send email
-        if (1 == $this->general_settings->send_email_buyer_purchase) {
-            $this->load->model('email_model');
-            $this->email_model->send_email_new_order($order_id);
+        $this->load->model('email_model');
+        $email_type = $this->input->post('email_type', true);
+        if ('contact' == $email_type) {
+            $this->send_email_contact_message();
+        } elseif ('new_order' == $email_type) {
+            $this->send_email_new_order();
+        } elseif ('new_product' == $email_type) {
+            $this->send_email_new_product();
+        } elseif ('order_shipped' == $email_type) {
+            $this->send_email_order_shipped();
+        } elseif ('new_message' == $email_type) {
+            $this->send_email_new_message();
+        } elseif ('email_general' == $email_type) {
+            $this->send_email_general();
         }
-        reset_flash_data();
+    }
+
+    //send email contact message
+    public function send_email_contact_message()
+    {
+        if (1 == $this->general_settings->send_email_contact_messages) {
+            $data = [
+                'subject' => trans('contact_message'),
+                'to' => $this->general_settings->mail_options_account,
+                'template_path' => 'email/email_contact_message',
+                'message_name' => $this->input->post('message_name', true),
+                'message_email' => $this->input->post('message_email', true),
+                'message_text' => $this->input->post('message_text', true),
+            ];
+            $this->email_model->send_email($data);
+        }
+    }
+
+    //send email order summary to user
+    public function send_email_new_order()
+    {
+        if (1 == $this->general_settings->send_email_buyer_purchase) {
+            $order_id = $this->input->post('order_id', true);
+            $order_id = clean_number($order_id);
+            $order = get_order($order_id);
+            $order_products = $this->order_model->get_order_products($order_id);
+            $order_shipping = get_order_shipping($order_id);
+            if (!empty($order)) {
+                //send to buyer
+                $to = '';
+                if (!empty($order_shipping)) {
+                    $to = $order_shipping->shipping_email;
+                }
+                if ('registered' == $order->buyer_type) {
+                    $user = get_user($order->buyer_id);
+                    if (!empty($user)) {
+                        $to = $user->email;
+                    }
+                }
+                $data = [
+                    'subject' => trans('email_text_thank_for_order'),
+                    'order' => $order,
+                    'order_products' => $order_products,
+                    'to' => $to,
+                    'template_path' => 'email/email_new_order',
+                ];
+                $this->email_model->send_email($data);
+
+                //send to seller
+                if (!empty($order_products)) {
+                    $seller_ids = [];
+                    foreach ($order_products as $order_product) {
+                        $seller = get_user($order_product->seller_id);
+                        if (!empty($seller)) {
+                            if (1 == $seller->send_email_when_item_sold && !in_array($seller->id, $seller_ids)) {
+                                array_push($seller_ids, $seller->id);
+                                $seller_order_products = $this->order_model->get_seller_order_products($order_id, $seller->id);
+                                $data = [
+                                    'subject' => trans('you_have_new_order'),
+                                    'order' => $order,
+                                    'order_products' => $seller_order_products,
+                                    'to' => $seller->email,
+                                    'template_path' => 'email/email_new_order_seller',
+                                ];
+                                $this->email_model->send_email($data);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     //send email new product
     public function send_email_new_product()
     {
-        $product_link = $this->input->post('product_link', true);
-        //send email
         if (1 == $this->general_settings->send_email_new_product) {
-            $this->load->model('email_model');
-            $this->email_model->send_email_new_product($product_link);
+            $product_id = $this->input->post('product_id', true);
+            $product = $this->product_model->get_product_by_id($product_id);
+            if (!empty($product)) {
+                $data = [
+                    'subject' => trans('email_text_new_product'),
+                    'product_url' => lang_base_url() . $product->slug,
+                    'to' => $this->general_settings->mail_options_account,
+                    'template_path' => 'email/email_new_product',
+                ];
+                $this->email_model->send_email($data);
+            }
         }
-        reset_flash_data();
     }
 
     //send email new message
     public function send_email_new_message()
     {
+        $sender_id = $this->input->post('sender_id', true);
         $receiver_id = $this->input->post('receiver_id', true);
-        $message_subject = $this->input->post('message_subject', true);
-        $message_text = $this->input->post('message_text', true);
-
-        $user = get_user($receiver_id);
-        if (!empty($user)) {
-            //send email
-            if (1 == $user->send_email_new_message) {
-                $this->load->model('email_model');
-                $this->email_model->send_email_new_message($user, $message_subject, $message_text);
+        $receiver = get_user($receiver_id);
+        if (!empty($receiver) && !empty($sender_id)) {
+            $data = [
+                'subject' => trans('you_have_new_message'),
+                'to' => $receiver->email,
+                'template_path' => 'email/email_new_message',
+                'message_sender' => '',
+                'message_subject' => $this->input->post('message_subject', true),
+                'message_text' => $this->input->post('message_text', true),
+            ];
+            $sender = get_user($sender_id);
+            if (!empty($sender)) {
+                $data['message_sender'] = $sender->username;
             }
+            $this->email_model->send_email($data);
         }
-        reset_flash_data();
     }
 
     //send email order shipped
     public function send_email_order_shipped()
     {
-        $order_product_id = $this->input->post('order_product_id', true);
-        $order_product = $this->order_model->get_order_product($order_product_id);
-        if (!empty($order_product)) {
-            if (1 == $this->general_settings->send_email_order_shipped) {
-                $this->load->model('email_model');
-                $this->email_model->send_email_order_shipped($order_product);
+        if (1 == $this->general_settings->send_email_order_shipped) {
+            $order_product_id = $this->input->post('order_product_id', true);
+            $order_product = $this->order_model->get_order_product($order_product_id);
+            if (!empty($order_product)) {
+                $order = get_order($order_product->order_id);
+                if (!empty($order)) {
+                    $to = $order->shipping_email;
+                    if ('registered' == $order->buyer_type) {
+                        $user = get_user($order->buyer_id);
+                        $to = $user->email;
+                    }
+                    $data = [
+                        'subject' => trans('your_order_shipped'),
+                        'to' => $to,
+                        'template_path' => 'email/email_order_shipped',
+                        'order' => $order,
+                        'order_product' => $order_product,
+                    ];
+                    $this->email_model->send_email($data);
+                }
             }
         }
-        reset_flash_data();
+    }
+
+    //send email general
+    public function send_email_general()
+    {
+        $data = [
+            'template_path' => 'email/email_general',
+            'to' => $this->input->post('to', true),
+            'subject' => $this->input->post('subject', true),
+            'email_content' => $this->input->post('email_content', true),
+            'email_link' => $this->input->post('email_link', true),
+            'email_button_text' => $this->input->post('email_button_text', true),
+        ];
+        $this->email_model->send_email($data);
     }
 }

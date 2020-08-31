@@ -69,8 +69,8 @@ class Message_model extends CI_Model
     {
         $user_id = clean_number($user_id);
         $query_unread_conversations = $this->get_user_unread_conversation_ids_query($user_id);
-        $query_read_conversations = $this->get_user_read_conversation_ids_query($user_id);
-        $this->db->where("conversations.id IN ($query_read_conversations)", null, false);
+        $query_conversations = $this->get_user_conversation_ids_query($user_id);
+        $this->db->where("conversations.id IN ($query_conversations)", null, false);
         $this->db->where("conversations.id NOT IN ($query_unread_conversations)", null, false);
         $this->db->order_by('conversations.created_at', 'DESC');
         $this->db->distinct();
@@ -186,8 +186,8 @@ class Message_model extends CI_Model
         return $query;
     }
 
-    //get user read conversation ids
-    public function get_user_read_conversation_ids_query($user_id)
+    //get user conversation ids
+    public function get_user_conversation_ids_query($user_id)
     {
         $user_id = clean_number($user_id);
         $this->db->select('conversation_id');
@@ -196,7 +196,6 @@ class Message_model extends CI_Model
         $this->db->or_where('receiver_id', $user_id);
         $this->db->group_end();
         $this->db->where('deleted_user_id !=', $user_id);
-        $this->db->where('is_read', 1);
         $this->db->distinct();
         $this->db->from('conversation_messages');
         $query = $this->db->get_compiled_select();

@@ -119,14 +119,24 @@ class Review_model extends CI_Model
     }
 
     //delete review
-    public function delete_review($id, $product_id)
+    public function delete_review($id, $product_id = null)
     {
         $id = clean_number($id);
-        $product_id = clean_number($product_id);
+        $this->db->where('id', $id);
+        $query = $this->db->get('reviews');
+        $row = $query->row();
+        if (empty($row)) {
+            return false;
+        }
+        $product = get_product($row->product_id);
+        if (empty($product)) {
+            return false;
+        }
+
         $this->db->where('id', $id);
         if ($this->db->delete('reviews')) {
             //update product rating
-            $this->update_product_rating($product_id);
+            $this->update_product_rating($product->id);
 
             return true;
         }
@@ -139,8 +149,7 @@ class Review_model extends CI_Model
     {
         if (!empty($review_ids)) {
             foreach ($review_ids as $id) {
-                $this->db->where('id', $id);
-                $this->db->delete('reviews');
+                $this->delete_review($id);
             }
         }
     }

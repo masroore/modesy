@@ -109,19 +109,21 @@ class Aws_model extends CI_Model
     //put object
     public function put_object($key, $temp_path)
     {
-        try {
-            $file = fopen($temp_path, 'r');
-            $this->s3->putObject([
-                'Bucket' => $this->bucket,
-                'Key' => $key,
-                'Body' => $file,
-                'ACL' => 'public-read',
-            ]);
-            fclose($file);
+        if (file_exists($temp_path)) {
+            try {
+                $file = fopen($temp_path, 'r');
+                $this->s3->putObject([
+                    'Bucket' => $this->bucket,
+                    'Key' => $key,
+                    'Body' => $file,
+                    'ACL' => 'public-read',
+                ]);
+                fclose($file);
 
-            return true;
-        } catch (S3Exception $e) {
-            echo $e->getMessage() . PHP_EOL;
+                return true;
+            } catch (S3Exception $e) {
+                echo $e->getMessage() . PHP_EOL;
+            }
         }
     }
 

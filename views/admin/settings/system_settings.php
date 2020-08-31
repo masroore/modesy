@@ -78,6 +78,22 @@
                     </div>
                 </div>
 
+				<div class="form-group">
+					<div class="row">
+						<div class="col-sm-12 col-xs-12 m-b-10">
+							<label><strong><?php echo trans('bidding_system_request_quote'); ?></strong></label>
+						</div>
+						<div class="col-sm-6 col-xs-12 col-option">
+							<input type="radio" name="bidding_system" value="1" id="bidding_system_1" class="square-purple" <?php echo ($general_settings->bidding_system == 1) ? 'checked' : ''; ?>>
+							<label for="bidding_system_1" class="option-label"><?php echo trans('enable'); ?></label>
+						</div>
+						<div class="col-sm-6 col-xs-12 col-option">
+							<input type="radio" name="bidding_system" value="0" id="bidding_system_2" class="square-purple" <?php echo ($general_settings->bidding_system != 1) ? 'checked' : ''; ?>>
+							<label for="bidding_system_2" class="option-label"><?php echo trans('disable'); ?></label>
+						</div>
+					</div>
+				</div>
+
                 <div class="form-group">
                     <div class="row">
                         <div class="col-sm-12 col-xs-12 m-b-10">

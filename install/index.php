@@ -11,7 +11,7 @@ if (isset($_POST['btn_license_code'])) {
 
     $current_url = currentUrl($_SERVER);
     $data = verify_license($license_code, $current_url);
-    $data->code = 'success';
+
     if (!empty($data)) {
         if ('error' == $data->code) {
             $error = 'Invalid License Code!';
@@ -25,6 +25,13 @@ if (isset($_POST['btn_license_code'])) {
     }
 }
 
+if (!isset($license_code)) {
+    if (isset($_GET['license_code'])) {
+        $license_code = $_GET['license_code'];
+    } else {
+        $license_code = '';
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -108,7 +115,10 @@ if (isset($_POST['btn_license_code'])) {
 
                                             <div class="form-group">
                                                 <label for="email">License Code</label>
-                                                <textarea name="license_code" class="form-control form-input" style="resize: vertical; height: 100px;line-height: 24px;padding: 10px;" placeholder="Enter anything here /privet" required><?php echo $license_code; ?></textarea>
+                                                <textarea name="license_code" class="form-control form-input" style="resize: vertical; height: 100px;line-height: 24px;padding: 10px;" placeholder="Enter License Code" required><?php echo $license_code; ?></textarea>
+                                                <small style="margin-top: 10px;display: block">*You need to enter your license code to this field (not your purchase code). If you don't have a license code,
+                                                    you should generate your license code by clicking "Generate License Code" button.
+                                                </small>
                                             </div>
                                         </div>
                                     </div>

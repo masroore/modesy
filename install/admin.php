@@ -10,6 +10,11 @@ if (isset($_POST['btn_admin'])) {
     $license_code = $_POST['license_code'];
     $purchase_code = $_POST['purchase_code'];
 
+    if (!isset($license_code) || !isset($purchase_code)) {
+        header('Location: index.php');
+        exit();
+    }
+
     $timezone = trim($_POST['timezone']);
     $admin_username = trim($_POST['admin_username']);
     $admin_email = trim($_POST['admin_email']);

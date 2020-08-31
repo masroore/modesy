@@ -13,7 +13,6 @@
 <?php if ($this->session->flashdata('error')): ?>
     <div class="form-group">
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="icon-times"></i>&nbsp;
             <?php echo $this->session->flashdata('error'); ?>
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <span aria-hidden="true">&times;</span>

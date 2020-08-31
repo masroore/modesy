@@ -29,7 +29,7 @@ function verify_license($license_code, $current_url)
         curl_close($ch);
     }
 
-    return json_decode(true);
+    return json_decode($response);
 }
 
 function update_config_license_code($license_code)

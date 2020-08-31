@@ -9,6 +9,7 @@ class Home_controller extends Home_Core_Controller
         parent::__construct();
         $this->comment_limit = 6;
         $this->blog_paginate_per_page = 12;
+        $this->product_paginate_per_page = 18;
         $this->promoted_products_limit = $this->general_settings->index_promoted_products_count;
     }
 
@@ -17,6 +18,7 @@ class Home_controller extends Home_Core_Controller
      */
     public function index()
     {
+        get_method();
         $data['title'] = $this->settings->homepage_title;
         $data['description'] = $this->settings->site_description;
         $data['keywords'] = $this->settings->keywords;
@@ -35,6 +37,7 @@ class Home_controller extends Home_Core_Controller
         $data['promoted_products'] = $this->product_model->get_promoted_products();
         $data['promoted_products_count'] = $this->product_model->get_promoted_products_count();
         $data['promoted_products_limit'] = $this->promoted_products_limit;
+
         $data['slider_items'] = $this->slider_model->get_slider_items();
         $data['featured_category_count'] = $this->category_model->get_featured_categories_count();
 
@@ -56,9 +59,11 @@ class Home_controller extends Home_Core_Controller
      */
     public function contact()
     {
+        get_method();
         $data['title'] = trans('contact');
         $data['description'] = trans('contact') . ' - ' . $this->app_name;
         $data['keywords'] = trans('contact') . ',' . $this->app_name;
+        $data['site_settings'] = get_site_settings();
         $this->load->view('partials/_header', $data);
         $this->load->view('contact', $data);
         $this->load->view('partials/_footer');
@@ -69,6 +74,7 @@ class Home_controller extends Home_Core_Controller
      */
     public function contact_post()
     {
+        post_method();
         //validate inputs
         $this->form_validation->set_rules('name', trans('name'), 'required|xss_clean|max_length[200]');
         $this->form_validation->set_rules('email', trans('email_address'), 'required|xss_clean|max_length[200]');
@@ -101,6 +107,7 @@ class Home_controller extends Home_Core_Controller
      */
     public function any($slug)
     {
+        get_method();
         $slug = decode_slug($slug);
         //index page
         if (empty($slug)) {
@@ -108,20 +115,119 @@ class Home_controller extends Home_Core_Controller
         }
 
         $data['page'] = $this->page_model->get_page($slug);
-        //if not exists
-        if (empty($data['page'])) {
-            $this->product($slug);
-        } //check if page disable
-        elseif (0 == $data['page']->visibility) {
-            $this->error_404();
-        } else {
-            $data['title'] = $data['page']->title;
-            $data['description'] = $data['page']->description;
-            $data['keywords'] = $data['page']->keywords;
+        $data['site_settings'] = get_site_settings();
+        //if exists
+        if (!empty($data['page'])) {
+            if (0 == $data['page']->visibility) {
+                $this->error_404();
+            } else {
+                $data['title'] = $data['page']->title;
+                $data['description'] = $data['page']->description;
+                $data['keywords'] = $data['page']->keywords;
 
-            $this->load->view('partials/_header', $data);
-            $this->load->view('page', $data);
-            $this->load->view('partials/_footer');
+                $this->load->view('partials/_header', $data);
+                $this->load->view('page', $data);
+                $this->load->view('partials/_footer');
+            }
+        } else {
+            //check category
+            $category = $this->category_model->get_category_by_slug($slug);
+            if (!empty($category)) {
+                $this->category($category);
+            } else {
+                $this->product($slug);
+            }
+        }
+    }
+
+    /**
+     * Products.
+     */
+    public function products()
+    {
+        get_method();
+        $data['title'] = trans('products');
+        $data['description'] = trans('products') . ' - ' . $this->app_name;
+        $data['keywords'] = trans('products') . ',' . $this->app_name;
+        //get paginated posts
+        $link = lang_base_url() . 'products';
+        $pagination = $this->paginate($link, $this->product_model->get_paginated_filtered_products_count(null), $this->product_paginate_per_page);
+        $data['products'] = $this->product_model->get_paginated_filtered_products(null, $pagination['per_page'], $pagination['offset']);
+        $data['categories'] = $this->category_model->get_parent_categories();
+        $data['site_settings'] = get_site_settings();
+
+        $data['show_location_filter'] = false;
+        if (!empty($data['products'])) {
+            foreach ($data['products'] as $item) {
+                if ('physical' == $item->product_type) {
+                    $data['show_location_filter'] = true;
+                    break;
+                }
+            }
+        }
+
+        $this->load->view('partials/_header', $data);
+        $this->load->view('product/products', $data);
+        $this->load->view('partials/_footer');
+    }
+
+    /**
+     * Category.
+     */
+    public function category($category)
+    {
+        if (empty($category)) {
+            redirect($this->agent->referrer());
+        }
+        $data['category'] = $category;
+        $data['title'] = !empty($data['category']->title_meta_tag) ? $data['category']->title_meta_tag : $data['category']->name;
+        $data['description'] = $data['category']->description;
+        $data['keywords'] = $data['category']->keywords;
+
+        $data['categories'] = $this->category_model->get_subcategories_by_parent_id($data['category']->id);
+        if (empty($data['categories'])) {
+            $data['categories'] = $this->category_model->get_subcategories_by_parent_id($data['category']->parent_id);
+        }
+
+        //get paginated posts
+        $link = generate_category_url($data['category']);
+        $pagination = $this->paginate($link, $this->product_model->get_paginated_filtered_products_count($data['category']->id), $this->product_paginate_per_page);
+        $data['products'] = $this->product_model->get_paginated_filtered_products($data['category']->id, $pagination['per_page'], $pagination['offset']);
+        $data['site_settings'] = get_site_settings();
+
+        $data['show_location_filter'] = false;
+        if (!empty($data['products'])) {
+            foreach ($data['products'] as $item) {
+                if ('physical' == $item->product_type) {
+                    $data['show_location_filter'] = true;
+                    break;
+                }
+            }
+        }
+
+        if (0 == $data['category']->parent_id) {
+            $data['parent_category'] = null;
+        } else {
+            $data['parent_category'] = $this->category_model->get_category_joined($data['category']->parent_id);
+        }
+
+        $this->load->view('partials/_header', $data);
+        $this->load->view('product/products', $data);
+        $this->load->view('partials/_footer');
+    }
+
+    /**
+     * SubCategory.
+     */
+    public function subcategory($parent_slug, $slug)
+    {
+        get_method();
+        $slug = decode_slug($slug);
+        $category = $this->category_model->get_category_by_slug($slug);
+        if (!empty($category)) {
+            $this->category($category);
+        } else {
+            $this->error_404();
         }
     }
 
@@ -130,6 +236,8 @@ class Home_controller extends Home_Core_Controller
      */
     public function product($slug)
     {
+        get_method();
+        $slug = decode_slug($slug);
         $this->review_limit = 5;
         $this->comment_limit = 5;
 
@@ -147,8 +255,6 @@ class Home_controller extends Home_Core_Controller
             }
 
             $data['category'] = $this->category_model->get_category_joined($data['product']->category_id);
-            $data['subcategory'] = $this->category_model->get_category_joined($data['product']->subcategory_id);
-            $data['third_category'] = $this->category_model->get_category_joined($data['product']->third_category_id);
 
             //images
             $data['product_images'] = $this->file_model->get_product_images($data['product']->id);
@@ -178,7 +284,7 @@ class Home_controller extends Home_Core_Controller
             $data['comment_count'] = $this->comment_model->get_product_comment_count($data['product']->id);
             $data['comments'] = $this->comment_model->get_comments($data['product']->id, $this->comment_limit);
             $data['comment_limit'] = $this->comment_limit;
-            $data['custom_fields'] = $this->field_model->generate_custom_fields_array($data['product']->category_id, $data['product']->subcategory_id, $data['product']->third_category_id, $data['product']->id);
+            $data['custom_fields'] = $this->field_model->generate_custom_fields_array($data['product']->category_id, $data['product']->id);
             $data['half_width_product_variations'] = $this->variation_model->get_half_width_product_variations($data['product']->id, $this->selected_lang->id);
             $data['full_width_product_variations'] = $this->variation_model->get_full_width_product_variations($data['product']->id, $this->selected_lang->id);
 
@@ -237,6 +343,7 @@ class Home_controller extends Home_Core_Controller
      */
     public function search()
     {
+        get_method();
         $search = trim($this->input->get('search', true));
         $search_type = $this->input->get('search_type', true);
         $search = remove_special_characters($search);
@@ -257,6 +364,7 @@ class Home_controller extends Home_Core_Controller
      */
     public function members()
     {
+        get_method();
         $search = trim($this->input->get('search', true));
         $search = remove_special_characters($search);
 
@@ -289,6 +397,7 @@ class Home_controller extends Home_Core_Controller
      */
     public function blog()
     {
+        get_method();
         $data['title'] = trans('blog');
         $data['description'] = trans('blog') . ' - ' . $this->app_name;
         $data['keywords'] = trans('blog') . ',' . $this->app_name;
@@ -299,6 +408,7 @@ class Home_controller extends Home_Core_Controller
             $blog_posts_count = $this->blog_model->get_posts_count();
             set_cache_data($key, $blog_posts_count);
         }
+        $data['site_settings'] = get_site_settings();
         //set pagination
         $pagination = $this->paginate(lang_base_url() . 'blog', $blog_posts_count, $this->blog_paginate_per_page);
         $key = 'blog_posts_lang_' . $this->selected_lang->id . '_page_' . $pagination['current_page'];
@@ -314,10 +424,11 @@ class Home_controller extends Home_Core_Controller
     }
 
     /**
-     * Category.
+     * Blog Category.
      */
-    public function category($slug)
+    public function blog_category($slug)
     {
+        get_method();
         $slug = decode_slug($slug);
         $data['category'] = $this->blog_category_model->get_category_by_slug($slug);
 
@@ -329,6 +440,7 @@ class Home_controller extends Home_Core_Controller
         $data['description'] = $data['category']->description;
         $data['keywords'] = $data['category']->keywords;
         $data['active_category'] = $slug;
+        $data['site_settings'] = get_site_settings();
         $key = 'blog_category_' . $data['category']->id . '_posts_count_lang_' . $this->selected_lang->id;
         $blog_posts_count = get_cached_data($key);
         if (empty($blog_posts_count)) {
@@ -355,6 +467,7 @@ class Home_controller extends Home_Core_Controller
      */
     public function tag($slug)
     {
+        get_method();
         $slug = decode_slug($slug);
         $data['tag'] = $this->tag_model->get_post_tag($slug);
 
@@ -368,6 +481,7 @@ class Home_controller extends Home_Core_Controller
         //get paginated posts
         $pagination = $this->paginate(lang_base_url() . 'blog/tag/' . $data['tag']->tag_slug, $this->blog_model->get_paginated_tag_posts_count($data['tag']->tag_slug), $this->blog_paginate_per_page);
         $data['posts'] = $this->blog_model->get_paginated_tag_posts($pagination['per_page'], $pagination['offset'], $data['tag']->tag_slug);
+        $data['site_settings'] = get_site_settings();
         $this->load->view('partials/_header', $data);
         $this->load->view('blog/tag', $data);
         $this->load->view('partials/_footer');
@@ -378,6 +492,7 @@ class Home_controller extends Home_Core_Controller
      */
     public function post($category_slug, $slug)
     {
+        get_method();
         $slug = decode_slug($slug);
         $data['post'] = $this->blog_model->get_post_by_slug($slug);
 
@@ -404,6 +519,7 @@ class Home_controller extends Home_Core_Controller
         $data['og_type'] = 'article';
         $data['og_url'] = lang_base_url() . 'blog/' . $data['post']->category_slug . '/' . $data['post']->slug;
         $data['og_image'] = get_blog_image_url($data['post'], 'image_default');
+        $data['site_settings'] = get_site_settings();
         $data['og_width'] = '750';
         $data['og_height'] = '500';
         if (!empty($data['post_user'])) {

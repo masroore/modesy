@@ -105,13 +105,8 @@ class Core_Controller extends CI_Controller
             $this->thousands_separator = ',';
             $this->input_initial_price = '0,00';
         }
-
         //update last seen time
         $this->auth_model->update_last_seen();
-
-        //include image resize library
-        include APPPATH . 'third_party/image-resize/ImageResize.php';
-        include APPPATH . 'third_party/image-resize/ImageResizeException.php';
 
         $this->load->vars($global_data);
     }
@@ -123,9 +118,11 @@ class Home_Core_Controller extends Core_Controller
     {
         parent::__construct();
 
-        //meintanence mode
+        //maintenance mode
         if (1 == $this->general_settings->maintenance_mode_status) {
-            $this->maintenance_mode();
+            if (!is_admin()) {
+                $this->maintenance_mode();
+            }
         }
 
         if ('post' == $this->input->method()) {
@@ -262,6 +259,7 @@ class Admin_Core_Controller extends Core_Controller
     public function __construct()
     {
         parent::__construct();
+        get_ci_core_construct();
     }
 
     public function paginate($url, $total_rows)

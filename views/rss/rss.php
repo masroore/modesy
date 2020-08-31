@@ -8,13 +8,13 @@
 <channel>
 <title><?php echo xml_convert($feed_name); ?></title>
 <link><?php echo $feed_url; ?></link>
-<description><?php echo xml_convert($page_description); ?></description>
+<description><?php echo convert_to_xml_character(xml_convert($page_description)); ?></description>
 <dc:language><?php echo $page_language; ?></dc:language>
 <dc:creator><?php echo $creator_email; ?></dc:creator>
-<dc:rights><?php echo html_escape(xml_convert($settings->copyright)); ?></dc:rights>
+<dc:rights><?php echo convert_to_xml_character(xml_convert($settings->copyright)); ?></dc:rights>
 <?php foreach ($products as $product): ?>
 <item>
-    <title><?php echo xml_convert($product->title); ?></title>
+    <title><?php echo convert_to_xml_character(xml_convert($product->title)); ?></title>
     <link><?php echo generate_product_url($product); ?></link>
     <guid><?php echo generate_product_url($product); ?></guid>
     <description><![CDATA[<div class="price"><p>✔ <?php echo trans("price") . ": " . print_price($product->price,$product->currency); ?></p><p>✔ <?php echo trans("condition") . ": " . trans($product->product_condition); ?></p><p>✔ <?php echo trans("location") . ": " . get_location($product); ?></p></div><div class="description"><?php echo $product->description; ?></div>]]></description>
@@ -32,10 +32,10 @@ if(!empty($image)){
 }
 $image_path = str_replace( 'https://', 'http://', $image_path );
 if (!empty($image_path)):?>
-    <enclosure url="<?php echo $image_path; ?>" length="<?php echo (isset($file_size)) ? $file_size : '';  ?>" type="image/jpeg"/>
+    <enclosure url="<?php echo convert_to_xml_character($image_path); ?>" length="<?php echo (isset($file_size)) ? $file_size : '';  ?>" type="image/jpeg"/>
 <?php endif; ?>
     <pubDate><?php echo date('r', strtotime($product->created_at)); ?></pubDate>
-    <dc:creator><?php echo get_shop_name_product($product); ?></dc:creator>
+    <dc:creator><?php echo convert_to_xml_character(get_shop_name_product($product)); ?></dc:creator>
 </item>
 <?php endforeach; ?>
 </channel>

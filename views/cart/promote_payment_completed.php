@@ -12,7 +12,7 @@
                     <?php if(!empty($transaction_number)): ?>
                         <p class="p-order-number"><?php echo trans("transaction_number"); ?><br><?php echo $transaction_number; ?></p>
                     <?php endif; ?>
-                    <?php if($method=="bank_transfer"): ?>
+                    <?php if($method !="gtw"): ?>
                         <p class="p-complete-payment"><?php echo trans("msg_bank_transfer_text_transaction_completed"); ?></p>
                         <div class="bank-account-container">
                             <?php echo $payment_settings->bank_transfer_accounts; ?>

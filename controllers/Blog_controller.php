@@ -20,6 +20,7 @@ class Blog_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('add_post');
         $data['categories'] = $this->blog_category_model->get_categories_by_lang($this->selected_lang->id);
+        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/blog/add_post', $data);
@@ -70,6 +71,7 @@ class Blog_controller extends Admin_Core_Controller
         $data['title'] = trans('blog_posts');
         $data['posts'] = $this->blog_model->get_posts_all();
         $data['lang_search_column'] = 2;
+        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/blog/posts', $data);
@@ -169,6 +171,7 @@ class Blog_controller extends Admin_Core_Controller
         $data['title'] = trans('categories');
         $data['categories'] = $this->blog_category_model->get_categories_all();
         $data['lang_search_column'] = 2;
+        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/blog/categories', $data);

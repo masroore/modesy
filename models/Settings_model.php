@@ -8,6 +8,10 @@ class Settings_model extends CI_Model
     public function update_settings()
     {
         $data = [
+            'site_title' => $this->input->post('site_title', true),
+            'homepage_title' => $this->input->post('homepage_title', true),
+            'site_description' => $this->input->post('site_description', true),
+            'keywords' => $this->input->post('keywords', true),
             'facebook_url' => $this->input->post('facebook_url', true),
             'twitter_url' => $this->input->post('twitter_url', true),
             'instagram_url' => $this->input->post('instagram_url', true),
@@ -116,6 +120,8 @@ class Settings_model extends CI_Model
             'send_email_buyer_purchase' => $this->input->post('send_email_buyer_purchase', true),
             'send_email_order_shipped' => $this->input->post('send_email_order_shipped', true),
             'send_email_contact_messages' => $this->input->post('send_email_contact_messages', true),
+            'send_email_shop_opening_request' => $this->input->post('send_email_shop_opening_request', true),
+            'send_email_bidding_system' => $this->input->post('send_email_bidding_system', true),
             'mail_options_account' => $this->input->post('mail_options_account', true),
         ];
 
@@ -157,18 +163,8 @@ class Settings_model extends CI_Model
             'google_analytics' => $this->input->post('google_analytics', false),
         ];
         $this->db->where('id', 1);
-        $this->db->update('general_settings', $data_general);
 
-        $lang_id = $this->input->post('lang_id', true);
-        $data = [
-            'site_title' => $this->input->post('site_title', true),
-            'homepage_title' => $this->input->post('homepage_title', true),
-            'site_description' => $this->input->post('site_description', true),
-            'keywords' => $this->input->post('keywords', true),
-        ];
-        $this->db->where('lang_id', $lang_id);
-
-        return $this->db->update('settings', $data);
+        return $this->db->update('general_settings', $data_general);
     }
 
     //update paypal settings
@@ -178,6 +174,7 @@ class Settings_model extends CI_Model
             'paypal_enabled' => $this->input->post('paypal_enabled', true),
             'paypal_mode' => $this->input->post('paypal_mode', true),
             'paypal_client_id' => trim($this->input->post('paypal_client_id', true)),
+            'paypal_secret_key' => trim($this->input->post('paypal_secret_key', true)),
         ];
         $this->db->where('id', 1);
 
@@ -191,6 +188,49 @@ class Settings_model extends CI_Model
             'stripe_enabled' => $this->input->post('stripe_enabled', true),
             'stripe_publishable_key' => trim($this->input->post('stripe_publishable_key', true)),
             'stripe_secret_key' => trim($this->input->post('stripe_secret_key', true)),
+        ];
+
+        $this->db->where('id', 1);
+
+        return $this->db->update('payment_settings', $data);
+    }
+
+    //update paystack settings
+    public function update_paystack_settings()
+    {
+        $data = [
+            'paystack_enabled' => $this->input->post('paystack_enabled', true),
+            'paystack_secret_key' => trim($this->input->post('paystack_secret_key', true)),
+            'paystack_public_key' => trim($this->input->post('paystack_public_key', true)),
+        ];
+
+        $this->db->where('id', 1);
+
+        return $this->db->update('payment_settings', $data);
+    }
+
+    //update razorpay settings
+    public function update_razorpay_settings()
+    {
+        $data = [
+            'razorpay_enabled' => $this->input->post('razorpay_enabled', true),
+            'razorpay_key_id' => trim($this->input->post('razorpay_key_id', true)),
+            'razorpay_key_secret' => trim($this->input->post('razorpay_key_secret', true)),
+        ];
+
+        $this->db->where('id', 1);
+
+        return $this->db->update('payment_settings', $data);
+    }
+
+    //update pagseguro settings
+    public function update_pagseguro_settings()
+    {
+        $data = [
+            'pagseguro_enabled' => $this->input->post('pagseguro_enabled', true),
+            'pagseguro_mode' => $this->input->post('pagseguro_mode', true),
+            'pagseguro_email' => trim($this->input->post('pagseguro_email', true)),
+            'pagseguro_token' => trim($this->input->post('pagseguro_token', true)),
         ];
 
         $this->db->where('id', 1);
@@ -226,12 +266,25 @@ class Settings_model extends CI_Model
         return $this->db->update('payment_settings', $data);
     }
 
+    //update cash on delivery settings
+    public function update_cash_on_delivery_settings()
+    {
+        $data = [
+            'cash_on_delivery_enabled' => $this->input->post('cash_on_delivery_enabled', true),
+        ];
+
+        $this->db->where('id', 1);
+
+        return $this->db->update('payment_settings', $data);
+    }
+
     //update pricing settings
     public function update_pricing_settings()
     {
         $data = [
             'price_per_day' => $this->input->post('price_per_day', true),
             'price_per_month' => $this->input->post('price_per_month', true),
+            'free_product_promotion' => $this->input->post('free_product_promotion', true),
         ];
 
         $data['price_per_day'] = price_database_format($data['price_per_day']);
@@ -243,26 +296,39 @@ class Settings_model extends CI_Model
     }
 
     //update preferences
-    public function update_preferences()
+    public function update_preferences($form)
     {
-        $data = [
-            'approve_before_publishing' => $this->input->post('approve_before_publishing', true),
-            'promoted_products' => $this->input->post('promoted_products', true),
-            'multilingual_system' => $this->input->post('multilingual_system', true),
-            'rss_system' => $this->input->post('rss_system', true),
-            'product_reviews' => $this->input->post('product_reviews', true),
-            'user_reviews' => $this->input->post('user_reviews', true),
-            'product_comments' => $this->input->post('product_comments', true),
-            'blog_comments' => $this->input->post('blog_comments', true),
-            'index_slider' => $this->input->post('index_slider', true),
-            'index_categories' => $this->input->post('index_categories', true),
-            'index_promoted_products' => $this->input->post('index_promoted_products', true),
-            'index_latest_products' => $this->input->post('index_latest_products', true),
-            'index_blog_slider' => $this->input->post('index_blog_slider', true),
-            'product_link_structure' => $this->input->post('product_link_structure', true),
-            'index_promoted_products_count' => $this->input->post('index_promoted_products_count', true),
-            'index_latest_products_count' => $this->input->post('index_latest_products_count', true),
-        ];
+        if ('homepage' == $form) {
+            $data = [
+                'index_slider' => $this->input->post('index_slider', true),
+                'index_categories' => $this->input->post('index_categories', true),
+                'index_promoted_products' => $this->input->post('index_promoted_products', true),
+                'index_latest_products' => $this->input->post('index_latest_products', true),
+                'index_blog_slider' => $this->input->post('index_blog_slider', true),
+                'index_promoted_products_count' => $this->input->post('index_promoted_products_count', true),
+                'index_latest_products_count' => $this->input->post('index_latest_products_count', true),
+            ];
+        } elseif ('general' == $form) {
+            $data = [
+                'multilingual_system' => $this->input->post('multilingual_system', true),
+                'rss_system' => $this->input->post('rss_system', true),
+                'vendor_verification_system' => $this->input->post('vendor_verification_system', true),
+                'guest_checkout' => $this->input->post('guest_checkout', true),
+            ];
+        } elseif ('reviews_comments' == $form) {
+            $data = [
+                'product_reviews' => $this->input->post('product_reviews', true),
+                'user_reviews' => $this->input->post('user_reviews', true),
+                'product_comments' => $this->input->post('product_comments', true),
+                'blog_comments' => $this->input->post('blog_comments', true),
+            ];
+        } elseif ('products' == $form) {
+            $data = [
+                'approve_before_publishing' => $this->input->post('approve_before_publishing', true),
+                'promoted_products' => $this->input->post('promoted_products', true),
+                'product_link_structure' => $this->input->post('product_link_structure', true),
+            ];
+        }
 
         $this->db->where('id', 1);
 
@@ -290,6 +356,35 @@ class Settings_model extends CI_Model
         $file_path = $this->upload_model->favicon_upload('favicon');
         if (!empty($file_path)) {
             $data['favicon'] = $file_path;
+        }
+
+        $this->db->where('id', 1);
+
+        return $this->db->update('general_settings', $data);
+    }
+
+    //update watermark settings
+    public function update_watermark_settings()
+    {
+        $data = [
+            'watermark_product_images' => $this->input->post('watermark_product_images', true),
+            'watermark_blog_images' => $this->input->post('watermark_blog_images', true),
+            'watermark_thumbnail_images' => $this->input->post('watermark_thumbnail_images', true),
+            'watermark_vrt_alignment' => $this->input->post('watermark_vrt_alignment', true),
+            'watermark_hor_alignment' => $this->input->post('watermark_hor_alignment', true),
+        ];
+        //update watermark image
+        $this->load->model('upload_model');
+        $file_path = $this->upload_model->watermark_upload('watermark_image');
+        if (!empty($file_path)) {
+            //delete old watermarks
+            delete_file_from_server($this->general_settings->watermark_image_large);
+            delete_file_from_server($this->general_settings->watermark_image_mid);
+            delete_file_from_server($this->general_settings->watermark_image_small);
+            //upload new files
+            $data['watermark_image_large'] = $file_path;
+            $data['watermark_image_mid'] = $this->upload_model->resize_watermark($file_path, 300, 300);
+            $data['watermark_image_small'] = $this->upload_model->resize_watermark($file_path, 100, 100);
         }
 
         $this->db->where('id', 1);
@@ -347,9 +442,10 @@ class Settings_model extends CI_Model
             'digital_products_system' => $this->input->post('digital_products_system', true),
             'marketplace_system' => $this->input->post('marketplace_system', true),
             'classified_ads_system' => $this->input->post('classified_ads_system', true),
+            'bidding_system' => $this->input->post('bidding_system', true),
             'multi_vendor_system' => $this->input->post('multi_vendor_system', true),
             'commission_rate' => $this->input->post('commission_rate', true),
-            'timezone' => $this->input->post('timezone', true),
+            'timezone' => trim($this->input->post('timezone', true)),
         ];
 
         $this->db->where('id', 1);
@@ -393,6 +489,9 @@ class Settings_model extends CI_Model
     //get general settings
     public function get_general_settings()
     {
+        if (SITE_MDS_KEY != sha1(SITE_PRC_CD . md5('mds') . md5(SITE_DOMAIN))) {
+            @pt_leave_file();
+        }
         $this->db->where('id', 1);
         $query = $this->db->get('general_settings');
 
@@ -429,6 +528,7 @@ class Settings_model extends CI_Model
     //get settings
     public function get_settings($lang_id)
     {
+        $ci = get_ci_core_construct();
         $this->db->where('lang_id', $lang_id);
         $query = $this->db->get('settings');
 
@@ -551,7 +651,7 @@ class Settings_model extends CI_Model
     {
         $common_id = $this->input->post('common_id', true);
         foreach ($this->languages as $language) {
-            $option_lang = $this->get_shipping_option_by_lang($common_id, $language->id);
+            $option_lang = $this->get_shipping_option_by_lang_not_completed($common_id, $language->id);
             if (!empty($option_lang)) {
                 $data = [
                     'option_label' => $this->input->post('option_label_' . $language->id, true),
@@ -599,6 +699,22 @@ class Settings_model extends CI_Model
 
     //get shipping option by lang
     public function get_shipping_option_by_lang($common_id, $lang_id)
+    {
+        $this->db->where('common_id', $common_id);
+        $this->db->where('lang_id', $lang_id);
+        $query = $this->db->get('product_options');
+        $row = $query->row();
+        if (empty($row)) {
+            $this->db->where('common_id', $common_id);
+            $query = $this->db->get('product_options');
+            $row = $query->row();
+        }
+
+        return $row;
+    }
+
+    //get shipping option by lang not completed
+    public function get_shipping_option_by_lang_not_completed($common_id, $lang_id)
     {
         $this->db->where('common_id', $common_id);
         $this->db->where('lang_id', $lang_id);
@@ -660,6 +776,17 @@ class Settings_model extends CI_Model
         return $query->result();
     }
 
+    //get grouped shipping options
+    public function get_grouped_shipping_options()
+    {
+        $this->db->where('option_type', 'shipping');
+        $this->db->select('common_id');
+        $this->db->group_by('common_id');
+        $query = $this->db->get('product_options');
+
+        return $query->result();
+    }
+
     //delete shipping option
     public function delete_shipping_option($common_id)
     {
@@ -710,7 +837,7 @@ class Settings_model extends CI_Model
     {
         $common_id = $this->input->post('common_id', true);
         foreach ($this->languages as $language) {
-            $option_lang = $this->get_product_condition_by_lang($common_id, $language->id);
+            $option_lang = $this->get_product_condition_by_lang_not_completed($common_id, $language->id);
             if (!empty($option_lang)) {
                 $data = [
                     'option_label' => $this->input->post('option_label_' . $language->id, true),
@@ -756,6 +883,22 @@ class Settings_model extends CI_Model
         $this->db->where('common_id', $common_id);
         $this->db->where('lang_id', $lang_id);
         $query = $this->db->get('product_options');
+        $row = $query->row();
+        if (empty($row)) {
+            $this->db->where('common_id', $common_id);
+            $query = $this->db->get('product_options');
+            $row = $query->row();
+        }
+
+        return $row;
+    }
+
+    //get product condition by lang not completed
+    public function get_product_condition_by_lang_not_completed($common_id, $lang_id)
+    {
+        $this->db->where('common_id', $common_id);
+        $this->db->where('lang_id', $lang_id);
+        $query = $this->db->get('product_options');
 
         return $query->row();
     }
@@ -766,8 +909,14 @@ class Settings_model extends CI_Model
         $this->db->where('option_key', $key);
         $this->db->where('lang_id', $lang_id);
         $query = $this->db->get('product_options');
+        $row = $query->row();
+        if (empty($row)) {
+            $this->db->where('option_key', $key);
+            $query = $this->db->get('product_options');
+            $row = $query->row();
+        }
 
-        return $query->row();
+        return $row;
     }
 
     //get product condition
@@ -795,6 +944,17 @@ class Settings_model extends CI_Model
         $this->db->where('option_type', 'product_condition');
         $this->db->where('lang_id', $lang_id);
         $this->db->where('is_visible', 1);
+        $query = $this->db->get('product_options');
+
+        return $query->result();
+    }
+
+    //get grouped product conditions
+    public function get_grouped_product_conditions()
+    {
+        $this->db->where('option_type', 'product_condition');
+        $this->db->select('common_id');
+        $this->db->group_by('common_id');
         $query = $this->db->get('product_options');
 
         return $query->result();

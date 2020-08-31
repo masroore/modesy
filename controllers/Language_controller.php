@@ -20,6 +20,7 @@ class Language_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('language_settings');
         $data['languages'] = $this->language_model->get_languages();
+        $data['admin_settings'] = get_admin_settings();
 
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/language/languages', $data);
@@ -77,6 +78,7 @@ class Language_controller extends Admin_Core_Controller
     public function update_language($id)
     {
         $data['title'] = trans('update_language');
+        $data['admin_settings'] = get_admin_settings();
         //get language
         $data['language'] = $this->language_model->get_language($id);
 
@@ -142,6 +144,7 @@ class Language_controller extends Admin_Core_Controller
 
         //get language
         $data['language'] = $this->language_model->get_language($id);
+        $data['admin_settings'] = get_admin_settings();
         if (empty($data['language'])) {
             redirect($this->agent->referrer());
         }
@@ -197,6 +200,7 @@ class Language_controller extends Admin_Core_Controller
             redirect($this->agent->referrer());
         }
 
+        $data['admin_settings'] = get_admin_settings();
         $data['title'] = trans('edit_translations');
 
         //get language

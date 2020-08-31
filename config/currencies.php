@@ -16,3 +16,4 @@ $currencies = $db->get('currencies')->result();
 foreach ($currencies as $currency) {
     $config['currencies_array'][$currency->code] = ['name' => $currency->name, 'symbol' => $currency->symbol, 'hex' => $currency->hex];
 }
+$db->close();

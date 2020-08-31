@@ -2,8 +2,8 @@
 -- version 4.8.5
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Aug 25, 2019 at 10:22 PM
+-- Host: localhost
+-- Generation Time: Oct 19, 2019 at 05:47 PM
 -- Server version: 10.1.38-MariaDB
 -- PHP Version: 5.6.40
 
@@ -150,10 +150,6 @@ CREATE TABLE `categories` (
   `id` int(11) NOT NULL,
   `slug` varchar(255) DEFAULT NULL,
   `parent_id` int(11) DEFAULT '0',
-  `top_parent_id` int(11) DEFAULT NULL,
-  `category_level` tinyint(4) DEFAULT '1',
-  `parent_slug` varchar(255) DEFAULT NULL,
-  `top_parent_slug` varchar(255) DEFAULT NULL,
   `title_meta_tag` varchar(255) DEFAULT NULL,
   `description` varchar(500) DEFAULT NULL,
   `keywords` varchar(500) DEFAULT NULL,
@@ -797,6 +793,7 @@ CREATE TABLE `digital_sales` (
   `product_title` varchar(500) DEFAULT NULL,
   `seller_id` int(11) NOT NULL,
   `buyer_id` int(11) NOT NULL,
+  `license_key` varchar(255) DEFAULT NULL,
   `purchase_code` varchar(100) NOT NULL,
   `currency` varchar(20) NOT NULL DEFAULT 'USD',
   `price` bigint(20) NOT NULL,
@@ -870,15 +867,18 @@ CREATE TABLE `form_settings` (
   `digital_demo_url` tinyint(1) DEFAULT '1',
   `digital_video_preview` tinyint(1) DEFAULT '1',
   `digital_audio_preview` tinyint(1) DEFAULT '1',
-  `external_link` tinyint(1) NOT NULL DEFAULT '1'
+  `external_link` tinyint(1) NOT NULL DEFAULT '1',
+  `sitemap_frequency` varchar(30) DEFAULT 'monthly',
+  `sitemap_last_modification` varchar(30) DEFAULT 'server_response',
+  `sitemap_priority` varchar(30) DEFAULT 'automatically'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `form_settings`
 --
 
-INSERT INTO `form_settings` (`id`, `product_conditions`, `product_conditions_required`, `quantity`, `price`, `price_required`, `quantity_required`, `variations`, `shipping`, `shipping_required`, `product_location`, `product_location_required`, `physical_demo_url`, `physical_video_preview`, `physical_audio_preview`, `digital_demo_url`, `digital_video_preview`, `digital_audio_preview`, `external_link`) VALUES
-(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+INSERT INTO `form_settings` (`id`, `product_conditions`, `product_conditions_required`, `quantity`, `price`, `price_required`, `quantity_required`, `variations`, `shipping`, `shipping_required`, `product_location`, `product_location_required`, `physical_demo_url`, `physical_video_preview`, `physical_audio_preview`, `digital_demo_url`, `digital_video_preview`, `digital_audio_preview`, `external_link`, `sitemap_frequency`, `sitemap_last_modification`, `sitemap_priority`) VALUES
+(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 'monthly', 'server_response', 'automatically');
 
 -- --------------------------------------------------------
 
@@ -892,6 +892,7 @@ CREATE TABLE `general_settings` (
   `digital_products_system` tinyint(1) DEFAULT '1',
   `marketplace_system` tinyint(1) DEFAULT '1',
   `classified_ads_system` tinyint(1) DEFAULT '1',
+  `bidding_system` tinyint(1) DEFAULT '1',
   `multi_vendor_system` tinyint(1) DEFAULT '1',
   `site_lang` tinyint(4) DEFAULT '1',
   `timezone` varchar(100) DEFAULT 'America/New_York',
@@ -936,6 +937,14 @@ CREATE TABLE `general_settings` (
   `logo` varchar(255) DEFAULT NULL,
   `logo_email` varchar(255) DEFAULT NULL,
   `favicon` varchar(255) DEFAULT NULL,
+  `watermark_image_large` varchar(255) DEFAULT NULL,
+  `watermark_image_mid` varchar(255) DEFAULT NULL,
+  `watermark_image_small` varchar(255) DEFAULT NULL,
+  `watermark_vrt_alignment` varchar(20) DEFAULT 'middle',
+  `watermark_hor_alignment` varchar(20) DEFAULT 'center',
+  `watermark_product_images` tinyint(1) DEFAULT '0',
+  `watermark_blog_images` tinyint(1) DEFAULT '0',
+  `watermark_thumbnail_images` tinyint(1) DEFAULT '0',
   `facebook_comment` text,
   `facebook_comment_status` tinyint(1) DEFAULT '0',
   `cache_system` tinyint(1) DEFAULT '0',
@@ -948,21 +957,26 @@ CREATE TABLE `general_settings` (
   `send_email_buyer_purchase` tinyint(1) DEFAULT '0',
   `send_email_contact_messages` tinyint(1) DEFAULT '0',
   `send_email_order_shipped` tinyint(1) DEFAULT '0',
+  `send_email_shop_opening_request` tinyint(1) DEFAULT '0',
+  `send_email_bidding_system` tinyint(1) DEFAULT '0',
   `mail_options_account` varchar(100) DEFAULT NULL,
+  `vendor_verification_system` tinyint(1) DEFAULT '1',
+  `guest_checkout` tinyint(1) DEFAULT '0',
   `maintenance_mode_title` varchar(500) DEFAULT NULL,
   `maintenance_mode_description` varchar(2000) DEFAULT NULL,
   `maintenance_mode_status` tinyint(1) DEFAULT '0',
-  `max_file_size_image` int(11) DEFAULT '10485760',
-  `max_file_size_video` int(11) DEFAULT '31457280',
-  `max_file_size_audio` int(11) DEFAULT '10485760'
+  `max_file_size_image` bigint(20) DEFAULT '10485760',
+  `max_file_size_video` bigint(20) DEFAULT '31457280',
+  `max_file_size_audio` bigint(20) DEFAULT '10485760',
+  `google_adsense_code` varchar(2000) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `general_settings`
 --
 
-INSERT INTO `general_settings` (`id`, `physical_products_system`, `digital_products_system`, `marketplace_system`, `classified_ads_system`, `multi_vendor_system`, `site_lang`, `timezone`, `application_name`, `selected_navigation`, `menu_limit`, `recaptcha_site_key`, `recaptcha_secret_key`, `recaptcha_lang`, `head_code`, `mail_library`, `mail_protocol`, `mail_host`, `mail_port`, `mail_username`, `mail_password`, `mail_title`, `email_verification`, `facebook_app_id`, `facebook_app_secret`, `google_client_id`, `google_client_secret`, `google_analytics`, `default_product_location`, `promoted_products`, `multilingual_system`, `product_comments`, `product_reviews`, `user_reviews`, `blog_comments`, `index_slider`, `index_categories`, `index_promoted_products`, `index_promoted_products_count`, `index_latest_products`, `index_latest_products_count`, `index_blog_slider`, `product_link_structure`, `mds_key`, `purchase_code`, `site_color`, `logo`, `logo_email`, `favicon`, `facebook_comment`, `facebook_comment_status`, `cache_system`, `refresh_cache_database_changes`, `cache_refresh_time`, `rss_system`, `approve_before_publishing`, `commission_rate`, `send_email_new_product`, `send_email_buyer_purchase`, `send_email_contact_messages`, `send_email_order_shipped`, `mail_options_account`, `maintenance_mode_title`, `maintenance_mode_description`, `maintenance_mode_status`, `max_file_size_image`, `max_file_size_video`, `max_file_size_audio`) VALUES
-(1, 1, 1, 1, 1, 1, 1, 'America/New_York', 'Modesy', 1, 8, '', '', 'en', '', '', '', '', '', '', '', '', 0, '', '', '', '', NULL, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 8, 1, 12, 1, 'slug-id', '', '', 'default', NULL, NULL, NULL, '', 0, 0, 0, 1800, 1, 1, 10, 0, 0, 0, 0, '', 'Coming Soon', 'Our website is under construction. We\'ll be here soon with our new awesome site.', 0, 10485760, 10485760, 10485760);
+INSERT INTO `general_settings` (`id`, `physical_products_system`, `digital_products_system`, `marketplace_system`, `classified_ads_system`, `bidding_system`, `multi_vendor_system`, `site_lang`, `timezone`, `application_name`, `selected_navigation`, `menu_limit`, `recaptcha_site_key`, `recaptcha_secret_key`, `recaptcha_lang`, `head_code`, `mail_library`, `mail_protocol`, `mail_host`, `mail_port`, `mail_username`, `mail_password`, `mail_title`, `email_verification`, `facebook_app_id`, `facebook_app_secret`, `google_client_id`, `google_client_secret`, `google_analytics`, `default_product_location`, `promoted_products`, `multilingual_system`, `product_comments`, `product_reviews`, `user_reviews`, `blog_comments`, `index_slider`, `index_categories`, `index_promoted_products`, `index_promoted_products_count`, `index_latest_products`, `index_latest_products_count`, `index_blog_slider`, `product_link_structure`, `mds_key`, `purchase_code`, `site_color`, `logo`, `logo_email`, `favicon`, `watermark_image_large`, `watermark_image_mid`, `watermark_image_small`, `watermark_vrt_alignment`, `watermark_hor_alignment`, `watermark_product_images`, `watermark_blog_images`, `watermark_thumbnail_images`, `facebook_comment`, `facebook_comment_status`, `cache_system`, `refresh_cache_database_changes`, `cache_refresh_time`, `rss_system`, `approve_before_publishing`, `commission_rate`, `send_email_new_product`, `send_email_buyer_purchase`, `send_email_contact_messages`, `send_email_order_shipped`, `send_email_shop_opening_request`, `send_email_bidding_system`, `mail_options_account`, `vendor_verification_system`, `guest_checkout`, `maintenance_mode_title`, `maintenance_mode_description`, `maintenance_mode_status`, `max_file_size_image`, `max_file_size_video`, `max_file_size_audio`, `google_adsense_code`) VALUES
+(1, 1, 1, 1, 1, 1, 1, 1, 'America/New_York', 'Modesy', 1, 8, '', '', 'en', '', '', '', '', '', '', '', '', 0, '', '', '', '', NULL, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 8, 1, 12, 1, 'slug-id', '', '', 'default', NULL, NULL, NULL, NULL, NULL, NULL, 'middle', 'center', 0, 0, 0, '', 0, 0, 0, 1800, 1, 1, 10, 0, 0, 0, 0, 0, 0, '', 1, 0, 'Coming Soon', 'Our website is under construction. We\'ll be here soon with our new awesome site.', 0, 10485760, 10485760, 10485760, NULL);
 
 -- --------------------------------------------------------
 
@@ -1180,17 +1194,30 @@ CREATE TABLE `payment_settings` (
   `paypal_enabled` tinyint(1) DEFAULT '0',
   `paypal_mode` varchar(30) DEFAULT 'live',
   `paypal_client_id` varchar(500) DEFAULT NULL,
+  `paypal_secret_key` varchar(500) DEFAULT NULL,
   `stripe_enabled` tinyint(1) DEFAULT '0',
   `stripe_publishable_key` varchar(500) DEFAULT NULL,
   `stripe_secret_key` varchar(500) DEFAULT NULL,
+  `paystack_enabled` tinyint(1) DEFAULT '0',
+  `paystack_secret_key` varchar(500) DEFAULT NULL,
+  `paystack_public_key` varchar(500) DEFAULT NULL,
+  `razorpay_enabled` tinyint(1) DEFAULT '0',
+  `razorpay_key_id` varchar(500) DEFAULT NULL,
+  `razorpay_key_secret` varchar(500) DEFAULT NULL,
+  `pagseguro_enabled` tinyint(1) DEFAULT '0',
+  `pagseguro_mode` varchar(20) DEFAULT 'production',
+  `pagseguro_email` varchar(255) DEFAULT NULL,
+  `pagseguro_token` varchar(500) DEFAULT NULL,
   `iyzico_enabled` tinyint(1) DEFAULT '0',
   `iyzico_mode` varchar(30) DEFAULT 'live',
   `iyzico_api_key` varchar(500) DEFAULT NULL,
   `iyzico_secret_key` varchar(500) DEFAULT NULL,
   `bank_transfer_enabled` tinyint(1) DEFAULT '0',
   `bank_transfer_accounts` text,
+  `cash_on_delivery_enabled` tinyint(1) DEFAULT '1',
   `price_per_day` bigint(20) DEFAULT '1',
   `price_per_month` bigint(20) DEFAULT '3',
+  `free_product_promotion` tinyint(1) DEFAULT '0',
   `payout_paypal_enabled` tinyint(1) DEFAULT '1',
   `payout_iban_enabled` tinyint(1) DEFAULT '1',
   `payout_swift_enabled` tinyint(1) DEFAULT '1',
@@ -1203,8 +1230,8 @@ CREATE TABLE `payment_settings` (
 -- Dumping data for table `payment_settings`
 --
 
-INSERT INTO `payment_settings` (`id`, `default_product_currency`, `allow_all_currencies_for_classied`, `promoted_products_payment_currency`, `currency_format`, `currency_symbol_format`, `paypal_enabled`, `paypal_mode`, `paypal_client_id`, `stripe_enabled`, `stripe_publishable_key`, `stripe_secret_key`, `iyzico_enabled`, `iyzico_mode`, `iyzico_api_key`, `iyzico_secret_key`, `bank_transfer_enabled`, `bank_transfer_accounts`, `price_per_day`, `price_per_month`, `payout_paypal_enabled`, `payout_iban_enabled`, `payout_swift_enabled`, `min_payout_paypal`, `min_payout_iban`, `min_payout_swift`) VALUES
-(1, 'USD', 1, 'USD', 'us', 'left', 0, 'sandbox', NULL, 0, NULL, NULL, 0, 'sandbox', NULL, NULL, 1, NULL, 10, 100, 1, 1, 1, 5000, 5000, 50000);
+INSERT INTO `payment_settings` (`id`, `default_product_currency`, `allow_all_currencies_for_classied`, `promoted_products_payment_currency`, `currency_format`, `currency_symbol_format`, `paypal_enabled`, `paypal_mode`, `paypal_client_id`, `paypal_secret_key`, `stripe_enabled`, `stripe_publishable_key`, `stripe_secret_key`, `paystack_enabled`, `paystack_secret_key`, `paystack_public_key`, `razorpay_enabled`, `razorpay_key_id`, `razorpay_key_secret`, `pagseguro_enabled`, `pagseguro_mode`, `pagseguro_email`, `pagseguro_token`, `iyzico_enabled`, `iyzico_mode`, `iyzico_api_key`, `iyzico_secret_key`, `bank_transfer_enabled`, `bank_transfer_accounts`, `cash_on_delivery_enabled`, `price_per_day`, `price_per_month`, `free_product_promotion`, `payout_paypal_enabled`, `payout_iban_enabled`, `payout_swift_enabled`, `min_payout_paypal`, `min_payout_iban`, `min_payout_swift`) VALUES
+(1, 'USD', 1, 'USD', 'us', 'left', 0, 'sandbox', NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, 'production', NULL, NULL, 0, 'sandbox', NULL, NULL, 1, NULL, 1, 10, 100, 0, 1, 1, 1, 5000, 5000, 50000);
 
 -- --------------------------------------------------------
 
@@ -1235,8 +1262,6 @@ CREATE TABLE `products` (
   `product_type` varchar(20) DEFAULT 'physical',
   `listing_type` varchar(20) DEFAULT 'sell_on_site',
   `category_id` int(11) DEFAULT NULL,
-  `subcategory_id` int(11) DEFAULT NULL,
-  `third_category_id` int(11) DEFAULT NULL,
   `price` bigint(20) DEFAULT NULL,
   `currency` varchar(20) DEFAULT NULL,
   `description` text,
@@ -1266,7 +1291,21 @@ CREATE TABLE `products` (
   `is_sold` tinyint(1) DEFAULT '0',
   `is_deleted` tinyint(1) DEFAULT '0',
   `is_draft` tinyint(1) DEFAULT '0',
+  `is_free_product` tinyint(1) DEFAULT '0',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product_license_keys`
+--
+
+CREATE TABLE `product_license_keys` (
+  `id` bigint(20) NOT NULL,
+  `product_id` int(11) DEFAULT NULL,
+  `license_key` varchar(500) DEFAULT NULL,
+  `is_used` tinyint(1) DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -1353,6 +1392,29 @@ CREATE TABLE `promoted_transactions` (
   `purchased_plan` varchar(255) DEFAULT NULL,
   `day_count` int(11) DEFAULT NULL,
   `ip_address` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `quote_requests`
+--
+
+CREATE TABLE `quote_requests` (
+  `id` int(11) NOT NULL,
+  `product_id` int(11) DEFAULT NULL,
+  `product_title` varchar(500) DEFAULT NULL,
+  `product_quantity` mediumint(9) DEFAULT '1',
+  `seller_id` int(11) DEFAULT NULL,
+  `buyer_id` int(11) DEFAULT NULL,
+  `status` varchar(20) DEFAULT 'pending',
+  `price_offered` bigint(20) DEFAULT NULL,
+  `price_currency` varchar(20) DEFAULT NULL,
+  `shipping_cost` bigint(20) DEFAULT NULL,
+  `is_buyer_deleted` tinyint(1) DEFAULT '0',
+  `is_seller_deleted` tinyint(1) DEFAULT '0',
+  `updated_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -5867,6 +5929,12 @@ ALTER TABLE `products`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `product_license_keys`
+--
+ALTER TABLE `product_license_keys`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `product_options`
 --
 ALTER TABLE `product_options`
@@ -5888,6 +5956,12 @@ ALTER TABLE `product_variations_options`
 -- Indexes for table `promoted_transactions`
 --
 ALTER TABLE `promoted_transactions`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `quote_requests`
+--
+ALTER TABLE `quote_requests`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -6189,6 +6263,12 @@ ALTER TABLE `products`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `product_license_keys`
+--
+ALTER TABLE `product_license_keys`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `product_options`
 --
 ALTER TABLE `product_options`
@@ -6210,6 +6290,12 @@ ALTER TABLE `product_variations_options`
 -- AUTO_INCREMENT for table `promoted_transactions`
 --
 ALTER TABLE `promoted_transactions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `quote_requests`
+--
+ALTER TABLE `quote_requests`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --

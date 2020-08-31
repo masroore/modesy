@@ -192,6 +192,7 @@ class File_controller extends Home_Core_Controller
     //download purchased digital file
     public function download_purchased_digital_file()
     {
+        post_method();
         if (!auth_check()) {
             redirect($this->agent->referrer());
         }
@@ -199,12 +200,32 @@ class File_controller extends Home_Core_Controller
         $sale = $this->product_model->get_digital_sale($sale_id);
         if (!empty($sale)) {
             if ($sale->buyer_id == user()->id) {
-                $file = $this->file_model->get_product_digital_file($sale->product_id);
-                $this->load->helper('download');
-                force_download(FCPATH . 'uploads/digital-files/' . $file->file_name, null);
+                $submit = $this->input->post('submit', true);
+                if ('license_certificate' == $submit) {
+                    //download license certificate
+                    $this->file_model->create_license_key_file($sale);
+                } else {
+                    $file = $this->file_model->get_product_digital_file($sale->product_id);
+                    $this->load->helper('download');
+                    @force_download(FCPATH . 'uploads/digital-files/' . $file->file_name, null);
+                }
             }
         }
         redirect($this->agent->referrer());
+    }
+
+    //download free digital file
+    public function download_free_digital_file()
+    {
+        if (!auth_check()) {
+            redirect($this->agent->referrer());
+        }
+        $product_id = $this->input->post('product_id', true);
+        $file = $this->file_model->get_product_digital_file($product_id);
+        if (!empty($file)) {
+            $this->load->helper('download');
+            @force_download(FCPATH . 'uploads/digital-files/' . $file->file_name, null);
+        }
     }
 
     /**

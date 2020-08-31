@@ -4,65 +4,18 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Promote_model extends CI_Model
 {
-    //execute promote payment paypal
-    public function execute_promote_payment_paypal($promoted_plan)
+    //execute promote payment
+    public function execute_promote_payment($data_transaction)
     {
+        $promoted_plan = $this->session->userdata('modesy_selected_promoted_plan');
         $data = [
-            'payment_method' => 'Paypal',
-            'payment_id' => $this->input->post('payment_id', true),
+            'payment_method' => $data_transaction['payment_method'],
+            'payment_id' => $data_transaction['payment_id'],
             'user_id' => user()->id,
             'product_id' => $promoted_plan->product_id,
-            'currency' => $this->input->post('currency', true),
-            'payment_amount' => $this->input->post('payment_amount', true),
-            'payment_status' => $this->input->post('payment_status', true),
-            'purchased_plan' => $promoted_plan->purchased_plan,
-            'day_count' => $promoted_plan->day_count,
-            'ip_address' => 0,
-            'created_at' => date('Y-m-d H:i:s'),
-        ];
-        $ip = $this->input->ip_address();
-        if (!empty($ip)) {
-            $data['ip_address'] = $ip;
-        }
-        $this->db->insert('promoted_transactions', $data);
-    }
-
-    //execute promote payment stripe
-    public function execute_promote_payment_stripe($promoted_plan)
-    {
-        $payment_amount = $this->input->post('payment_amount', true);
-        $payment_amount = price_format_decimal($payment_amount);
-        $data = [
-            'payment_method' => 'Stripe',
-            'payment_id' => $this->input->post('payment_id', true),
-            'user_id' => user()->id,
-            'product_id' => $promoted_plan->product_id,
-            'currency' => $this->input->post('currency', true),
-            'payment_amount' => $payment_amount,
-            'payment_status' => $this->input->post('payment_status', true),
-            'purchased_plan' => $promoted_plan->purchased_plan,
-            'day_count' => $promoted_plan->day_count,
-            'ip_address' => 0,
-            'created_at' => date('Y-m-d H:i:s'),
-        ];
-        $ip = $this->input->ip_address();
-        if (!empty($ip)) {
-            $data['ip_address'] = $ip;
-        }
-        $this->db->insert('promoted_transactions', $data);
-    }
-
-    //execute promote payment iyzico
-    public function execute_promote_payment_iyzico($promoted_plan, $token, $currency, $price)
-    {
-        $data = [
-            'payment_method' => 'Iyzico',
-            'payment_id' => $token,
-            'user_id' => user()->id,
-            'product_id' => $promoted_plan->product_id,
-            'currency' => $currency,
-            'payment_amount' => $price,
-            'payment_status' => 'succeeded',
+            'currency' => $data_transaction['currency'],
+            'payment_amount' =>$data_transaction['payment_amount'],
+            'payment_status' => $data_transaction['payment_status'],
             'purchased_plan' => $promoted_plan->purchased_plan,
             'day_count' => $promoted_plan->day_count,
             'ip_address' => 0,

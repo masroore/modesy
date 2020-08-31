@@ -24,6 +24,7 @@ class Rss_controller extends Home_Core_Controller
         $data['title'] = trans('rss_feeds');
         $data['description'] = trans('rss_feeds') . ' - ' . $this->app_name;
         $data['keywords'] = trans('rss_feeds') . ',' . $this->app_name;
+        $data['user_session'] = get_user_session();
         $this->load->view('partials/_header', $data);
         $this->load->view('rss/rss_feeds', $data);
         $this->load->view('partials/_footer');
@@ -41,6 +42,7 @@ class Rss_controller extends Home_Core_Controller
         $data['page_language'] = $this->selected_lang->short_form;
         $data['creator_email'] = '';
         $data['products'] = $this->product_model->get_products_limited(30);
+        $data['user_session'] = get_user_session();
         header('Content-Type: application/rss+xml; charset=utf-8');
         $this->load->view('rss/rss', $data);
     }
@@ -57,6 +59,7 @@ class Rss_controller extends Home_Core_Controller
         $data['page_language'] = $this->selected_lang->short_form;
         $data['creator_email'] = '';
         $data['products'] = $this->product_model->get_promoted_products();
+        $data['user_session'] = get_user_session();
         header('Content-Type: application/rss+xml; charset=utf-8');
         $this->load->view('rss/rss', $data);
     }
@@ -72,6 +75,7 @@ class Rss_controller extends Home_Core_Controller
             redirect(lang_base_url() . 'rss-feeds');
         }
         $data['products'] = $this->product_model->get_rss_products_by_category($category->id);
+        $data['user_session'] = get_user_session();
         $data['feed_name'] = $this->app_name . ' ' . trans('rss_feeds') . ' - ' . $category->name;
         $data['encoding'] = 'utf-8';
         $data['feed_url'] = lang_base_url() . 'rss/category/' . $slug;
@@ -104,6 +108,7 @@ class Rss_controller extends Home_Core_Controller
         $data['page_description'] = $this->app_name . ' ' . trans('rss_feeds') . ' - ' . $user->username;
         $data['page_language'] = $this->selected_lang->short_form;
         $data['creator_email'] = '';
+        $data['user_session'] = get_user_session();
         header('Content-Type: application/rss+xml; charset=utf-8');
         $this->load->view('rss/rss', $data);
     }

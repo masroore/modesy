@@ -1,9 +1,16 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 
 <div class="box">
-    <div class="box-header with-border">
-        <h3 class="box-title"><?php echo $title; ?></h3>
-    </div><!-- /.box-header -->
+	<div class="box-header with-border">
+		<div class="left">
+			<h3 class="box-title"><?php echo trans('payout_requests'); ?></h3>
+		</div>
+		<div class="right">
+			<a href="<?php echo admin_url(); ?>add-payout" class="btn btn-success btn-add-new">
+				<i class="fa fa-plus"></i>&nbsp;&nbsp;<?php echo trans('add_payout'); ?>
+			</a>
+		</div>
+	</div><!-- /.box-header -->
 
     <div class="box-body">
         <div class="row">

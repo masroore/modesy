@@ -268,5 +268,12 @@
 <style>
     .col-sm-12 label {
         margin-left: 10px;
+		font-weight: 400 !important;
+		-webkit-touch-callout: none;
+		-webkit-user-select: none;
+		-khtml-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
     }
 </style>

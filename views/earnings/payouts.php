@@ -98,7 +98,7 @@
 
                 <div class="row-custom table-earnings-container">
                     <div class="table-responsive">
-                        <table class="table table-orders">
+                        <table class="table table-orders table-striped">
                             <thead>
                             <tr>
                                 <th scope="col"><?php echo trans("withdraw_method"); ?></th>

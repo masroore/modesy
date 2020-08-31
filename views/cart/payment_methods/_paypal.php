@@ -1,71 +1,64 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 <?php if ($cart_payment_method->payment_option == "paypal"): ?>
-    <div class="row">
-        <div class="col-12">
-            <?php $this->load->view('product/_messages'); ?>
-        </div>
-    </div>
-    <div id="payment-button-container" class=paypal-button-cnt">
-        <p class="p-complete-payment"><?php echo trans("msg_complete_payment"); ?></p>
-        <div id="paypal-button"></div>
-    </div>
 
-    <script src="https://www.paypalobjects.com/api/checkout.js"></script>
-    <script>
-        paypal.Button.render({
-            // Configure environment
-            env: paypal_mode,
-            client: {
-                sandbox: paypal_client_id,
-                production: paypal_client_id
-            },
-            // Customize button (optional)
-            locale: 'en_US',
-            style: {
-                size: 'medium',
-                color: 'black',
-                shape: 'rect',
-            },
-            // Enable Pay Now checkout flow (optional)
-            commit: true,
-            // Set up a payment
-            payment: function (data, actions) {
-                return actions.payment.create({
-                    transactions: [{
-                        amount: {
-                            total: total_amount,
-                            currency: currency
-                        }
-                    }]
-                });
-            },
-            // Execute the payment
-            onAuthorize: function (data, actions) {
-                return actions.payment.execute().then(function () {
-                    var data_array = {
-                        'payment_id': data.paymentID,
-                        'currency': currency,
-                        'payment_amount': total_amount,
-                        'payment_status': 'succeeded',
-                        'lang_folder': lang_folder,
-                        'form_lang_base_url': '<?php echo lang_base_url(); ?>'
-                    };
-                    data_array[csfr_token_name] = $.cookie(csfr_cookie_name);
-                    $.ajax({
-                        type: "POST",
-                        url: base_url + "cart_controller/paypal_payment_post",
-                        data: data_array,
-                        success: function (response) {
-                            var obj = JSON.parse(response);
-                            if (obj.result == 1) {
-                                window.location.href = obj.redirect;
-                            } else {
-                                location.reload();
+	<script src="https://www.paypal.com/sdk/js?client-id=<?php echo $payment_settings->paypal_client_id; ?>&currency=<?php echo $currency; ?>"></script>
+
+	<div class="row">
+		<div class="col-12">
+			<?php $this->load->view('product/_messages'); ?>
+		</div>
+	</div>
+	<div id="payment-button-container" class="paypal-button-cnt">
+		<div id="paypal-button-container"></div>
+	</div>
+
+	<script>
+        $(document).ready(function () {
+            paypal.Buttons({
+                createOrder: function (data, actions) {
+                    return actions.order.create({
+                        purchase_units: [{
+                            amount: {
+                                value: '<?php echo price_format_decimal($total_amount); ?>',
                             }
-                        }
+                        }]
                     });
-                });
-            }
-        }, '#paypal-button');
-    </script>
+                },
+                style: {
+                    color: 'gold',
+                },
+                onApprove: function (data, actions) {
+                    // Capture the funds from the transaction
+                    return actions.order.capture().then(function (details) {
+                        var data_array = {
+                            'payment_id': details.id,
+                            'currency': '<?php echo $currency; ?>',
+                            'payment_amount': '<?php echo price_format_decimal($total_amount); ?>',
+                            'payment_status': details.status,
+                            'mds_payment_type': '<?php echo $mds_payment_type; ?>',
+                            'lang_folder': lang_folder,
+                            'form_lang_base_url': '<?php echo lang_base_url(); ?>'
+                        };
+                        data_array[csfr_token_name] = $.cookie(csfr_cookie_name);
+                        $.ajax({
+                            type: "POST",
+                            url: base_url + "cart_controller/paypal_payment_post",
+                            data: data_array,
+                            success: function (response) {
+                                var obj = JSON.parse(response);
+                                if (obj.result == 1) {
+                                    window.location.href = obj.redirect;
+                                } else {
+                                    location.reload();
+                                }
+                            }
+                        });
+                    });
+                },
+                onError: function (error) {
+                    alert(error);
+                }
+            }).render('#paypal-button-container');
+        });
+	</script>
 <?php endif; ?>

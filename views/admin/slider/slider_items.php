@@ -2,11 +2,16 @@
 <div class="row">
     <div class="col-md-12">
         <div class="box">
-            <div class="box-header with-border">
-                <div class="pull-left">
-                    <h3 class="box-title"><?php echo trans('slider_items'); ?></h3>
-                </div>
-            </div><!-- /.box-header -->
+			<div class="box-header with-border">
+				<div class="left">
+					<h3 class="box-title"><?php echo trans('slider_items'); ?></h3>
+				</div>
+				<div class="right">
+					<a href="<?php echo admin_url(); ?>add-slider-item" class="btn btn-success btn-add-new">
+						<i class="fa fa-plus"></i>&nbsp;&nbsp;<?php echo trans('add_slider_item'); ?>
+					</a>
+				</div>
+			</div><!-- /.box-header -->
 
             <!-- include message block -->
             <div class="col-sm-12">

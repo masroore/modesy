@@ -42,23 +42,27 @@ class Slider_model extends CI_Model
             'item_order' => $this->input->post('item_order', true),
         ];
 
-        $this->load->model('upload_model');
-        $temp_path = $this->upload_model->upload_temp_image('file');
-        if (!empty($temp_path)) {
-            delete_file_from_server($item->image);
-            $data['image'] = $this->upload_model->slider_image_upload($temp_path);
-            $this->upload_model->delete_temp_image($temp_path);
-        }
-        $temp_path = $this->upload_model->upload_temp_image('file_small');
-        if (!empty($temp_path)) {
-            delete_file_from_server($item->image_small);
-            $data['image_small'] = $this->upload_model->slider_small_image_upload($temp_path);
-            $this->upload_model->delete_temp_image($temp_path);
+        $item = $this->get_slider_item($id);
+        if (!empty($item)) {
+            $this->load->model('upload_model');
+            $temp_path = $this->upload_model->upload_temp_image('file');
+            if (!empty($temp_path)) {
+                delete_file_from_server($item->image);
+                $data['image'] = $this->upload_model->slider_image_upload($temp_path);
+                $this->upload_model->delete_temp_image($temp_path);
+            }
+            $temp_path = $this->upload_model->upload_temp_image('file_small');
+            if (!empty($temp_path)) {
+                delete_file_from_server($item->image_small);
+                $data['image_small'] = $this->upload_model->slider_small_image_upload($temp_path);
+                $this->upload_model->delete_temp_image($temp_path);
+            }
+            $this->db->where('id', $id);
+
+            return $this->db->update('slider', $data);
         }
 
-        $this->db->where('id', $id);
-
-        return $this->db->update('slider', $data);
+        return false;
     }
 
     //get slider item
@@ -102,6 +106,7 @@ class Slider_model extends CI_Model
                 $this->aws_model->delete_slider_object($slider_item->image);
             } else {
                 delete_file_from_server($slider_item->image);
+                delete_file_from_server($slider_item->image_small);
             }
             $this->db->where('id', $id);
 

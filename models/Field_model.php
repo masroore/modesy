@@ -167,25 +167,19 @@ class Field_model extends CI_Model
     }
 
     //get category fields
-    public function get_category_fields($category_id, $subcategory_id, $third_category_id)
+    public function get_category_fields($category_id)
     {
         $category_id = clean_number($category_id);
-        $subcategory_id = clean_number($subcategory_id);
-        $third_category_id = clean_number($third_category_id);
+        $category_tree_ids = $this->category_model->get_parent_category_tree_ids_string($category_id);
+        if (empty($category_tree_ids)) {
+            return [];
+        }
         $this->db->join('custom_fields_lang', 'custom_fields_lang.field_id = custom_fields.id');
         $this->db->join('custom_fields_category', 'custom_fields_category.field_id = custom_fields.id');
         $this->db->select('custom_fields.*, custom_fields_lang.lang_id as lang_id, custom_fields_lang.name as name, custom_fields_category.category_id as category_id');
         $this->db->where('custom_fields_lang.lang_id', $this->selected_lang->id);
         $this->db->where('custom_fields.status', 1);
-        $this->db->group_start();
-        $this->db->where('custom_fields_category.category_id', $category_id);
-        if (!empty($subcategory_id)) {
-            $this->db->or_where('custom_fields_category.category_id', $subcategory_id);
-        }
-        if (!empty($third_category_id)) {
-            $this->db->or_where('custom_fields_category.category_id', $third_category_id);
-        }
-        $this->db->group_end();
+        $this->db->where('custom_fields_category.category_id IN (' . $category_tree_ids . ')', null, false);
         $this->db->order_by('custom_fields.field_order');
         $query = $this->db->get('custom_fields');
 
@@ -196,13 +190,17 @@ class Field_model extends CI_Model
     public function get_custom_fields_by_lang($category_id, $lang_id)
     {
         $category_id = clean_number($category_id);
+        $category_tree_ids = $this->category_model->get_parent_category_tree_ids_string($category_id);
+        if (empty($category_tree_ids)) {
+            return [];
+        }
         $lang_id = clean_number($lang_id);
         $this->db->join('custom_fields_lang', 'custom_fields_lang.field_id = custom_fields.id');
         $this->db->join('custom_fields_category', 'custom_fields_category.field_id = custom_fields.id');
         $this->db->select('custom_fields.*, custom_fields_lang.lang_id as lang_id, custom_fields_lang.name as name, custom_fields_category.category_id as category_id');
         $this->db->where('custom_fields_lang.lang_id', $lang_id);
         $this->db->where('custom_fields.status', 1);
-        $this->db->where('custom_fields_category.category_id', $category_id);
+        $this->db->where('custom_fields_category.category_id IN (' . $category_tree_ids . ')', null, false);
         $this->db->order_by('custom_fields.field_order');
         $query = $this->db->get('custom_fields');
 
@@ -210,11 +208,9 @@ class Field_model extends CI_Model
     }
 
     //get custom fields
-    public function get_custom_filters($category_id, $subcategory_id, $third_category_id)
+    public function get_custom_filters($category_id)
     {
         $category_id = clean_number($category_id);
-        $subcategory_id = clean_number($subcategory_id);
-        $third_category_id = clean_number($third_category_id);
         $array = [];
         $array_ids = [];
         $array_product_filters = [];
@@ -222,7 +218,7 @@ class Field_model extends CI_Model
             $this->session->unset_userdata('mds_custom_product_filters');
         }
         if (!empty($category_id)) {
-            $custom_fields = $this->get_category_fields($category_id, $subcategory_id, $third_category_id);
+            $custom_fields = $this->get_category_fields($category_id);
         } else {
             $custom_fields = $this->get_fields();
         }
@@ -254,15 +250,13 @@ class Field_model extends CI_Model
     }
 
     //generate custom fields array
-    public function generate_custom_fields_array($category_id, $subcategory_id, $third_category_id, $product_id)
+    public function generate_custom_fields_array($category_id, $product_id)
     {
         $category_id = clean_number($category_id);
-        $subcategory_id = clean_number($subcategory_id);
-        $third_category_id = clean_number($third_category_id);
         $product_id = clean_number($product_id);
 
         $array = [];
-        $custom_fields = $this->field_model->get_category_fields($category_id, $subcategory_id, $third_category_id);
+        $custom_fields = $this->field_model->get_category_fields($category_id);
         foreach ($custom_fields as $custom_field) {
             $data = new stdClass();
             $data->id = $custom_field->id;
@@ -381,10 +375,19 @@ class Field_model extends CI_Model
     }
 
     //add category to field
-    public function add_category_to_field($field_id, $category_id)
+    public function add_category_to_field()
     {
-        $field_id = clean_number($field_id);
-        $category_id = clean_number($category_id);
+        $field_id = clean_number($this->input->post('field_id'));
+        $category_id = 0;
+        $category_ids_array = $this->input->post('category_id', true);
+        if (!empty($category_ids_array)) {
+            foreach ($category_ids_array as $key => $value) {
+                if (!empty($value)) {
+                    $category_id = $value;
+                }
+            }
+        }
+
         $row = $this->get_category_field($field_id, $category_id);
         if (empty($row)) {
             $data = [

@@ -158,7 +158,7 @@
                                 <input type="hidden" name="receiver_id" value="<?php echo $conversation->sender_id; ?>">
                             <?php endif; ?>
                             <div class="form-group">
-                                <textarea class="form-control" name="message" placeholder="<?php echo trans('write_a_message'); ?>" required></textarea>
+                                <textarea class="form-control form-textarea" name="message" placeholder="<?php echo trans('write_a_message'); ?>" required></textarea>
                             </div>
                             <div class="form-group">
                                 <button type="submit" class="btn btn-md btn-custom float-right"><i class="icon-send"></i> <?php echo trans("send"); ?></button>
@@ -175,30 +175,4 @@
     </div>
 </div>
 <!-- Wrapper End-->
-
-<?php if (!empty($this->session->userdata('mds_send_email_new_message'))): ?>
-    <script>
-        $(document).ready(function () {
-            var data = {
-                "receiver_id": '<?php echo $this->session->userdata('mds_send_email_new_message_send_to'); ?>',
-                "message_subject": '<?php echo html_escape($conversation->subject); ?>',
-                "message_text": '<?php echo $this->session->userdata('mds_send_email_new_message_text'); ?>',
-                'lang_folder': lang_folder,
-                'form_lang_base_url': '<?php echo lang_base_url(); ?>'
-            };
-            data[csfr_token_name] = $.cookie(csfr_cookie_name);
-            $.ajax({
-                type: "POST",
-                url: base_url + "ajax_controller/send_email_new_message",
-                data: data,
-                success: function (response) {
-                }
-            });
-        });
-    </script>
-    <?php
-    $this->session->unset_userdata('mds_send_email_new_message');
-    $this->session->unset_userdata('mds_send_email_new_message_send_to');
-    $this->session->unset_userdata('mds_send_email_new_message_text');
-endif; ?>
 

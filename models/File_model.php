@@ -209,6 +209,16 @@ class File_model extends Core_Model
         return $rows;
     }
 
+    //get product images uncached
+    public function get_product_images_uncached($product_id)
+    {
+        $this->db->where('product_id', $product_id);
+        $this->db->order_by('images.is_main', 'DESC');
+        $query = $this->db->get('images');
+
+        return $query->result();
+    }
+
     //get product image
     public function get_image($image_id)
     {
@@ -251,6 +261,7 @@ class File_model extends Core_Model
                     $item->img_big = $modesy_image->img_big;
                     $item->img_small = $modesy_image->img_small;
                     $item->file_id = $modesy_image->file_id;
+                    $item->is_main = $modesy_image->is_main;
                     $item->file_time = $modesy_image->file_time;
                     array_push($modesy_images_new, $item);
                 }
@@ -413,33 +424,13 @@ class File_model extends Core_Model
             } else {
                 $file_name = $name_slug . '-' . $product->id . '-' . uniqid() . '.' . $ext;
             }
-
-            $is_uploaded = false;
-            $storage = 'local';
-            if ('aws_s3' == $this->storage_settings->storage) {
-                $this->load->model('aws_model');
-                $storage = 'aws_s3';
-                if (isset($_FILES['file'])) {
-                    if (empty($_FILES['file']['name'])) {
-                        return;
-                    }
-                }
-                if ($this->aws_model->put_video_object($file_name, $_FILES['file']['tmp_name'])) {
-                    $is_uploaded = true;
-                }
-            } else {
-                $this->load->model('upload_model');
-                if ($this->upload_model->digital_file_upload('file', $file_name)) {
-                    $is_uploaded = true;
-                }
-            }
-            //add to database
-            if (!empty($file_name) && true == $is_uploaded) {
+            $this->load->model('upload_model');
+            if ($this->upload_model->digital_file_upload('file', $file_name)) {
                 $data = [
                     'product_id' => $product_id,
                     'user_id' => $this->user_id,
                     'file_name' => $file_name,
-                    'storage' => $storage,
+                    'storage' => 'local',
                     'created_at' => date('Y-m-d H:i:s'),
                 ];
                 $this->db->insert('digital_files', $data);
@@ -463,6 +454,48 @@ class File_model extends Core_Model
         $query = $this->db->get('digital_files');
 
         return $query->row();
+    }
+
+    //create license key file
+    public function create_license_key_file($sale)
+    {
+        $seller = get_user($sale->seller_id);
+        $buyer = get_user($sale->buyer_id);
+        $product = get_product($sale->product_id);
+
+        $text = "\n" . strtoupper($this->general_settings->application_name) . ' ' . strtoupper(trans('license_certificate')) . "\n==============================================\n\n";
+        if (!empty($product)) {
+            $text .= trans('product') . ":\n";
+            $text .= $product->title . "\n\n";
+            $text .= trans('product_url') . ":\n";
+            $text .= generate_product_url($product) . "\n\n";
+        }
+        if (!empty($seller)) {
+            $text .= trans('seller') . ":\n";
+            $text .= $seller->username . "\n\n";
+        }
+        if (!empty($buyer)) {
+            $text .= trans('buyer') . ":\n";
+            $text .= $buyer->username . "\n\n";
+        }
+        $text .= trans('purchase_code') . ":\n";
+        $text .= $sale->purchase_code . "\n\n";
+        if (!empty($sale->license_key)) {
+            $text .= trans('license_key') . ":\n";
+            $text .= $sale->license_key . "\n\n";
+        }
+
+        $handle = fopen('license_certificate.txt', 'w');
+        fwrite($handle, $text);
+        fclose($handle);
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename=' . basename('license_certificate.txt'));
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize('license_certificate.txt'));
+        readfile('license_certificate.txt');
+        exit();
     }
 
     //delete digital file

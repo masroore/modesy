@@ -27,6 +27,7 @@ class Admin_controller extends Admin_Core_Controller
 
         $data['latest_pending_products'] = $this->product_admin_model->get_latest_pending_products(15);
         $data['latest_products'] = $this->product_admin_model->get_latest_products(15);
+        $data['admin_settings'] = get_admin_settings();
 
         $data['latest_reviews'] = $this->review_model->get_latest_reviews(15);
         $data['latest_comments'] = $this->comment_model->get_latest_comments(15);
@@ -80,6 +81,7 @@ class Admin_controller extends Admin_Core_Controller
     public function add_slider_item()
     {
         $data['title'] = trans('add_slider_item');
+        $data['admin_settings'] = get_admin_settings();
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/slider/add_item', $data);
         $this->load->view('admin/includes/_footer');
@@ -141,6 +143,44 @@ class Admin_controller extends Admin_Core_Controller
         $id = $this->input->post('id', true);
         if ($this->slider_model->delete_slider_item($id)) {
             $this->session->set_flashdata('success', trans('msg_slider_deleted'));
+        } else {
+            $this->session->set_flashdata('error', trans('msg_error'));
+        }
+    }
+
+    /*
+    *-------------------------------------------------------------------------------------------------
+    * BIDDING SYSTEM
+    *-------------------------------------------------------------------------------------------------
+    */
+
+    /**
+     * Quote Requests.
+     */
+    public function quote_requests()
+    {
+        $this->load->model('bidding_model');
+        $data['title'] = trans('quote_requests');
+        $data['form_action'] = admin_url() . 'quote-requests';
+        $data['admin_settings'] = get_admin_settings();
+        //get paginated requests
+        $pagination = $this->paginate(admin_url() . 'quote-requests', $this->bidding_model->get_admin_quote_requests_count());
+        $data['quote_requests'] = $this->bidding_model->get_admin_paginated_quote_requests($pagination['per_page'], $pagination['offset']);
+
+        $this->load->view('admin/includes/_header', $data);
+        $this->load->view('admin/bidding/quote_requests', $data);
+        $this->load->view('admin/includes/_footer');
+    }
+
+    /**
+     * Delete Quote Request.
+     */
+    public function delete_quote_request_post()
+    {
+        $this->load->model('bidding_model');
+        $id = $this->input->post('id', true);
+        if ($this->bidding_model->delete_admin_quote_request($id)) {
+            $this->session->set_flashdata('success', trans('msg_deleted'));
         } else {
             $this->session->set_flashdata('error', trans('msg_error'));
         }
@@ -322,10 +362,26 @@ class Admin_controller extends Admin_Core_Controller
         redirect($this->agent->referrer());
     }
 
+    /**
+     * Google Adsense Code Post.
+     */
+    public function google_adsense_code_post()
+    {
+        if ($this->ad_model->update_google_adsense_code()) {
+            $this->session->set_flashdata('success', trans('msg_updated'));
+            $this->session->set_flashdata('mes_adsense', 1);
+        } else {
+            $this->session->set_flashdata('error', trans('msg_error'));
+            $this->session->set_flashdata('mes_adsense', 1);
+        }
+        redirect($this->agent->referrer());
+    }
+
     // Seo Tools
     public function seo_tools()
     {
         $data['title'] = trans('seo_tools');
+        $data['admin_settings'] = get_admin_settings();
         $data['current_lang_id'] = $this->input->get('lang', true);
 
         if (empty($data['current_lang_id'])) {
@@ -366,6 +422,7 @@ class Admin_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('currency_settings');
         $data['currencies'] = $this->currency_model->get_currencies();
+        $data['admin_settings'] = get_admin_settings();
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/currency/currency_settings', $data);
         $this->load->view('admin/includes/_footer');
@@ -459,6 +516,7 @@ class Admin_controller extends Admin_Core_Controller
         $data['title'] = trans('email_settings');
 
         $data['general_settings'] = $this->settings_model->get_general_settings();
+        $data['admin_settings'] = get_admin_settings();
         $data['library'] = $this->input->get('library');
         if (empty($data['library'])) {
             $data['library'] = 'swift';
@@ -553,10 +611,29 @@ class Admin_controller extends Admin_Core_Controller
         }
     }
 
+    /**
+     * Update Watermak Category.
+     */
+    public function update_watermark_settings_post()
+    {
+        $this->settings_model->update_watermark_settings();
+        redirect($this->agent->referrer());
+    }
+
+    /**
+     * Delete Category Watermak.
+     */
+    public function delete_category_watermark_post()
+    {
+        $this->settings_model->delete_category_watermark();
+        redirect($this->agent->referrer());
+    }
+
     // System Settings
     public function system_settings()
     {
         $data['title'] = trans('system_settings');
+        $data['admin_settings'] = get_admin_settings();
         $data['system_settings'] = $this->settings_model->get_system_settings();
         $data['currencies'] = $this->currency_model->get_currencies();
 
@@ -581,8 +658,8 @@ class Admin_controller extends Admin_Core_Controller
 
         $marketplace_system = $this->input->post('marketplace_system', true);
         $classified_ads_system = $this->input->post('classified_ads_system', true);
-        $offer_system = $this->input->post('offer_system', true);
-        if (0 == $marketplace_system && 0 == $classified_ads_system && 0 == $offer_system) {
+        $bidding_system = $this->input->post('bidding_system', true);
+        if (0 == $marketplace_system && 0 == $classified_ads_system && 0 == $bidding_system) {
             $this->session->set_flashdata('error', trans('msg_error_selected_system'));
             redirect($this->agent->referrer());
             exit();
@@ -755,9 +832,31 @@ class Admin_controller extends Admin_Core_Controller
      */
     public function approve_shop_opening_request()
     {
-        $id = $this->input->post('id', true);
-        if ($this->auth_model->approve_shop_opening_request($id)) {
+        $user_id = $this->input->post('id', true);
+        if ($this->auth_model->approve_shop_opening_request($user_id)) {
             $this->session->set_flashdata('success', trans('msg_updated'));
+
+            $submit = $this->input->post('submit', true);
+            $email_content = trans('your_shop_opening_request_approved');
+            $email_button_text = trans('start_selling');
+            if (0 == $submit) {
+                $email_content = trans('msg_shop_request_declined');
+                $email_button_text = trans('view_site');
+            }
+
+            //send email
+            $user = get_user($user_id);
+            if (!empty($user) && 1 == $this->general_settings->send_email_shop_opening_request) {
+                $email_data = [
+                    'email_type' => 'email_general',
+                    'to' => $user->email,
+                    'subject' => trans('shop_opening_request'),
+                    'email_content' => $email_content,
+                    'email_link' => base_url(),
+                    'email_button_text' => $email_button_text,
+                ];
+                $this->session->set_userdata('mds_send_email_data', json_encode($email_data));
+            }
         } else {
             $this->session->set_flashdata('error', trans('msg_error'));
         }
@@ -822,6 +921,7 @@ class Admin_controller extends Admin_Core_Controller
      */
     public function storage()
     {
+        $data['admin_settings'] = get_admin_settings();
         $data['title'] = trans('storage');
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/storage', $data);
@@ -890,6 +990,7 @@ class Admin_controller extends Admin_Core_Controller
     public function preferences()
     {
         $data['title'] = trans('preferences');
+        $data['admin_settings'] = get_admin_settings();
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/preferences', $data);
         $this->load->view('admin/includes/_footer');
@@ -900,12 +1001,17 @@ class Admin_controller extends Admin_Core_Controller
      */
     public function preferences_post()
     {
-        if ($this->settings_model->update_preferences()) {
-            $admin_panel_link = $this->input->post('admin_panel_link', true);
-            $this->settings_model->update_admin_panel_link($admin_panel_link);
+        $form = $this->input->post('submit', true);
+        $this->session->set_flashdata('mes_' . $form, 1);
+        if ($this->settings_model->update_preferences($form)) {
+            if ('general' == $form) {
+                $admin_panel_link = $this->input->post('admin_panel_link', true);
+                $this->settings_model->update_admin_panel_link($admin_panel_link);
+                sleep(1);
+            }
+
             $this->session->set_flashdata('success', trans('msg_updated'));
             //reset cache
-            reset_cache_data_on_change();
             redirect(admin_url() . 'preferences');
         } else {
             $this->session->set_flashdata('error', trans('msg_error'));
@@ -927,6 +1033,7 @@ class Admin_controller extends Admin_Core_Controller
 
         $data['settings'] = $this->settings_model->get_settings($data['settings_lang']);
         $data['general_settings'] = $this->settings_model->get_general_settings();
+        $data['admin_settings'] = get_admin_settings();
         $this->load->view('admin/includes/_header', $data);
         $this->load->view('admin/settings/settings', $data);
         $this->load->view('admin/includes/_footer');
@@ -1055,6 +1162,7 @@ class Admin_controller extends Admin_Core_Controller
     public function countries()
     {
         $data['title'] = trans('countries');
+        $data['admin_settings'] = get_admin_settings();
         //get paginated products
         $pagination = $this->paginate(admin_url() . 'countries', $this->location_model->get_paginated_countries_count());
         $data['countries'] = $this->location_model->get_paginated_countries($pagination['per_page'], $pagination['offset']);
@@ -1160,6 +1268,7 @@ class Admin_controller extends Admin_Core_Controller
     {
         $data['title'] = trans('states');
         $data['countries'] = $this->location_model->get_countries();
+        $data['admin_settings'] = get_admin_settings();
         //get paginated states
         $pagination = $this->paginate(admin_url() . 'states', $this->location_model->get_paginated_states_count());
         $data['states'] = $this->location_model->get_paginated_states($pagination['per_page'], $pagination['offset']);
@@ -1273,6 +1382,7 @@ class Admin_controller extends Admin_Core_Controller
         $data['title'] = trans('cities');
         $data['countries'] = $this->location_model->get_countries();
         $data['states'] = $this->location_model->get_states();
+        $data['admin_settings'] = get_admin_settings();
         //get paginated cities
         $pagination = $this->paginate(admin_url() . 'cities', $this->location_model->get_paginated_cities_count());
         $data['cities'] = $this->location_model->get_paginated_cities($pagination['per_page'], $pagination['offset']);

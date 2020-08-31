@@ -123,7 +123,7 @@ class Blog_model extends CI_Model
     //get post by slug
     public function get_post_by_slug($slug)
     {
-        $slug = clean_slug($slug);
+        $slug = remove_special_characters($slug);
         $this->db->join('blog_categories', 'blog_posts.category_id= blog_categories.id');
         $this->db->select('blog_posts.*, blog_categories.name as category_name, blog_categories.slug as category_slug');
         $this->db->where('blog_posts.slug', $slug);
@@ -244,7 +244,7 @@ class Blog_model extends CI_Model
     //get paginated tag posts
     public function get_paginated_tag_posts($per_page, $offset, $tag_slug)
     {
-        $tag_slug = clean_slug($tag_slug);
+        $tag_slug = remove_special_characters($tag_slug);
         $this->db->join('blog_tags', 'blog_posts.id= blog_tags.post_id');
         $this->db->join('blog_categories', 'blog_posts.category_id= blog_categories.id');
         $this->db->select('blog_posts.*, blog_categories.name as category_name, blog_categories.slug as category_slug');
@@ -260,7 +260,7 @@ class Blog_model extends CI_Model
     //get paginated tag posts count
     public function get_paginated_tag_posts_count($tag_slug)
     {
-        $tag_slug = clean_slug($tag_slug);
+        $tag_slug = remove_special_characters($tag_slug);
         $this->db->join('blog_tags', 'blog_posts.id= blog_tags.post_id');
         $this->db->join('blog_categories', 'blog_posts.category_id= blog_categories.id');
         $this->db->select('blog_posts.*, blog_categories.name as category_name, blog_categories.slug as category_slug');

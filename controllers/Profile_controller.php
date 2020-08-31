@@ -25,6 +25,7 @@ class Profile_controller extends Home_Core_Controller
         $data['description'] = $data['user']->username . ' - ' . $this->app_name;
         $data['keywords'] = $data['user']->username . ',' . $this->app_name;
         $data['active_tab'] = 'products';
+        $data['user_session'] = get_user_session();
         if ('member' == $data['user']->role) {
             redirect(lang_base_url() . 'favorites/' . $data['user']->slug);
         }
@@ -57,6 +58,7 @@ class Profile_controller extends Home_Core_Controller
         //set pagination
         $pagination = $this->paginate(lang_base_url() . 'pending-products', $this->product_model->get_user_pending_products_count($data['user']->id), $this->pagination_per_page);
         $data['products'] = $this->product_model->get_paginated_user_pending_products($data['user']->id, $pagination['per_page'], $pagination['offset']);
+        $data['user_session'] = get_user_session();
 
         $this->load->view('partials/_header', $data);
         $this->load->view('profile/pending_products', $data);
@@ -82,6 +84,7 @@ class Profile_controller extends Home_Core_Controller
         //set pagination
         $pagination = $this->paginate(lang_base_url() . 'drafts', $this->product_model->get_user_drafts_count($data['user']->id), $this->pagination_per_page);
         $data['products'] = $this->product_model->get_paginated_user_drafts($data['user']->id, $pagination['per_page'], $pagination['offset']);
+        $data['user_session'] = get_user_session();
         $this->load->view('partials/_header', $data);
         $this->load->view('profile/drafts', $data);
         $this->load->view('partials/_footer');
@@ -95,7 +98,10 @@ class Profile_controller extends Home_Core_Controller
         if (!auth_check()) {
             redirect(lang_base_url());
         }
-        if (!is_marketplace_active()) {
+        if (!is_sale_active()) {
+            redirect(lang_base_url());
+        }
+        if (0 == $this->general_settings->digital_products_system) {
             redirect(lang_base_url());
         }
         $data['user'] = user();
@@ -106,6 +112,7 @@ class Profile_controller extends Home_Core_Controller
         //set pagination
         $pagination = $this->paginate(lang_base_url() . 'downloads', $this->product_model->get_user_downloads_count($data['user']->id), $this->pagination_per_page);
         $data['items'] = $this->product_model->get_paginated_user_downloads($data['user']->id, $pagination['per_page'], $pagination['offset']);
+        $data['user_session'] = get_user_session();
         $this->load->view('partials/_header', $data);
         $this->load->view('profile/downloads', $data);
         $this->load->view('partials/_footer');
@@ -132,6 +139,7 @@ class Profile_controller extends Home_Core_Controller
         //set pagination
         $pagination = $this->paginate(lang_base_url() . 'hidden-products', $this->product_model->get_user_hidden_products_count($data['user']->id), $this->pagination_per_page);
         $data['products'] = $this->product_model->get_paginated_user_hidden_products($data['user']->id, $pagination['per_page'], $pagination['offset']);
+        $data['user_session'] = get_user_session();
         $this->load->view('partials/_header', $data);
         $this->load->view('profile/pending_products', $data);
         $this->load->view('partials/_footer');
@@ -153,6 +161,7 @@ class Profile_controller extends Home_Core_Controller
         $data['keywords'] = trans('favorites') . ',' . $this->app_name;
         $data['active_tab'] = 'favorites';
         $data['products'] = $this->product_model->get_user_favorited_products($data['user']->id);
+        $data['user_session'] = get_user_session();
 
         $this->load->view('partials/_header', $data);
         $this->load->view('profile/favorites', $data);
@@ -250,6 +259,7 @@ class Profile_controller extends Home_Core_Controller
             redirect(lang_base_url());
         }
         $data['active_tab'] = 'update_profile';
+        $data['user_session'] = get_user_session();
         $this->load->view('partials/_header', $data);
         $this->load->view('settings/update_profile', $data);
         $this->load->view('partials/_footer');
@@ -285,7 +295,7 @@ class Profile_controller extends Home_Core_Controller
         } else {
             $data = [
                 'username' => $this->input->post('username', true),
-                'slug' => $this->input->post('slug', true),
+                'slug' => str_slug($this->input->post('slug', true)),
                 'email' => $this->input->post('email', true),
                 'send_email_new_message' => $this->input->post('send_email_new_message', true),
             ];
@@ -343,6 +353,7 @@ class Profile_controller extends Home_Core_Controller
             redirect(lang_base_url());
         }
         $data['active_tab'] = 'shop_settings';
+        $data['user_session'] = get_user_session();
         $this->load->view('partials/_header', $data);
         $this->load->view('settings/shop_settings', $data);
         $this->load->view('partials/_footer');
@@ -390,6 +401,7 @@ class Profile_controller extends Home_Core_Controller
         $data['countries'] = $this->location_model->get_countries();
         $data['states'] = $this->location_model->get_states_by_country($data['user']->country_id);
         $data['cities'] = $this->location_model->get_cities_by_state($data['user']->state_id);
+        $data['user_session'] = get_user_session();
         $this->load->view('partials/_header', $data);
         $this->load->view('settings/contact_informations', $data);
         $this->load->view('partials/_footer');
@@ -431,6 +443,7 @@ class Profile_controller extends Home_Core_Controller
         }
         $data['active_tab'] = 'shipping_address';
         $data['countries'] = $this->location_model->get_countries();
+        $data['user_session'] = get_user_session();
         $this->load->view('partials/_header', $data);
         $this->load->view('settings/shipping_address', $data);
         $this->load->view('partials/_footer');
@@ -472,6 +485,7 @@ class Profile_controller extends Home_Core_Controller
             redirect(lang_base_url());
         }
         $data['active_tab'] = 'social_media';
+        $data['user_session'] = get_user_session();
         $this->load->view('partials/_header', $data);
         $this->load->view('settings/social_media', $data);
         $this->load->view('partials/_footer');

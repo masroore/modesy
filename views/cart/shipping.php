@@ -181,12 +181,13 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-sm-12 col-lg-5 order-summary-container">
-                            <h2 class="cart-section-title"><?php echo trans("order_summary"); ?> (<?php echo get_cart_product_count(); ?>)</h2>
-                            <div class="right">
-                                <?php $this->load->view("cart/_order_summary"); ?>
-                            </div>
-                        </div>
+
+						<?php if ($mds_payment_type == 'promote') {
+							$this->load->view("cart/_order_summary_promote");
+						} else {
+							$this->load->view("cart/_order_summary");
+						} ?>
+
                     </div>
                 </div>
             </div>

@@ -29,6 +29,11 @@ class Auth_model extends CI_Model
 
                 return false;
             }
+            if (1 != $user->email_status) {
+                $this->session->set_flashdata('error', trans('msg_confirmed_required') . "&nbsp;<a href='javascript:void(0)' class='link-resend-activation-email' onclick=\"send_activation_email('" . $user->id . "','" . $user->token . "');\">" . trans('resend_activation_email') . '</a>');
+
+                return false;
+            }
             if (1 == $user->banned) {
                 $this->session->set_flashdata('error', trans('msg_ban_error'));
 
@@ -184,7 +189,7 @@ class Auth_model extends CI_Model
         $this->load->library('bcrypt');
 
         $data = $this->auth_model->input_values();
-        $data['username'] = $data['username'];
+        $data['username'] = remove_special_characters($data['username']);
         //secure password
         $data['password'] = $this->bcrypt->hash_password($data['password']);
         $data['user_type'] = 'registered';
@@ -192,21 +197,86 @@ class Auth_model extends CI_Model
         $data['banned'] = 0;
         $data['created_at'] = date('Y-m-d H:i:s');
         $data['token'] = generate_token();
-
+        $data['email_status'] = 1;
+        if (1 == $this->general_settings->email_verification) {
+            $data['email_status'] = 0;
+        }
         if ($this->db->insert('users', $data)) {
             $last_id = $this->db->insert_id();
             if (1 == $this->general_settings->email_verification) {
-                $data['email_status'] = 0;
-                $this->load->model('email_model');
-                $this->email_model->send_email_activation($last_id);
-            } else {
-                $data['email_status'] = 1;
+                $user = $this->get_user($last_id);
+                if (!empty($user)) {
+                    $this->session->set_flashdata('success', trans('msg_register_success') . ' ' . trans('msg_send_confirmation_email') . "&nbsp;<a href='javascript:void(0)' class='link-resend-activation-email' onclick=\"send_activation_email_register('" . $user->id . "','" . $user->token . "');\">" . trans('resend_activation_email') . '</a>');
+                    $this->send_email_activation_ajax($user->id, $user->token);
+                }
             }
 
-            return $this->get_user($last_id);
+            return $last_id;
         }
 
         return false;
+    }
+
+    //send email activation
+    public function send_email_activation($user_id, $token)
+    {
+        if (!empty($user_id)) {
+            $user = $this->get_user($user_id);
+            if (!empty($user)) {
+                if (!empty($user->token) && $user->token != $token) {
+                    exit();
+                }
+                //check token
+                $data['token'] = $user->token;
+                if (empty($data['token'])) {
+                    $data['token'] = generate_token();
+                    $this->db->where('id', $user->id);
+                    $this->db->update('users', $data);
+                }
+                //send email
+                $email_data = [
+                    'template_path' => 'email/email_general',
+                    'to' => $user->email,
+                    'subject' => trans('confirm_your_account'),
+                    'email_content' => trans('msg_confirmation_email'),
+                    'email_link' => lang_base_url() . 'confirm?token=' . $data['token'],
+                    'email_button_text' => trans('confirm_your_account'),
+                ];
+                $this->load->model('email_model');
+                $this->email_model->send_email($email_data);
+            }
+        }
+    }
+
+    //send email activation
+    public function send_email_activation_ajax($user_id, $token)
+    {
+        if (!empty($user_id)) {
+            $user = $this->get_user($user_id);
+            if (!empty($user)) {
+                if (!empty($user->token) && $user->token != $token) {
+                    exit();
+                }
+                //check token
+                $data['token'] = $user->token;
+                if (empty($data['token'])) {
+                    $data['token'] = generate_token();
+                    $this->db->where('id', $user->id);
+                    $this->db->update('users', $data);
+                }
+
+                //send email
+                $email_data = [
+                    'email_type' => 'email_general',
+                    'to' => $user->email,
+                    'subject' => trans('confirm_your_account'),
+                    'email_content' => trans('msg_confirmation_email'),
+                    'email_link' => lang_base_url() . 'confirm?token=' . $data['token'],
+                    'email_button_text' => trans('confirm_your_account'),
+                ];
+                $this->session->set_userdata('mds_send_email_data', json_encode($email_data));
+            }
+        }
     }
 
     //add administrator
@@ -331,6 +401,7 @@ class Auth_model extends CI_Model
     //update last seen time
     public function update_last_seen()
     {
+        get_ci_core_construct();
         if ($this->is_logged_in()) {
             $user = user();
             //update last seen
@@ -426,7 +497,6 @@ class Auth_model extends CI_Model
     //get user by slug
     public function get_user_by_slug($slug)
     {
-        $slug = clean_slug($slug);
         $this->db->where('slug', $slug);
         $query = $this->db->get('users');
 
@@ -528,7 +598,6 @@ class Auth_model extends CI_Model
     //check slug
     public function check_is_slug_unique($slug, $id)
     {
-        $slug = clean_slug($slug);
         $id = clean_number($id);
         $this->db->where('users.slug', $slug);
         $this->db->where('users.id !=', $id);

@@ -3,10 +3,16 @@
 <div class="row">
     <div class="col-sm-7">
         <div class="box box-primary">
-            <div class="box-header with-border">
-                <h3 class="box-title"><?php echo trans("add_custom_field"); ?></h3>
-            </div>
-            <!-- /.box-header -->
+			<div class="box-header with-border">
+				<div class="left">
+					<h3 class="box-title"><?php echo trans('add_custom_field'); ?></h3>
+				</div>
+				<div class="right">
+					<a href="<?php echo admin_url(); ?>custom-fields" class="btn btn-success btn-add-new">
+						<i class="fa fa-list-ul"></i>&nbsp;&nbsp;<?php echo trans('custom_fields'); ?>
+					</a>
+				</div>
+			</div><!-- /.box-header -->
 
             <!-- form start -->
             <?php echo form_open_multipart('category_controller/add_custom_field_post', ['onkeypress' => 'return event.keyCode != 13;']); ?>

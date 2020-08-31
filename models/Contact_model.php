@@ -20,9 +20,15 @@ class Contact_model extends CI_Model
         $data = $this->input_values();
         //send email
         if (1 == $this->general_settings->send_email_contact_messages) {
-            $this->load->model('email_model');
-            $this->email_model->send_email_contact_message($data['name'], $data['email'], $data['message']);
+            $email_data = [
+                'email_type' => 'contact',
+                'message_name' => $data['name'],
+                'message_email' => $data['email'],
+                'message_text' => $data['message'],
+            ];
+            $this->session->set_userdata('mds_send_email_data', json_encode($email_data));
         }
+
         $data['created_at'] = date('Y-m-d H:i:s');
 
         return $this->db->insert('contacts', $data);

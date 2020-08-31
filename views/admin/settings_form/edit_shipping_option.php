@@ -15,7 +15,7 @@
                 <!-- include message block -->
                 <?php $this->load->view('admin/includes/_messages_form'); ?>
                 <?php foreach ($languages as $language):
-                    $option = $this->settings_model->get_shipping_option_by_lang($main_option->common_id, $language->id); ?>
+                    $option = $this->settings_model->get_shipping_option_by_lang_not_completed($main_option->common_id, $language->id); ?>
                     <div class="form-group">
                         <label><?php echo trans("option_label"); ?> (<?php echo $language->name; ?>)</label>
                         <input type="text" class="form-control" name="option_label_<?php echo $language->id; ?>" placeholder="<?php echo trans("option_label"); ?>" value="<?php echo html_escape(@$option->option_label); ?>" maxlength="255" required>

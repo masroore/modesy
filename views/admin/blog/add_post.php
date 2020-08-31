@@ -2,10 +2,16 @@
 <div class="row">
     <div class="col-md-12">
         <div class="box box-primary">
-            <div class="box-header with-border">
-                <h3 class="box-title"><?php echo trans('add_post'); ?></h3>
-            </div>
-            <!-- /.box-header -->
+			<div class="box-header with-border">
+				<div class="left">
+					<h3 class="box-title"><?php echo trans('add_post'); ?></h3>
+				</div>
+				<div class="right">
+					<a href="<?php echo admin_url(); ?>blog-posts" class="btn btn-success btn-add-new">
+						<i class="fa fa-list-ul"></i>&nbsp;&nbsp;<?php echo trans('posts'); ?>
+					</a>
+				</div>
+			</div><!-- /.box-header -->
 
             <!-- form start -->
             <?php echo form_open_multipart('blog_controller/add_post_post'); ?>
@@ -87,7 +93,7 @@
                             <label class="control-label"><?php echo trans('content'); ?></label>
                             <div class="row">
                                 <div class="col-sm-12 m-b-10">
-                                    <button type="button" class="btn btn-sm btn-secondary color-white btn_ck_add_image"><i class="icon-image"></i><?php echo trans("add_image"); ?></button>
+                                    <button type="button" class="btn btn-sm bg-purple color-white btn_ck_add_image"><i class="icon-image"></i><?php echo trans("add_image"); ?></button>
                                     <button type="button" class="btn btn-sm btn-info color-white btn_ck_add_video"><i class="icon-image"></i><?php echo trans("add_video"); ?></button>
                                     <button type="button" class="btn btn-sm btn-warning color-white btn_ck_add_iframe"><i class="icon-image"></i><?php echo trans("add_iframe"); ?></button>
                                 </div>
